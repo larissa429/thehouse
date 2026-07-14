@@ -242,7 +242,7 @@ a:hover { color: var(--paper); }
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;       /* all three columns match height */
-  height: 520px;              /* fixed row height — tune this number */
+  min-height: 520px;              /* fixed row height — tune this number */
   gap: 1.5rem;
   margin: 1.5rem 0;
 }

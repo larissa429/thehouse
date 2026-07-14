@@ -75,25 +75,20 @@ class SiteFooter extends HTMLElement {
 customElements.define("site-footer", SiteFooter);
 
 /* ---- ICONS ------------------------------------------ */
-
 document.querySelectorAll(".card").forEach(card => {
   card.addEventListener("click", function(event) {
     if (window.innerWidth <= 700) {
 
-      // If this card is already open, allow the link to work
       if (this.classList.contains("show-icon")) {
         return;
       }
 
-      // Stop the first tap from opening the page
       event.preventDefault();
 
-      // Close every other card
       document.querySelectorAll(".card.show-icon").forEach(openCard => {
         openCard.classList.remove("show-icon");
       });
 
-      // Open this card
       this.classList.add("show-icon");
     }
   });

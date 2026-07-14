@@ -449,11 +449,13 @@ a:focus-visible, .card:focus-visible {
   opacity: 0;
   transform: rotate(15deg) scale(0.7);
   transition: opacity 0.25s, transform 0.25s;
+  pointer-events: none;
 
   pointer-events: none;
 }
 
-.card:hover .character-icon {
+.card:hover .character-icon,
+.card.show-icon .character-icon {
   opacity: 1;
   transform: rotate(0deg) scale(1);
 }

@@ -93,3 +93,14 @@ document.querySelectorAll(".card").forEach(card => {
     }
   });
 });
+
+document.addEventListener("click", (event) => {
+  if (window.innerWidth > 700) return;
+
+  // If the tap wasn't inside a card, close them all.
+  if (!event.target.closest(".card")) {
+    document.querySelectorAll(".card.show-icon").forEach(card => {
+      card.classList.remove("show-icon");
+    });
+  }
+});

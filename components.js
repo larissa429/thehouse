@@ -76,11 +76,9 @@ customElements.define("site-footer", SiteFooter);
 
 document.querySelectorAll(".card").forEach(card => {
   card.addEventListener("click", function(event) {
-    if (window.innerWidth <= 700) {
-      if (!this.classList.contains("show-icon")) {
-        event.preventDefault();
-        this.classList.add("show-icon");
-      }
+    if (window.innerWidth <= 700 && !this.classList.contains("show-icon")) {
+      event.preventDefault();
+      this.classList.add("show-icon");
     }
   });
 });

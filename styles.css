@@ -1,0 +1,431 @@
+/* ============================================================
+   THE HOUSE - shared stylesheet
+   Everything you'll want to change lives up top in :root.
+   Change a color there once and it updates across every page.
+   ============================================================ */
+
+:root {
+  /* ============================================================
+     BACKGROUND - this is the part you asked about.
+     "Leather" is active below. To go PURE BLACK instead, just
+     change these three lines to the black values in the comment.
+     ------------------------------------------------------------
+       LEATHER (active):  --shadow:#1a1310  --wall:#251b15  --wall-lit:#33241a
+       BLACK:             --shadow:#0d0c0b  --wall:#1a1613  --wall-lit:#241d18
+     ============================================================ */
+  --shadow:    #1a1310;   /* THE PAGE BACKGROUND (dark leather) */
+  --wall:      #251b15;   /* card background (a shade lighter)  */
+  --wall-lit:  #33241a;   /* a card the lamp actually reaches   */
+
+  /* ---- ACCENTS (leave or tweak) ---------------------------- */
+  --paper:     #ece0cb;   /* aged paper - headings, cream text  */
+  --ink:       #e4d8c6;   /* main body text, warm cream         */
+  --ink-soft:  #ab9c86;   /* quieter text, captions, labels     */
+  --lamp:      #e3a94e;   /* amber lamplight - links + accents  */
+  --edgeclr:   #9d8570;   /* faded-ink taupe - hairlines only   */
+
+  /* ---- TYPE ------------------------------------------------ */
+  --display: "IM Fell English", Georgia, serif;   /* haunted book */
+  --body:    "EB Garamond", Georgia, serif;        /* warm, readable */
+  --label:   "Courier Prime", "Courier New", monospace; /* typewriter */
+
+  /* ---- SPACING / FEEL -------------------------------------- */
+  --measure: clamp(34rem, 72vw, 72rem);   /* fluid: scales with window width */
+  --edge: 1px solid rgba(157, 133, 112, 0.28);  /* taupe hairline */
+}
+
+/* ---- RESET ------------------------------------------------ */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--shadow);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 1.15rem;
+  line-height: 1.7;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* ambient vignette: the room's edges never quite lit.
+   this slow pulse is the one "moving" thing on the page. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(
+    120% 100% at 50% 32%,
+    transparent 42%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+  animation: breathe 11s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { opacity: 0.85; }
+  50%      { opacity: 1; }
+}
+
+.wrap, header, footer { position: relative; z-index: 2; }
+
+/* ---- LAYOUT ----------------------------------------------- */
+.wrap { max-width: 62rem; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+/* ---- MASTHEAD / NAV --------------------------------------- */
+header { padding: 2rem 1.5rem 1rem; max-width: 62rem; margin: 0 auto; }
+.sitename {
+  font-family: var(--display);
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  letter-spacing: 0.02em;
+  margin: 0;
+  color: var(--paper);
+  text-shadow: 0 0 26px rgba(227, 169, 78, 0.16);
+}
+.sitename a { color: inherit; text-decoration: none; }
+.tagline {
+  font-family: var(--label);
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  margin: 0.4rem 0 0;
+}
+
+nav.rooms {
+  margin-top: 1.4rem;
+  padding-top: 1rem;
+  border-top: var(--edge);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.6rem;
+}
+nav.rooms a {
+  font-family: var(--label);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 0.2rem 0;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+nav.rooms a:hover,
+nav.rooms a[aria-current="page"] {
+  color: var(--lamp);
+  border-bottom-color: var(--lamp);
+}
+
+/* ---- TYPOGRAPHY ------------------------------------------- */
+h1, h2, h3 { font-family: var(--display); font-weight: 400; line-height: 1.15; }
+h1 { font-size: clamp(2.2rem, 7vw, 3.6rem); margin: 2.5rem 0 1rem; color: var(--paper); }
+h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin: 3rem 0 0.8rem; color: var(--lamp); }
+h3 { font-size: 1.4rem; margin: 1.6rem 0 0.4rem; color: var(--paper); }
+
+p { }
+a { color: var(--lamp); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--paper); }
+
+.eyebrow {
+  font-family: var(--label);
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.eyebrow a { color: var(--ink-soft); }
+.eyebrow a:hover { color: var(--lamp); }
+
+/* character designer credit line */
+.credit {
+  font-family: var(--label);
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin: 1.2rem 0 0;
+}
+
+/* ---- HERO (home page) ------------------------------------- */
+.hero { padding: 3.5rem 0 1rem; }
+.thesis {
+  font-family: var(--display);
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  line-height: 1.25;
+  color: var(--paper);
+  max-width: 30ch;
+  margin: 1rem 0 2rem;
+}
+.thesis em { color: var(--lamp); font-style: italic; }
+
+/* ---- THRESHOLD DIVIDER ------------------------------------ */
+.threshold {
+  border: 0;
+  height: 1px;
+  margin: 3.5rem auto;
+  max-width: var(--measure);
+  background: linear-gradient(90deg, transparent, var(--edgeclr), transparent);
+  opacity: 0.5;
+}
+
+/* ---- CARDS ------------------------------------------------ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1.2rem;
+  margin: 1.5rem 0;
+}
+.card {
+  background: var(--wall);
+  border: var(--edge);
+  border-radius: 2px;
+  padding: 1.3rem 1.4rem 1.5rem;
+  transition: background 0.25s, transform 0.25s;
+  text-decoration: none;
+  display: block;
+}
+.card:hover { background: var(--wall-lit); transform: translateY(-2px); }
+.card h3 { margin-top: 0; }
+.card .role {
+  font-family: var(--label);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: block;
+  margin-bottom: 0.6rem;
+}
+.card p { font-size: 1rem; margin: 0; color: var(--ink); }
+
+/* ---- CHARACTER STAT BLOCK --------------------------------- */
+/* the info list at the top of a character page. it's a <dl>:
+   each label/value pair is one <div class="stat"> with a <dt>
+   above and a <dd> below. Always a single stacked column — this
+   box lives in a narrower third of the row now, so it doesn't
+   need to reflow into multiple columns. */
+.statblock {
+  background: var(--wall);
+  border: var(--edge);
+  border-radius: 2px;
+  padding: 1rem 1.3rem;
+  margin: 1.5rem 0;
+  max-width: var(--measure);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;              /* was 0.9rem — the main height saver */
+  align-content: start;
+}
+.statblock dt {
+  font-family: var(--label);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lamp);
+  display: block;
+  margin: 0 0 0.15rem;
+}
+.statblock dd { margin: 0; color: var(--ink); line-height: 1.35; }
+
+/* ---- CHARACTER HEADER (portrait / stats / playlist) -------- */
+/* Structure on each character page:
+     <div class="character-header">
+       <figure class="portrait"> <img/> <figcaption class="credit">Art by ...</figcaption> </figure>
+       <dl class="statblock"> ... </dl>
+       <div class="playlist"> ... </div>
+     </div>
+   Three equal columns (~1/3 width each) on wide screens, stacking
+   to one column on narrow ones. Portrait art has no border/background
+   so transparent PNGs float free; the playlist box keeps its own
+   natural height instead of being stretched. */
+.character-header {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;       /* all three columns match height */
+  height: 520px;              /* fixed row height — tune this number */
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+.character-header .statblock {
+  margin: 0;
+  max-width: none;
+  overflow-y: auto;           /* scroll if stats overflow the fixed height */
+}
+
+.portrait {                  /* the <figure> — no border, no background */
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.portrait img {              /* transparent art floats free */
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  object-fit: contain;       /* keep aspect ratio, fill the height */
+  object-position: center;
+  display: block;
+}
+.portrait figcaption {       /* the credit, under the portrait */
+  flex: 0 0 auto;
+  margin-top: 0.6rem;
+  text-align: center;
+}
+
+/* ---- PLAYLIST (Spotify embed slot) ------------------------- */
+/* Placeholder until real embeds go in. To add a real one: on
+   Spotify, open the playlist -> Share -> Embed playlist -> Copy —
+   that gives you an <iframe> snippet. Replace the placeholder
+   .playlist-embed div with that iframe (see the HTML comment on
+   each character page for the exact snippet shape). */
+.playlist {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.playlist .eyebrow { flex: 0 0 auto; }
+.playlist iframe { flex: 1 1 auto; width: 100%; border: 0; border-radius: 2px; display: block; }
+.playlist-embed {
+  border: 1px dashed rgba(227, 169, 78, 0.4);
+  border-radius: 2px;
+  min-height: 12rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem;
+  color: var(--ink-soft);
+  font-family: var(--label);
+  font-size: 0.85rem;
+}
+.playlist-embed iframe { width: 100%; border: 0; border-radius: 2px; }
+.playlist iframe { width: 100%; border: 0; border-radius: 2px; display: block; }
+
+@media (max-width: 880px) {
+  .character-header { grid-template-columns: 1fr; height: auto; }
+  .portrait { max-width: 420px; margin: 0 auto; }
+  .playlist { max-width: 420px; margin: 0 auto; width: 100%; }
+  .playlist iframe { min-height: 352px; }
+  .content-columns { grid-template-columns: 1fr; }
+}
+
+
+
+
+/* ---- CONTENT COLUMNS (description + VA side by side) ------- */
+/* On pages with a casting section, wrap both in:
+     <div class="content-columns">
+       <div> ...description paragraph... </div>
+       <section class="casting"> ... </section>
+     </div>
+   They sit side by side on wide screens, stack on narrow ones. */
+.content-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 1.5rem;
+  align-items: start;
+}
+
+/* ---- CASTING CALL ----------------------------------------- */
+/* only on characters who still need a VA. to remove, delete the
+   whole <section class="casting"> ... </section> from their page. */
+.casting {
+  border: 1px dashed rgba(227, 169, 78, 0.45);
+  border-radius: 2px;
+  padding: 1.4rem 1.6rem;
+  margin: 2.5rem 0;
+}
+.content-columns .casting { margin: 0; }
+.casting .tag {
+  font-family: var(--label);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lamp);
+}
+.casting h2 { margin-top: 0.3rem; }
+.voice-notes { }
+.voice-notes li { margin-bottom: 0.6rem; }
+.guide { list-style: none; padding: 0; margin: 1rem 0 0; }
+.guide li { margin-bottom: 0.4rem; }
+.guide .song { font-family: var(--display); font-size: 1.2rem; color: var(--paper); }
+.guide .artist { font-family: var(--label); font-size: 0.78rem; color: var(--ink-soft); }
+
+/* ---- BUTTON ----------------------------------------------- */
+.btn {
+  display: inline-block;
+  font-family: var(--label);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--shadow);
+  background: var(--lamp);
+  padding: 0.7rem 1.3rem;
+  border-radius: 2px;
+  text-decoration: none;
+  margin: 0.4rem 0.6rem 0.4rem 0;
+  transition: transform 0.15s, filter 0.15s;
+}
+.btn:hover { color: var(--shadow); filter: brightness(1.08); transform: translateY(-1px); }
+
+
+/* ---- FOOTER ----------------------------------------------- */
+footer {
+  max-width: 62rem;
+  margin: 4rem auto 0;
+  padding: 2rem 1.5rem 3rem;
+  border-top: var(--edge);
+  font-family: var(--label);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+footer a { color: var(--ink-soft); }
+footer a:hover { color: var(--lamp); }
+.listening { color: var(--lamp); opacity: 0.75; }
+
+/* ---- GLITCH / CORRUPTED TEXT ------------------------------ */
+/* Wrap any text in <span class="glitch">TEXT</span> and include
+   glitch.js on that page. It cycles each character through random
+   letters/symbols — same length, monospace, so the width NEVER
+   changes and it can't overflow. Only safe ASCII is used, so no
+   missing-glyph squares on mobile. The real text is kept for screen
+   readers. Tune speed/charset at the top of glitch.js. */
+.glitch {
+  font-family: var(--label);
+  color: var(--paper);
+  letter-spacing: 0.06em;
+  animation: chroma 1.3s steps(2) infinite;
+}
+@keyframes chroma {
+  0%   { text-shadow: -0.035em 0 rgba(255,40,80,0.55),  0.035em 0 rgba(60,200,255,0.5); }
+  100% { text-shadow:  0.035em 0 rgba(255,40,80,0.55), -0.035em 0 rgba(60,200,255,0.5); }
+}
+
+/* ---- ACCESSIBILITY: focus + reduced motion --------------- */
+a:focus-visible, .card:focus-visible {
+  outline: 2px solid var(--lamp);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  body::before { animation: none; }
+  .glitch { animation: none; text-shadow: 0.02em 0 rgba(255,40,80,0.5), -0.02em 0 rgba(60,200,255,0.45); }
+}
+
+/* ---- BIG SCREENS / TVs ------------------------------------ */
+/* On very wide displays the centered column got lost between huge
+   margins. Widen the shell (and nudge the type up for viewing
+   distance). Body paragraphs stay capped by --measure, so lines
+   never get uncomfortably long. Tweak these rem values to taste. */
+@media (min-width: 1600px) {
+  :root { font-size: 18px; }
+  .wrap, header, footer { max-width: 84rem; }
+  .wrap { padding-left: 1rem; padding-right: 1rem; }
+}
+@media (min-width: 2200px) {
+  :root { font-size: 20px; }
+  .wrap, header, footer { max-width: 96rem; }
+  .wrap { padding-left: 0.5rem; padding-right: 0.5rem; }
+}

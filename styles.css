@@ -438,14 +438,19 @@ a:focus-visible, .card:focus-visible {
 }
 
 .character-icon {
-  right: -15px;
-  bottom: -15px;
-  top: auto;
+  position: absolute;
   width: 110px;
   height: 110px;
+  object-fit: contain;
+
+  right: -15px;
+  bottom: -15px;
 
   opacity: 0;
   transform: rotate(15deg) scale(0.7);
+  transition: opacity 0.25s, transform 0.25s;
+
+  pointer-events: none;
 }
 
 .card:hover .character-icon {

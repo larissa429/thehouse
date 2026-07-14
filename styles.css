@@ -241,15 +241,13 @@ a:hover { color: var(--paper); }
 .character-header {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: stretch;       /* all three columns match height */
-  min-height: 520px;              /* fixed row height — tune this number */
+  align-items: stretch;       /* all three columns match the tallest one's height */
   gap: 1.5rem;
   margin: 1.5rem 0;
 }
 .character-header .statblock {
   margin: 0;
   max-width: none;
-  overflow-y: auto;           /* scroll if stats overflow the fixed height */
 }
 
 .portrait {                  /* the <figure> — no border, no background */

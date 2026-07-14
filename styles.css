@@ -433,3 +433,22 @@ a:focus-visible, .card:focus-visible {
   .wrap, header, footer { max-width: 96rem; }
   .wrap { padding-left: 0.5rem; padding-right: 0.5rem; }
 }
+.card {
+  position: relative;
+}
+
+.character-icon {
+  right: -15px;
+  bottom: -15px;
+  top: auto;
+  width: 110px;
+  height: 110px;
+
+  opacity: 0;
+  transform: rotate(15deg) scale(0.7);
+}
+
+.card:hover .character-icon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}

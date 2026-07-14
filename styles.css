@@ -284,7 +284,14 @@ a:hover { color: var(--paper); }
   flex-direction: column;
 }
 .playlist .eyebrow { flex: 0 0 auto; }
-.playlist iframe { flex: 1 1 auto; width: 100%; border: 0; border-radius: 2px; display: block; }
+.playlist iframe {
+  flex: 1 1 auto;
+  min-height: 0;    /* lets the iframe actually shrink/grow to fill the column */
+  width: 100%;
+  border: 0;
+  border-radius: 2px;
+  display: block;
+}
 .playlist-embed {
   border: 1px dashed rgba(227, 169, 78, 0.4);
   border-radius: 2px;
@@ -299,7 +306,6 @@ a:hover { color: var(--paper); }
   font-size: 0.85rem;
 }
 .playlist-embed iframe { width: 100%; border: 0; border-radius: 2px; }
-.playlist iframe { width: 100%; border: 0; border-radius: 2px; display: block; }
 
 @media (max-width: 880px) {
   .character-header { grid-template-columns: 1fr; height: auto; }

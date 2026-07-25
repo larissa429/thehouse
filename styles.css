@@ -950,3 +950,90 @@ a:focus-visible, .card:focus-visible {
 @media (max-width: 700px) {
   .connection-self { display: none; }
 }
+
+/* new connection-note colors for Journal's page */
+.note[data-color="mirror"] { background: #cfe0d8; }
+.note[data-color="n528"]   { background: #b8d4c9; }
+.note[data-color="dream"]  { background: #c7b8d4; }
+
+/* more breathing room between the small casting tag and its heading */
+.casting .tag {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+.casting h2 {
+  margin-top: 0;
+}
+
+a.tag { text-decoration: none; }
+
+.trivia-note { margin: 2rem auto; }
+
+/* video now sits in a row alongside the voice-claim text */
+/* top row: tag+heading on the left, voice-claim text + video on
+   the right (right-aligned text, video pinned to the corner) */
+.casting-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.casting-left { flex: 0 0 auto; }
+.casting-left h2 { margin-top: 0; }
+
+.casting-right {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 1.2rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.casting-claim-text {
+  text-align: right;
+  max-width: 26rem;
+  min-width: 0;
+}
+.casting-claim-text h3 { margin-top: 0; }
+
+.casting-video {
+  flex: 0 0 280px;
+  width: 280px;
+}
+.casting-video iframe {
+  width: 100%;
+  aspect-ratio: 16/9;
+  height: auto;
+  border: 0;
+  border-radius: 2px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+  display: block;
+}
+
+@media (max-width: 880px) {
+  .casting-top { flex-direction: column; }
+  .casting-right { flex-direction: column; align-items: flex-start; width: 100%; }
+  .casting-claim-text { text-align: left; max-width: none; }
+  .casting-video { width: 100%; }
+}
+/* audition lines dropdown, matching the casting box's dashed style */
+.audition-lines {
+  clear: both;
+  margin: 1.6rem 0;
+  border: 1px dashed rgba(227,169,78,0.45);
+  border-radius: 2px;
+  padding: 0.9rem 1.2rem;
+}
+.audition-lines summary {
+  cursor: pointer;
+  font-family: var(--label);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lamp);
+}
+.audition-lines[open] summary { margin-bottom: 0.8rem; }
+.audition-lines-body p { margin-bottom: 1.2rem; }
+.audition-lines-body strong { color: var(--paper); }

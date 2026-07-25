@@ -7,7 +7,7 @@
   <meta name="description" content="Mirror — has lived in The House longer than almost anyone." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
 </head>
 <body>
@@ -21,8 +21,6 @@
 
     <div class="character-header">
       <figure class="portrait">
-        <!-- Swap src to your art once uploaded to the images/ folder.
-             Until the file exists you'll see a broken-image icon. -->
         <img src="../images/mirror.png" alt="Portrait of Mirror" />
         <figcaption class="credit">Art by KrunchKo_ on TikTok</figcaption>
       </figure>
@@ -38,21 +36,94 @@
         <div class="stat"><dt>Favorite resident</dt><dd><span class="glitch">#####</span></dd></div>
       </dl>
       <div class="playlist">
-        <span class="eyebrow">Playlist</span>
         <iframe src="https://open.spotify.com/embed/playlist/3WOqjiSApBsZ9iSOjypgZP?utm_source=generator"
-               height="350" frameborder="0"
+               height="352" frameborder="0"
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"></iframe>
       </div>
     </div>
 
+    <div class="tags">
+      <span class="tag">SHE/HER</span>
+      <span class="tag">~1,900 BLOOMS</span>
+      <span class="tag">CAREGIVER</span>
+      <span class="tag">INTROVERT</span>
+    </div>
+
     <p>Mirror has lived in The House longer than almost anyone. She's often in the kitchen where she cleans dishes or cooks meals for the other residents. She enjoys tasks such as these, finding a calming feeling following in them. Mirror is also gentle and an introvert who listens more than she speaks. However, there is an ache beneath her surface that will never go away. It is of great loss, but she hasn't let it turn her unkind or unhelpful. Past that, she creates small drawings and doodles throughout her day.</p>
 
+    <div class="connections">
+      <span class="eyebrow">Connections</span>
+      <div class="connections-board">
+        <svg class="connections-strings"></svg>
+
+        <div class="connection-pin connection-self" style="--x:50%; --y:44%;">
+          <img src="../images/icons/mirror.png" alt="Mirror" />
+        </div>
+
+        <button class="connection-pin" style="--x:18%; --y:16%; --tilt:-4deg;" data-color="journal">
+          <img src="../images/icons/journal.png" alt="Journal" />
+          <template>
+            <h4>Journal</h4>
+            <p>One of the oldest friendships in the House. They don't cross paths as often as they used to, but the fondness never faded.</p>
+          </template>
+        </button>
+
+        <button class="connection-pin" style="--x:82%; --y:14%; --tilt:3deg;" data-color="ap">
+          <img src="../images/icons/ap.png" alt="Abstract Painting" />
+          <template>
+            <h4>Abstract Painting</h4>
+            <p>AP visits often, mostly to talk about herself. Mirror doesn't mind. Someone has to listen.</p>
+          </template>
+        </button>
+
+        <button class="connection-pin" style="--x:30%; --y:80%; --tilt:-2deg;" data-color="bm">
+          <img src="../images/icons/bluemarble.png" alt="Blue Marble" />
+          <template>
+            <h4>Blue Marble</h4>
+            <p>One of the few residents that truly matches Mirror's energy. Blue MArble doesn't come out ofher room as often as she used to, so Mirror cherishes any time she gets with her.</p>
+          </template>
+        </button>
+
+        <button class="connection-pin" style="--x:75%; --y:76%; --tilt:4deg;" data-color="charlie">
+          <img src="../images/icons/charlie.png" alt="Charlie" />
+          <template>
+            <h4>Charlie</h4>
+            <p>The first resident to really see Charlie's panic for what it was, and to meet it with patience instead of pity.</p>
+          </template>
+        </button>
+
+        <button class="connection-pin connection-torn" style="--x:8%; --y:74%; --tilt:-6deg;" data-color="bunny" data-no-line>
+          <div class="torn-shape">?</div>
+          <template>
+            <h4></h4>
+            <p><img src="../images/Kaninchen_und_Ente.png" alt="Kaninchen und Ente" width="300"/></p>
+          </template>
+        </button>
+      </div>
+    </div>
+
+    <div class="trivia-note">
+      <h3>Trivia</h3>
+      <ul>
+        <li>Trivia point one goes here.</li>
+        <li>Trivia point two goes here.</li>
+      </ul>
+    </div>
+
   </main>
+
+  <div class="note-overlay" id="note-overlay">
+    <div class="note" id="note-content">
+      <button class="note-close" id="note-close">×</button>
+      <div id="note-body"></div>
+    </div>
+  </div>
 
   <site-footer></site-footer>
 
   <script src="../components.js" defer></script>
   <script src="../glitch.js" defer></script>
+  <script src="../connections.js" defer></script>
 </body>
 </html>

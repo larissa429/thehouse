@@ -32,6 +32,11 @@
   /* ---- SPACING / FEEL -------------------------------------- */
   --measure: clamp(34rem, 72vw, 72rem);   /* fluid: scales with window width */
   --edge: 1px solid rgba(157, 133, 112, 0.28);  /* taupe hairline */
+
+  --hand:      "Caveat", cursive;              /* Journal's handwriting */
+  --ink-on-paper: #2e2118;                     /* dark text for light "paper" cards */
+  --dt-on-paper:  #8a5a24;                     /* label color for light "paper" cards */
+  --urgent:    #c0463c;                        /* VA-needed tag glow */
 }
 
 /* ---- RESET ------------------------------------------------ */
@@ -465,4 +470,427 @@ a:focus-visible, .card:focus-visible {
     width: 70px;
     height: 70px;
   }
+}
+
+/* ---- SCRAPBOOK PORTRAIT & PLAYLIST (pinned-photo look) ----- */
+/* Turns .portrait and .playlist into polaroid-style photos tacked
+   to the wall — light paper mat, drop shadow, a bit of "tape" at
+   the top, and a slight rotation so nothing sits perfectly straight. */
+.portrait, .playlist {
+  background: var(--paper);
+  border-radius: 2px;
+  padding: 0.8rem 0.8rem 1.6rem;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.3);
+  position: relative;
+}
+.portrait { transform: rotate(-2.5deg); }
+.playlist { transform: rotate(1.5deg); }
+
+.portrait::before, .playlist::before {
+  content: "";
+  position: absolute;
+  top: -0.6rem;
+  left: 50%;
+  width: 3.2rem;
+  height: 1.1rem;
+  background: rgba(227, 169, 78, 0.5);
+  transform: translateX(-50%) rotate(-3deg);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.portrait figcaption {
+  font-family: var(--hand);
+  font-size: 1.3rem;
+  color: var(--ink-on-paper);
+  margin-top: 0.5rem;
+}
+.playlist .eyebrow {
+  font-family: var(--hand);
+  font-size: 1.2rem;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ink-on-paper);
+  margin-bottom: 0.5rem;
+}
+
+/* ---- INFO CARD (redesigned statblock — pinned index card) -- */
+.statblock {
+  background: var(--paper);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.3);
+  transform: rotate(1deg);
+  position: relative;
+}
+.statblock::before {
+  content: "";
+  position: absolute;
+  top: -0.6rem;
+  left: 50%;
+  width: 3.2rem;
+  height: 1.1rem;
+  background: rgba(227, 169, 78, 0.5);
+  transform: translateX(-50%) rotate(2deg);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.statblock dt { color: var(--dt-on-paper); }
+.statblock dd { color: var(--ink-on-paper); }
+
+/* ---- TRAIT TAGS (glowing pills under the info card) --------- */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.tag {
+  font-family: var(--label);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lamp);
+  background: rgba(227, 169, 78, 0.1);
+  border: 1px solid rgba(227, 169, 78, 0.55);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  box-shadow: 0 0 9px rgba(227, 169, 78, 0.35);
+}
+.tag.va-needed {
+  color: var(--urgent);
+  background: rgba(192, 70, 60, 0.12);
+  border-color: rgba(192, 70, 60, 0.6);
+  box-shadow: 0 0 9px rgba(192, 70, 60, 0.4);
+}
+
+/* ---- TRIVIA NOTE (pinned sticky note) ------------------------ */
+.trivia-note {
+  background: var(--paper);
+  color: var(--ink-on-paper);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3);
+  border-radius: 2px;
+  padding: 1.2rem 1.4rem;
+  max-width: var(--measure);
+  margin: 2rem 0;
+  transform: rotate(-1deg);
+}
+.trivia-note h3 {
+  font-family: var(--hand);
+  color: var(--ink-on-paper);
+  font-size: 1.6rem;
+  margin: 0 0 0.6rem;
+}
+.trivia-note ul { margin: 0; padding-left: 1.2rem; }
+.trivia-note li { margin-bottom: 0.4rem; }
+
+/* add inside your existing @media (max-width: 880px) block */
+.portrait, .playlist, .statblock, .trivia-note { transform: none; }
+
+/* cap the pinned-photo row so it doesn't stretch huge on wide screens */
+.character-header {
+  max-width: 50rem;
+  margin: 1.5rem auto;
+}
+
+/* shrink the pinned-photo row + space things out more */
+:root {
+  --photo-row-height: 380px;   /* the one number to tweak — smaller = shorter row */
+}
+
+.character-header {
+  height: var(--photo-row-height);
+  gap: 2.5rem;                  /* more breathing room between the three items */
+  margin: 2rem auto 2.5rem;     /* a little extra space above/below the whole row */
+}
+
+.character-header .statblock {
+  overflow-y: auto;             /* safety net if a character's info list runs long */
+}
+
+.playlist iframe {
+  height: 100%;                 /* fills the shorter row instead of its old fixed 350px */
+}
+
+/* ---- SCRAPBOOK REFINEMENTS: less squished, more handmade ---- */
+
+/* stop forcing every item to match one shared row height — let
+   each pinned item size itself naturally instead */
+.character-header {
+  align-items: start;
+  height: auto;
+}
+
+/* portrait + info card keep the shorter, intentional height */
+.portrait, .character-header .statblock {
+  height: var(--photo-row-height);
+}
+
+/* playlist: drop the paper-photo card entirely — just tape the
+   real Spotify embed straight to the wall, full natural size */
+.playlist {
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  transform: rotate(1.5deg) translateX(10px);
+}
+.playlist .eyebrow {
+  color: var(--paper);
+  font-family: var(--hand);
+  font-size: 1.2rem;
+  letter-spacing: normal;
+  text-transform: none;
+  margin-bottom: 0.5rem;
+}
+.playlist iframe {
+  height: 352px;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.3);
+  border-radius: 10px;
+}
+.playlist::before {
+  top: -0.5rem;
+}
+
+/* nudge each piece of tape off dead-center + give photos a slight
+   sideways offset, so nothing looks perfectly centered */
+.portrait::before  { left: 42%; }
+.playlist::before  { left: 60%; }
+.portrait { transform: rotate(-2.5deg) translateX(-8px); }
+
+/* ---- INFO CARD: two-corner tape instead of one top strip ---- */
+/* gives it its own distinct pinning style, so the three don't
+   all look identical */
+.character-header .statblock::before {
+  top: -0.5rem;
+  left: 0.6rem;
+  width: 2.6rem;
+  height: 1rem;
+  transform: rotate(-8deg);
+}
+.character-header .statblock::after {
+  content: "";
+  position: absolute;
+  bottom: -0.5rem;
+  right: 0.6rem;
+  width: 2.6rem;
+  height: 1rem;
+  background: rgba(227, 169, 78, 0.5);
+  transform: rotate(-8deg);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* ============================================================
+   SCRAPBOOK FINAL PASS — safe to paste at the very end.
+   You don't need to delete any earlier scrapbook blocks, this
+   one explicitly overrides the conflicting bits (height, overflow).
+   ============================================================ */
+
+.character-header {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  height: auto;
+  gap: 5rem;              /* the "spaced out" number */
+  max-width: 80rem;
+  margin: 2rem auto 2.5rem;
+}
+
+.portrait {
+  height: auto;
+  transform: rotate(-2.5deg) translateX(-8px);
+}
+.portrait img {
+  max-height: 300px;
+  height: auto;
+  width: 100%;
+  object-fit: contain;
+}
+.portrait::before { left: 42%; }
+
+.character-header .statblock {
+  height: auto;
+  overflow: visible;       /* this undoes the scroll-bug */
+  transform: rotate(1deg);
+}
+
+.playlist {
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  height: auto;
+  transform: rotate(1.5deg) translateX(10px);
+}
+.playlist iframe {
+  height: 352px;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.3);
+  border-radius: 10px;
+}
+.playlist::before { left: 60%; top: -0.5rem; z-index: 2; }
+
+@media (max-width: 880px) {
+  .portrait, .playlist, .character-header .statblock { transform: none !important; }
+}
+
+/* ============================================================
+   CONNECTIONS (corkboard web + sticky-note popup)
+   ============================================================ */
+.connections { margin: 3rem 0 2rem; }
+.connections-board {
+  position: relative;
+  height: 420px;
+  max-width: var(--measure);
+  margin-top: 1rem;
+}
+.connections-strings {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* ============================================================
+   CONNECTIONS — clean final version
+   ============================================================ */
+.connections { margin: 3rem 0 2rem; }
+.connections-board {
+  position: relative;
+  height: 420px;
+  max-width: var(--measure);
+  margin: 1rem auto 2rem;
+}
+
+/* LAYER 1 (bottom): the photos themselves */
+.connection-pin {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  margin-left: -38px;
+  width: 76px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+.connection-pin img,
+.connection-pin .torn-shape {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  display: block;
+  transform: rotate(var(--tilt, -3deg));
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.45));
+  transition: transform 0.2s;
+}
+.connection-pin:hover img,
+.connection-pin:hover .torn-shape {
+  transform: rotate(0deg) scale(1.08);
+}
+.connection-self { cursor: default; }
+.connection-self:hover img { transform: rotate(var(--tilt, -3deg)); }
+
+.connection-torn .torn-shape {
+  background: #6b5d52;
+  clip-path: polygon(0% 4%, 12% 0%, 30% 6%, 48% 1%, 65% 5%, 82% 0%, 100% 6%,
+                       97% 40%, 100% 70%, 88% 100%, 60% 96%, 40% 100%, 15% 94%, 0% 88%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  font-size: 1.6rem;
+  color: var(--ink-soft);
+}
+
+/* LAYER 2 (middle): the red strings */
+.connections-strings {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.connections-strings line {
+  stroke: #a33b2f;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+/* LAYER 3 (top): the pin dots — fully independent, always drawn on top */
+.connections-dots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.connection-dot {
+  position: absolute;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-left: -0.425rem;
+  margin-top: -0.425rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f3c877, #b5762a 70%, #7a4a15);
+  box-shadow: 0 2px 3px rgba(0,0,0,0.5);
+}
+
+@media (max-width: 700px) {
+  .connections-board { height: auto; }
+  .connections-strings, .connections-dots { display: none; }
+  .connections-board {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+  .connection-pin { position: static; margin-left: 0; }
+}
+
+/* ---- STICKY NOTE POPUP -------------------------------------- */
+.note-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.note-overlay.open { display: flex; }
+
+.note {
+  position: relative;
+  max-width: 22rem;
+  padding: 1.6rem 1.8rem;
+  border-radius: 2px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  transform: rotate(-1.5deg);
+  font-family: var(--hand);
+  font-size: 1.25rem;
+  color: var(--ink-on-paper);
+  background: #f0e0a0;
+}
+.note h4 {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  margin: 0 0 0.5rem;
+}
+.note-close {
+  position: absolute;
+  top: 0.4rem; right: 0.7rem;
+  background: none; border: none;
+  font-size: 1.4rem;
+  color: var(--ink-on-paper);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.note[data-color="journal"]  { background: #d9b473; }
+.note[data-color="ap"]       { background: #e8a2a8; }
+.note[data-color="bm"]       { background: #a8d4c4; }
+.note[data-color="charlie"]  { background: #bcd6ea; }
+.note[data-color="bunny"]    { background: #cfc4d4; }
+
+/* one-off position nudge for Charlie's photo, keeps hover intact */
+.connection-pin[data-color="charlie"] img {
+  transform: rotate(var(--tilt, 4deg)) translateY(-7px) translateX(-7px);
+}
+.connection-pin[data-color="charlie"]:hover img {
+  transform: rotate(0deg) scale(1.08) translateY(-7px) translateX(-7px);
 }

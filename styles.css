@@ -894,3 +894,12 @@ a:focus-visible, .card:focus-visible {
 .connection-pin[data-color="charlie"]:hover img {
   transform: rotate(0deg) scale(1.08) translateY(-7px) translateX(-7px);
 }
+
+/* explicit, final say on mobile stacking — wins over any earlier
+   unscoped .character-header rule, no matter where it lives */
+@media (max-width: 880px) {
+  .character-header {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+  }
+}

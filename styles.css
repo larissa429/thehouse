@@ -226,7 +226,14 @@ a:hover { color: var(--paper); }
    CHARACTER STAT BLOCK — the pinned "index card"
    ============================================================ */
 .statblock {
-  background: var(--paper);
+  background-color: #f2e6a0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 1.9em,
+    rgba(120, 85, 40, 0.35) 1.9em,
+    rgba(120, 85, 40, 0.35) calc(1.9em + 1px)
+  );
   border-radius: 2px;
   padding: 1rem 1.3rem;
   box-shadow: 0 10px 22px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.3);
@@ -310,7 +317,7 @@ a:hover { color: var(--paper); }
   margin: 0;
   display: flex;
   flex-direction: column;
-  background: var(--paper);
+  background: #ffffff;
   border-radius: 2px;
   padding: 0.8rem 0.8rem 1.6rem;
   box-shadow: 0 10px 22px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.3);
@@ -321,6 +328,8 @@ a:hover { color: var(--paper); }
   width: 100%;
   object-fit: contain;
   display: block;
+  background-color: #b8c9d4;
+  border-radius: 2px;
 }
 .portrait figcaption {
   font-family: var(--hand);

@@ -100,8 +100,8 @@ header {
 
 @media (max-width: 600px) {
   header { flex-direction: column; }
+  header > a { align-self: center; }
 }
-
 .sitename {
   font-family: var(--display);
   font-size: clamp(2rem, 6vw, 3.2rem);

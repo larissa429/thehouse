@@ -418,7 +418,7 @@ a:hover { color: var(--paper); }
     gap: 1.5rem;
   }
   .portrait, .playlist, .character-header .statblock {
-    position: static;
+    position: relative;
     width: 100%;
     max-width: 420px;
     margin: 0 auto;
@@ -803,7 +803,7 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
     gap: 1rem;
     justify-content: center;
   }
-  .connection-pin { position: static; margin-left: 0; }
+.connection-pin { position: relative; margin-left: 0; }
 }
 
 /* ---- STICKY NOTE POPUP -------------------------------------- */
@@ -986,3 +986,17 @@ a.tag { text-decoration: none; }
 
 /* the "?" on Bunny's torn photo needs to stay readable on cork */
 .connection-torn .torn-shape { color: #e8ddcc; }
+
+.connection-pin::before {
+    content: "";
+    position: absolute;
+    top: -0.35rem;
+    left: 50%;
+    width: 0.85rem;
+    height: 0.85rem;
+    margin-left: -0.425rem;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
+    box-shadow: 0 2px 3px rgba(0,0,0,0.5);
+    z-index: 2;
+  }

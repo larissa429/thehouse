@@ -1048,16 +1048,16 @@ a.tag { text-decoration: none; }
 /* small "VA needed" badge on a character's grid card */
 .va-badge {
   position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
+  top: -0.6rem;
+  right: -0.6rem;
   font-family: var(--label);
   font-size: 0.62rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--urgent);
-  background: rgba(192, 70, 60, 0.15);
-  border: 1px solid rgba(192, 70, 60, 0.6);
+  color: var(--paper);
+  background: var(--urgent);
   border-radius: 999px;
-  padding: 0.2rem 0.55rem;
-  box-shadow: 0 0 8px rgba(192, 70, 60, 0.35);
+  padding: 0.25rem 0.6rem;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+  z-index: 2;
 }

@@ -937,32 +937,33 @@ a:focus-visible, .card:focus-visible {
   }
 }
 
-/* trivia card: whitish-grey ruled note paper, replaces the cream
-   "paper" scrapbook look with something closer to lined index cards */
 .trivia-note {
   background-color: #f2f1ee;
-
-  /* 1) Single red line */
-  background-image:
-    linear-gradient(
-      to bottom,
-      transparent 1.7em,
-      red 1.7em,
-      red calc(1.7em + 1px),
-      transparent calc(1.7em + 1px)
-    ),
-
-    /* 2) Repeating blue lines */
-    repeating-linear-gradient(
-      to bottom,
-      transparent,
-      transparent 1.7em,
-      rgba(120, 170, 210, 0.4) 1.7em,
-      rgba(120, 170, 210, 0.4) calc(1.7em + 1px)
-    );
-
-  background-position: 0 1em; /* keeps your heading spacing */
   color: #2e2118;
+}
+.trivia-rule {
+  display: block;
+  width: auto;
+  border: none;
+  height: 2px;
+  background: red;
+  margin: 0.6rem -1.4rem 0.8rem;
+  box-sizing: border-box;
+}
+.trivia-note ul {
+  margin: 0 -1.4rem;
+  padding: 0 1.4rem 0 2.6rem;
+  line-height: 1.7em;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 1.7em,
+    rgba(120, 170, 210, 0.4) 1.7em,
+    rgba(120, 170, 210, 0.4) calc(1.7em + 1px)
+  );
+}
+.trivia-note li {
+  margin: 0;
 }
 
 /* on the collapsed mobile layout, there's no web/strings to be

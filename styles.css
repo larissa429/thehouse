@@ -1133,7 +1133,7 @@ a.tag { text-decoration: none; }
   font-size: 0.78rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: #33241a;
   text-decoration: none;
 }
 .hidden-links a:hover { color: var(--lamp); }

@@ -313,7 +313,7 @@ a:hover { color: var(--paper); }
 
 .portrait {
   left: var(--tx, 17%);
-  transform: translateX(-50%) rotate(calc(-2.5deg + var(--extra-rot, 0deg))) scale(var(--scl, 1));
+transform: translateX(-50%) rotate(calc(var(--rest-rot, -2.5deg) + var(--extra-rot, 0deg))) scale(var(--scl, 1));
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -352,13 +352,13 @@ a:hover { color: var(--paper); }
 
 .character-header .statblock {
   left: var(--tx, 50%);
-  transform: translateX(-50%) rotate(calc(1deg + var(--extra-rot, 0deg))) scale(var(--scl, 1));
+transform: translateX(-50%) rotate(calc(var(--rest-rot, 1deg) + var(--extra-rot, 0deg))) scale(var(--scl, 1));
   margin: 0;
 }
 
 .playlist {
   left: var(--tx, 83%);
-  transform: translateX(-50%) rotate(calc(1.5deg + var(--extra-rot, 0deg))) scale(var(--scl, 1));
+transform: translateX(-50%) rotate(calc(var(--rest-rot, 1.5deg) + var(--extra-rot, 0deg))) scale(var(--scl, 1));
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -650,8 +650,9 @@ a:focus-visible, .card:focus-visible {
   touch-action: none;
   z-index: 1;
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-  transform: rotate(calc(-1deg + var(--extra-rot, 0deg))) scale(var(--scl, 1));
+transform: rotate(calc(var(--rest-rot, -1deg) + var(--extra-rot, 0deg))) scale(var(--scl, 1));
 }
+
 .trivia-note:active { cursor: grabbing; }
 .trivia-note.is-lifted {
   z-index: 10;
@@ -861,6 +862,11 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
 .note[data-color="bm"]       { background: #a8d4c4; }
 .note[data-color="charlie"]  { background: #bcd6ea; }
 .note[data-color="bunny"]    { background: #cfc4d4; }
+.note[data-color="mirror"]   { background: #cfe0d8; }
+.note[data-color="lp"]       { background: #d4c4b8; }
+.note[data-color="indigo"]   { background: #b8a8d4; }
+.note[data-color="cassette"] { background: #e0a8c8; }
+.note[data-color="geeky"]    { background: #c8b088; }
 
 /* one-off position nudge for Charlie's photo, keeps hover intact */
 .connection-pin[data-color="charlie"] img {
@@ -1011,3 +1017,47 @@ a.tag { text-decoration: none; }
     box-shadow: 0 2px 3px rgba(0,0,0,0.5);
     z-index: 2;
   }
+
+/* ---- CENTERED TEXT PAGE (Penny, and similar minimal pages) --- */
+.center-page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.center-page p {
+  font-family: var(--display);
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+  font-style: italic;
+}
+
+/* ---- THE HOUSE'S EYES (mouse-tracking, house/index.html only) */
+.house-eyes-wrap {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4rem;
+}
+.house-eye { width: 180px; height: auto; }
+.house-eye path { fill: var(--paper); stroke: var(--shadow); stroke-width: 2; }
+.house-eye .pupil { fill: var(--shadow); }
+
+/* small "VA needed" badge on a character's grid card */
+.va-badge {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  font-family: var(--label);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--urgent);
+  background: rgba(192, 70, 60, 0.15);
+  border: 1px solid rgba(192, 70, 60, 0.6);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  box-shadow: 0 0 8px rgba(192, 70, 60, 0.35);
+}

@@ -211,3 +211,36 @@ document.addEventListener("click", (event) => {
     });
   });
 })();
+
+/* ---- RANDOM RESTING TILT ------------------------------------
+   On page load, give every portrait/statblock/playlist/trivia-note
+   a small random tilt within its own natural range, instead of a
+   fixed value. An inline style="--rest-rot:Xdeg" on the element
+   (like on the Cool S & Clickbaity page) always wins over this —
+   so pages that want a specific hand-picked tilt keep it. ------- */
+(function () {
+  function randomBetween(min, max) {
+    return (Math.random() * (max - min) + min).toFixed(2) + 'deg';
+  }
+
+  document.querySelectorAll('.character-header .portrait').forEach(function (el) {
+    if (!el.style.getPropertyValue('--rest-rot')) {
+      el.style.setProperty('--rest-rot', randomBetween(-4, -1));
+    }
+  });
+  document.querySelectorAll('.character-header .statblock').forEach(function (el) {
+    if (!el.style.getPropertyValue('--rest-rot')) {
+      el.style.setProperty('--rest-rot', randomBetween(-0.5, 2.5));
+    }
+  });
+  document.querySelectorAll('.character-header .playlist').forEach(function (el) {
+    if (!el.style.getPropertyValue('--rest-rot')) {
+      el.style.setProperty('--rest-rot', randomBetween(0.5, 3));
+    }
+  });
+  document.querySelectorAll('.trivia-note').forEach(function (el) {
+    if (!el.style.getPropertyValue('--rest-rot')) {
+      el.style.setProperty('--rest-rot', randomBetween(-2, 1));
+    }
+  });
+})();

@@ -42,7 +42,7 @@ class SiteHeader extends HTMLElement {
   connectedCallback() {
    this.innerHTML = `
       <header>
-        <img src="../images/logo.png" alt="The House" width="250" />
+        <a href="${prefix}index.html"><img src="${prefix}images/logo.png" alt="The House" width="250" /></a>
         <div class="header-nav-wrap">
           <nav class="rooms">
             <a href="${prefix}index.html" data-key="">Home</a>

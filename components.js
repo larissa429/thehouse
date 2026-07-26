@@ -18,15 +18,24 @@
    domain like thehouseos.com/journal/.
    ============================================================ */
 
-/* folder name for every page that now lives at PAGE/index.html */
-var PAGE_FOLDERS = ["about", "residents", "audition", "journal", "mirror", "lp", "charlie", "n528"];
-var CHARACTER_FOLDERS = ["residents", "journal", "mirror", "lp", "charlie", "n528"];
+/* the small, fixed set of non-character utility pages. Anything else
+   one level deep is assumed to be a character page — so new
+   character folders NEVER need to be added here manually again. */
+var UTILITY_FOLDERS = ["about", "residents", "audition"];
 
-/* are we sitting inside one of those folders right now? */
 var pathParts = location.pathname.split("/").filter(Boolean);
 var here = pathParts[pathParts.length - 1] || "";
-var atRoot = PAGE_FOLDERS.indexOf(here) === -1;
-var prefix = atRoot ? "" : "../";   // how to reach the site root from here
+
+/* depth is read from this script's own src attribute (which every
+   page already writes correctly) instead of guessing from folder
+   names — so it's automatically right for every character, forever. */
+var scriptSrc = document.currentScript ? document.currentScript.getAttribute("src") : "components.js";
+var prefix = scriptSrc.indexOf("../") === 0 ? "../" : "";
+var atRoot = prefix === "";
+
+/* is this a character page? one level deep, and not one of the
+   fixed utility pages above */
+var isCharacterPage = !atRoot && UTILITY_FOLDERS.indexOf(here) === -1;
 
 /* ---- SITE HEADER (masthead + nav) ------------------------- */
 class SiteHeader extends HTMLElement {
@@ -50,8 +59,8 @@ class SiteHeader extends HTMLElement {
     links.forEach(function (a) {
       var key = a.getAttribute("data-key");
       if (key === here) a.setAttribute("aria-current", "page");
-      // any character page also lights up the "Characters" tab
-      if (key === "residents" && CHARACTER_FOLDERS.indexOf(here) !== -1) {
+     // any character page also lights up the "Characters" tab
+      if (key === "residents" && isCharacterPage) {
         a.setAttribute("aria-current", "page");
       }
     });

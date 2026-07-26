@@ -7,7 +7,7 @@
   <meta name="description" content="-5/28 — a quiet, gentle presence in The House." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
 </head>
 <body>
@@ -17,12 +17,9 @@
   <main class="wrap">
 
     <span class="eyebrow"><a href="../residents/">← All characters</a></span>
-    <h1>-⁵⁄₂₈</h1>
 
     <div class="character-header">
       <figure class="portrait">
-        <!-- Swap src to your art once uploaded to the images/ folder.
-             Until the file exists you'll see a broken-image icon. -->
         <img src="../images/n528.png" alt="Portrait of Negative Five Twenty Eighths" />
         <figcaption class="credit">Art by KrunchKo_ on TikTok</figcaption>
       </figure>
@@ -43,7 +40,6 @@
           <!-- Placeholder. To add the real one: on Spotify, open the
                playlist -> Share -> Embed playlist -> Copy, then replace
                this whole <div class="playlist-embed">...</div> with:
-
           <iframe src="https://open.spotify.com/embed/playlist/PLAYLIST_ID?utm_source=generator"
                   width="100%" height="352" frameborder="0"
                   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
@@ -54,12 +50,68 @@
       </div>
     </div>
 
+    <div class="tags">
+      <span class="tag">HE/THEY</span>
+      <span class="tag">~90 BLOOMS</span>
+      <span class="tag">QUIET</span>
+      <span class="tag">GENTLE</span>
+    </div>
+
     <p>-⁵⁄₂₈ is a quiet, odd, but also gentle presence in The House. He watches others from a distance, not favoring being in the middle of attention. He likes being around his small group of friends, and enjoys calm environments where he feels safe. If you're ever around him, make sure to listen closely if he speaks, since he does so rarely and quietly. His intentions are also always pure.</p>
 
+    <div class="connections">
+      <span class="eyebrow">Connections</span>
+      <div class="connections-board">
+        <svg class="connections-strings"></svg>
+
+        <div class="connection-pin connection-self" style="--x:50%; --y:44%;">
+          <img src="../images/icons/n528.png" alt="-⁵⁄₂₈" />
+        </div>
+
+        <button class="connection-pin" style="--x:18%; --y:16%; --tilt:-4deg;" data-color="journal">
+          <img src="../images/icons/journal.png" alt="Journal" />
+          <template>
+            <h4>Journal</h4>
+            <p>Placeholder text.</p>
+          </template>
+        </button>
+
+        <button class="connection-pin" style="--x:82%; --y:14%; --tilt:3deg;" data-color="mirror">
+          <img src="../images/icons/mirror.png" alt="Mirror" />
+          <template>
+            <h4>Mirror</h4>
+            <p>Placeholder text.</p>
+          </template>
+        </button>
+      </div>
+    </div>
+
+    <div class="trivia-note">
+      <span class="tape tape-left"></span>
+      <span class="tape tape-right"></span>
+      <h3>Trivia</h3>
+      <hr class="trivia-rule" />
+      <ul>
+        <li>Placeholder text.</li>
+        <li>Placeholder text.</li>
+        <li>Placeholder text.</li>
+        <li>Placeholder text.</li>
+        <li>Placeholder text.</li>
+      </ul>
+    </div>
+
   </main>
+
+  <div class="note-overlay" id="note-overlay">
+    <div class="note" id="note-content">
+      <button class="note-close" id="note-close">×</button>
+      <div id="note-body"></div>
+    </div>
+  </div>
 
   <site-footer></site-footer>
 
   <script src="../components.js" defer></script>
+  <script src="../connections.js" defer></script>
 </body>
 </html>

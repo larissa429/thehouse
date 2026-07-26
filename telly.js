@@ -3,12 +3,12 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!stage) return;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const WINDOW_COUNT = 70;
-  const BATCH_SIZE = 10;
-  const STEP = 11;
-  const JITTER = 16;
+const WINDOW_COUNT = 144;
+  const BATCH_SIZE = 12;
+  const STEP = 13;
+  const JITTER = 5;
   const START_GAP = 450;
-  const MIN_GAP = 6;
+  const MIN_GAP = 5;
   const CURVE = 1.2;
   const GRID_COLS = 4;
   const GRID_ROWS = 3;

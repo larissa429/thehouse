@@ -37,6 +37,15 @@ var atRoot = prefix === "";
    fixed utility pages above */
 var isCharacterPage = !atRoot && UTILITY_FOLDERS.indexOf(here) === -1;
 
+/* ---- FAVICON (auto-injected on every page) -------------------- */
+(function () {
+  const link = document.createElement('link');
+  link.rel = 'icon';
+  link.type = 'image/png';
+  link.href = prefix + 'images/favicon.png';
+  document.head.appendChild(link);
+})();
+
 /* ---- SITE HEADER (masthead + nav) ------------------------- */
 class SiteHeader extends HTMLElement {
   connectedCallback() {

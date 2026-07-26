@@ -254,3 +254,51 @@ el.addEventListener('pointerdown', function (e) {
     }
   });
 })();
+/* ---- PREV / NEXT CHARACTER PAGINATION ------------------------
+   Appears right after the "← All characters" breadcrumb on every
+   character page. To add a new character later, just add one line
+   to CHARACTER_ORDER below — nothing else needs to change. ------- */
+(function () {
+  if (!isCharacterPage) return;
+
+  var CHARACTER_ORDER = [
+    ["journal", "Journal"],
+    ["mirror", "Mirror"],
+    ["lp", "Long Play"],
+    ["charlie", "Charlie"],
+    ["n528", "-\u2075\u2044\u2082\u2088"],
+    ["dream", "Dream"],
+    ["indigo", "Indigo"],
+    ["cassette", "Cassette"],
+    ["greendaisy", "Green D.A.I.S.Y."],
+    ["bluemarble", "Blue Marble"],
+    ["ap", "Abstract Painting"],
+    ["coolsclickbaity", "Cool S & Clickbaity"],
+    ["geeky", "Geeky"],
+    ["pbc", "PBC"],
+    ["dumptruck", "Dumptruck"],
+    ["liz", "Liz"]
+  ];
+
+  var idx = -1;
+  for (var i = 0; i < CHARACTER_ORDER.length; i++) {
+    if (CHARACTER_ORDER[i][0] === here) { idx = i; break; }
+  }
+  if (idx === -1) return; // current folder not in the list yet — skip quietly
+
+  var prev = CHARACTER_ORDER[(idx - 1 + CHARACTER_ORDER.length) % CHARACTER_ORDER.length];
+  var next = CHARACTER_ORDER[(idx + 1) % CHARACTER_ORDER.length];
+
+  var breadcrumbLink = document.querySelector('.eyebrow a[href*="residents"]');
+  if (!breadcrumbLink) return;
+  var breadcrumbEl = breadcrumbLink.closest('.eyebrow');
+  if (!breadcrumbEl) return;
+
+  var nav = document.createElement('div');
+  nav.className = 'char-pagination';
+  nav.innerHTML =
+    '<a href="' + prefix + prev[0] + '/">\u2190 ' + prev[1] + '</a>' +
+    '<a href="' + prefix + next[0] + '/">' + next[1] + ' \u2192</a>';
+
+  breadcrumbEl.insertAdjacentElement('afterend', nav);
+})();

@@ -1143,3 +1143,20 @@ a.tag { text-decoration: none; }
 .house-playlist.is-lifted iframe {
   box-shadow: 0 20px 34px rgba(0,0,0,0.6);
 }
+
+.char-pagination {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.6rem 0 0;
+  flex-wrap: wrap;
+}
+.char-pagination a {
+  font-family: var(--label);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+.char-pagination a:hover { color: var(--lamp); }

@@ -130,13 +130,14 @@ document.addEventListener("click", (event) => {
 (function () {
   const EXTRA_ROT = 3;      // degrees of extra tilt added on pickup
   const LIFT_SCALE = 1.05;  // how much it grows on pickup
+  const isMobileLayout = window.matchMedia('(max-width: 880px)');
 
   function makeDraggable(el, opts) {
     let dragging = false;
     let startClientX, startClientY, startA, startB;
 
-    el.addEventListener('pointerdown', function (e) {
-      if (getComputedStyle(el).position === 'static') return; // mobile: skip
+   el.addEventListener('pointerdown', function (e) {
+      if (isMobileLayout.matches) return; // mobile: skip entirely, regardless of CSS position
       dragging = true;
       el.classList.add('is-lifted');
       el.style.setProperty('--extra-rot', (Math.random() < 0.5 ? -1 : 1) * EXTRA_ROT + 'deg');

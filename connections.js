@@ -1,28 +1,20 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-  // ---- popup notes ----
   const overlay = document.getElementById('note-overlay');
   const noteEl = document.getElementById('note-content');
   const noteBody = document.getElementById('note-body');
   const closeBtn = document.getElementById('note-close');
+
+  function closeNote() { overlay.classList.remove('open'); }
   if (overlay) {
-    document.querySelectorAll('.connection-pin[data-color]').forEach(function (pin) {
-      pin.addEventListener('click', function () {
-        const tpl = pin.querySelector('template');
-        noteBody.innerHTML = '';
-        if (tpl) noteBody.appendChild(tpl.content.cloneNode(true));
-        noteEl.setAttribute('data-color', pin.getAttribute('data-color'));
-        overlay.classList.add('open');
-      });
-    });
-    function closeNote() { overlay.classList.remove('open'); }
     closeBtn.addEventListener('click', closeNote);
     overlay.addEventListener('click', function (e) { if (e.target === overlay) closeNote(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNote(); });
   }
 
-  // ---- strings + pin dots: independent layers, so stacking is
-  // always photos < strings < dots, no matter what -------------
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const mobileQuery = window.matchMedia('(max-width: 700px)');
+
   document.querySelectorAll('.connections-board').forEach(function (board) {
     const svg = board.querySelector('.connections-strings');
     const selfPin = board.querySelector('.connection-self');
@@ -41,39 +33,134 @@ document.addEventListener('DOMContentLoaded', function () {
       return { x: r.left + r.width / 2 - b.left, y: r.top - b.top };
     }
 
-    function placeDot(x, y) {
+    // persistent dots — created once, repositioned every frame
+    const allPins = [selfPin].concat(Array.from(board.querySelectorAll('.connection-pin[data-color]')));
+    const dotEls = new Map();
+    allPins.forEach(function (pin) {
       const dot = document.createElement('span');
       dot.className = 'connection-dot';
-      dot.style.left = x + 'px';
-      dot.style.top = y + 'px';
       dotLayer.appendChild(dot);
-    }
+      dotEls.set(pin, dot);
+    });
 
-    function draw() {
+    // persistent strings — one physics object per connected pin
+    const strings = [];
+    board.querySelectorAll('.connection-pin[data-color]').forEach(function (pin, i) {
+      if (pin.hasAttribute('data-no-line')) return;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('fill', 'none');
+      svg.appendChild(path);
+      strings.push({
+        pin: pin, path: path,
+        sagX: 0, sagY: 0, velX: 0, velY: 0,
+        phase: i * 1.7, initialized: false
+      });
+    });
+
+    /* ---- THE NUMBERS TO TWEAK -------------------------------
+       GRAVITY: how deep the sag is, as a fraction of the string's
+                own length. Bigger = droopier.
+       STIFFNESS: how strongly it springs back toward its resting
+                  sag. Bigger = snappier/faster settle.
+       DAMPING: 0-1, how quickly bounce dies down. Closer to 1 =
+                bouncier/jigglier for longer; lower = settles fast.
+       AMBIENT_SWAY: constant gentle wobble in pixels, even at rest.
+                     Set to 0 for zero motion when nothing's dragged.
+       ---------------------------------------------------------- */
+    const GRAVITY = 0.22;
+    const STIFFNESS = 0.02;
+    const DAMPING = 0.88;
+    const AMBIENT_SWAY = reduceMotion ? 0 : 4;
+
+    function frame(t) {
+      if (mobileQuery.matches) { requestAnimationFrame(frame); return; } // skip work on the flattened mobile layout
+
       const b = board.getBoundingClientRect();
       svg.setAttribute('viewBox', '0 0 ' + b.width + ' ' + b.height);
-      svg.innerHTML = '';
-      dotLayer.innerHTML = '';
 
       const from = centerOf(selfPin);
-      placeDot(from.x, from.y);
+      dotEls.get(selfPin).style.left = from.x + 'px';
+      dotEls.get(selfPin).style.top = from.y + 'px';
 
-    board.querySelectorAll('.connection-pin[data-color]').forEach(function (pin) {
-        const to = centerOf(pin);
-        if (!pin.hasAttribute('data-no-line')) {
-          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-          line.setAttribute('x1', from.x);
-          line.setAttribute('y1', from.y);
-          line.setAttribute('x2', to.x);
-          line.setAttribute('y2', to.y);
-          svg.appendChild(line);
+      strings.forEach(function (s) {
+        const to = centerOf(s.pin);
+        dotEls.get(s.pin).style.left = to.x + 'px';
+        dotEls.get(s.pin).style.top = to.y + 'px';
+
+        const midX = (from.x + to.x) / 2;
+        const midY = (from.y + to.y) / 2;
+        const dist = Math.hypot(to.x - from.x, to.y - from.y);
+        const sway = AMBIENT_SWAY * Math.sin(t / 900 + s.phase);
+        const targetX = midX;
+        const targetY = midY + dist * GRAVITY + sway;
+
+        if (!s.initialized) { s.sagX = targetX; s.sagY = targetY; s.initialized = true; }
+
+        if (reduceMotion) {
+          s.sagX = targetX; s.sagY = targetY;
+        } else {
+          s.velX += (targetX - s.sagX) * STIFFNESS;
+          s.velY += (targetY - s.sagY) * STIFFNESS;
+          s.velX *= DAMPING; s.velY *= DAMPING;
+          s.sagX += s.velX; s.sagY += s.velY;
         }
-        placeDot(to.x, to.y);
-      });
-    }
 
-    window.addEventListener('load', draw);
-    window.addEventListener('resize', draw);
-    draw();
+        // quadratic bezier control point, chosen so the curve
+        // visually passes through (sagX, sagY) at its midpoint
+        const ctrlX = 2 * s.sagX - midX;
+        const ctrlY = 2 * s.sagY - midY;
+
+        s.path.setAttribute('d',
+          'M ' + from.x + ' ' + from.y + ' Q ' + ctrlX + ' ' + ctrlY + ' ' + to.x + ' ' + to.y
+        );
+      });
+
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    // ---- dragging (same as before — the animation loop above
+    // now reads live positions every frame, so no draw() call needed) ----
+    board.querySelectorAll('.connection-pin').forEach(function (pin) {
+      let dragging = false, moved = false, justDragged = false;
+      let startClientX, startClientY, startXPct, startYPct;
+
+      pin.addEventListener('pointerdown', function (e) {
+        if (getComputedStyle(pin).position !== 'absolute') return;
+        dragging = true; moved = false;
+        pin.setPointerCapture(e.pointerId);
+        startClientX = e.clientX; startClientY = e.clientY;
+        startXPct = parseFloat(pin.style.getPropertyValue('--x')) || 50;
+        startYPct = parseFloat(pin.style.getPropertyValue('--y')) || 50;
+        e.preventDefault();
+      });
+
+      pin.addEventListener('pointermove', function (e) {
+        if (!dragging) return;
+        const dx = e.clientX - startClientX;
+        const dy = e.clientY - startClientY;
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+        if (!moved) return;
+        const b = board.getBoundingClientRect();
+        let newX = Math.max(2, Math.min(98, startXPct + (dx / b.width) * 100));
+        let newY = Math.max(2, Math.min(98, startYPct + (dy / b.height) * 100));
+        pin.style.setProperty('--x', newX + '%');
+        pin.style.setProperty('--y', newY + '%');
+      });
+
+      function endDrag() { if (dragging && moved) justDragged = true; dragging = false; }
+      pin.addEventListener('pointerup', endDrag);
+      pin.addEventListener('pointercancel', endDrag);
+
+      pin.addEventListener('click', function () {
+        if (justDragged) { justDragged = false; return; }
+        const tpl = pin.querySelector('template');
+        if (!tpl || !overlay) return;
+        noteBody.innerHTML = '';
+        noteBody.appendChild(tpl.content.cloneNode(true));
+        noteEl.setAttribute('data-color', pin.getAttribute('data-color'));
+        overlay.classList.add('open');
+      });
+    });
   });
 });

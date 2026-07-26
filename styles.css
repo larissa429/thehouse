@@ -837,10 +837,11 @@ a:focus-visible, .card:focus-visible {
   pointer-events: none;
   z-index: 2;
 }
-.connections-strings line {
+.connections-strings path {
   stroke: #a33b2f;
   stroke-width: 3px;
   stroke-linecap: round;
+  fill: none;
   opacity: 0.85;
 }
 
@@ -1058,3 +1059,6 @@ a.tag { text-decoration: none; }
 .audition-lines-body strong { color: var(--paper); }
 
 .breadcrumb { margin-top: 1.5rem; }
+
+.connection-pin { cursor: grab; }
+.connection-pin:active { cursor: grabbing; }

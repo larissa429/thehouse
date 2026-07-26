@@ -106,3 +106,107 @@ document.addEventListener("click", (event) => {
     });
   }
 });
+
+/* ============================================================
+   FREE-DRAG: portrait / playlist / statblock / trivia-note
+   ------------------------------------------------------------
+   Grab any of these, and it "lifts" (grows slightly, gets a
+   deeper shadow, a small extra tilt), follows your cursor/finger
+   directly (no lag, no spring), then smoothly settles flat again
+   right where you drop it — no snapping back to its original spot.
+
+   The three top-row pieces (portrait/playlist/statblock) live in
+   .character-header, which is now a free-form "board": position is
+   tracked as --tx/--ty, a PERCENT of the board's own width/height,
+   so they can move anywhere across the whole row and overlap.
+
+   trivia-note isn't part of that board — it's tracked instead as
+   --dragX/--dragY, a plain pixel offset from wherever it normally
+   sits, since it has nothing else to overlap with.
+
+   Does nothing on the mobile layout, where these elements switch
+   to position:static and aren't meant to be dragged.
+   ============================================================ */
+(function () {
+  const EXTRA_ROT = 3;      // degrees of extra tilt added on pickup
+  const LIFT_SCALE = 1.05;  // how much it grows on pickup
+
+  function makeDraggable(el, opts) {
+    let dragging = false;
+    let startClientX, startClientY, startA, startB;
+
+    el.addEventListener('pointerdown', function (e) {
+      if (getComputedStyle(el).position === 'static') return; // mobile: skip
+      dragging = true;
+      el.classList.add('is-lifted');
+      el.style.setProperty('--extra-rot', (Math.random() < 0.5 ? -1 : 1) * EXTRA_ROT + 'deg');
+      el.style.setProperty('--scl', LIFT_SCALE);
+      el.setPointerCapture(e.pointerId);
+      startClientX = e.clientX;
+      startClientY = e.clientY;
+      const start = opts.getStart();
+      startA = start[0];
+      startB = start[1];
+      e.preventDefault();
+    });
+
+    el.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      const dx = e.clientX - startClientX;
+      const dy = e.clientY - startClientY;
+      opts.onMove(startA, startB, dx, dy);
+    });
+
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove('is-lifted');
+      el.style.setProperty('--extra-rot', '0deg');
+      el.style.setProperty('--scl', 1);
+    }
+    el.addEventListener('pointerup', endDrag);
+    el.addEventListener('pointercancel', endDrag);
+  }
+
+  // ---- the three top-row elements: position = % of the board ----
+  document.querySelectorAll('.character-header').forEach(function (board) {
+    board.querySelectorAll('.portrait, .playlist, .statblock').forEach(function (el) {
+      makeDraggable(el, {
+        getStart: function () {
+          const b = board.getBoundingClientRect();
+          const r = el.getBoundingClientRect();
+          // el's center-x lines up with its "left" percent anchor
+          // (since it's centered via translateX(-50%)); its "top"
+          // is a direct, uncentered anchor.
+          const xPct = ((r.left + r.width / 2) - b.left) / b.width * 100;
+          const yPct = (r.top - b.top) / b.height * 100;
+          return [xPct, yPct];
+        },
+        onMove: function (startX, startY, dx, dy) {
+          const b = board.getBoundingClientRect();
+          let newX = startX + (dx / b.width) * 100;
+          let newY = startY + (dy / b.height) * 100;
+          newX = Math.max(5, Math.min(95, newX));
+          newY = Math.max(-10, Math.min(90, newY));
+          el.style.setProperty('--tx', newX + '%');
+          el.style.setProperty('--ty', newY + '%');
+        }
+      });
+    });
+  });
+
+  // ---- trivia note: position = raw px offset from resting spot ----
+  document.querySelectorAll('.trivia-note').forEach(function (el) {
+    makeDraggable(el, {
+      getStart: function () {
+        const x = parseFloat(el.style.getPropertyValue('--dragX')) || 0;
+        const y = parseFloat(el.style.getPropertyValue('--dragY')) || 0;
+        return [x, y];
+      },
+      onMove: function (startX, startY, dx, dy) {
+        el.style.setProperty('--dragX', (startX + dx) + 'px');
+        el.style.setProperty('--dragY', (startY + dy) + 'px');
+      }
+    });
+  });
+})();

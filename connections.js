@@ -133,8 +133,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
         if (!moved) return;
         const b = board.getBoundingClientRect();
-        let newX = Math.max(2, Math.min(98, startXPct + (dx / b.width) * 100));
-        let newY = Math.max(2, Math.min(98, startYPct + (dy / b.height) * 100));
+let newX = Math.max(-8, Math.min(108, startXPct + (dx / b.width) * 100));
+        let newY = Math.max(-8, Math.min(108, startYPct + (dy / b.height) * 100));
         pin.style.setProperty('--x', newX + '%');
         pin.style.setProperty('--y', newY + '%');
       });

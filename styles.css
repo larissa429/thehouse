@@ -417,8 +417,10 @@ a:hover { color: var(--paper); }
     flex-direction: column;
     gap: 1.5rem;
   }
-  .portrait, .playlist, .character-header .statblock {
+ .portrait, .playlist, .character-header .statblock {
     position: relative;
+    left: auto;
+    top: auto;
     width: 100%;
     max-width: 420px;
     margin: 0 auto;
@@ -803,7 +805,7 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
     gap: 1rem;
     justify-content: center;
   }
-.connection-pin { position: relative; margin-left: 0; }
+.connection-pin { position: relative; left: auto; top: auto; margin-left: 0; }
 }
 
 /* ---- STICKY NOTE POPUP -------------------------------------- */

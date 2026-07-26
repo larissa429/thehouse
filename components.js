@@ -302,3 +302,59 @@ el.addEventListener('pointerdown', function (e) {
 
   breadcrumbEl.insertAdjacentElement('afterend', nav);
 })();
+
+/* ---- DRAGGABLE CHARACTER CARDS (residents grid) --------------- */
+(function () {
+  const isMobileLayout = window.matchMedia('(max-width: 700px)');
+  const EXTRA_ROT = 4;
+  const LIFT_SCALE = 1.04;
+
+  document.querySelectorAll('.grid .card').forEach(function (card) {
+    const sticky = card.hasAttribute('data-sticky'); // Blue Marble's card only
+    let dragging = false, moved = false;
+    let startClientX, startClientY, startX, startY;
+
+    card.addEventListener('pointerdown', function (e) {
+      if (isMobileLayout.matches) return;
+      dragging = true;
+      moved = false;
+      card.classList.add('is-lifted');
+      card.style.setProperty('--extra-rot', (Math.random() < 0.5 ? -1 : 1) * EXTRA_ROT + 'deg');
+      card.style.setProperty('--scl', LIFT_SCALE);
+      card.setPointerCapture(e.pointerId);
+      startClientX = e.clientX;
+      startClientY = e.clientY;
+      startX = parseFloat(card.style.getPropertyValue('--dragX')) || 0;
+      startY = parseFloat(card.style.getPropertyValue('--dragY')) || 0;
+      e.preventDefault();
+    });
+
+    card.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      const dx = e.clientX - startClientX;
+      const dy = e.clientY - startClientY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+      card.style.setProperty('--dragX', (startX + dx) + 'px');
+      card.style.setProperty('--dragY', (startY + dy) + 'px');
+    });
+
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      card.classList.remove('is-lifted');
+      card.style.setProperty('--extra-rot', '0deg');
+      card.style.setProperty('--scl', 1);
+      if (!sticky) {
+        card.style.setProperty('--dragX', '0px');
+        card.style.setProperty('--dragY', '0px');
+      }
+    }
+    card.addEventListener('pointerup', endDrag);
+    card.addEventListener('pointercancel', endDrag);
+
+    // a real drag shouldn't also trigger the card's link navigation
+    card.addEventListener('click', function (e) {
+      if (moved) { e.preventDefault(); moved = false; }
+    });
+  });
+})();

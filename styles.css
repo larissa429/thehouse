@@ -1160,3 +1160,230 @@ a.tag { text-decoration: none; }
   text-decoration: none;
 }
 .char-pagination a:hover { color: var(--lamp); }
+
+/* ---- DRAGGABLE CHARACTER CARDS (residents grid) ---------------
+   Every card gets a little "give" — grows, deeper shadow, small
+   tilt on pickup, same tactile language as the rest of the site.
+   Most cards ease smoothly back to their original spot on release.
+   Blue Marble's card is the one exception (data-sticky) — it stays
+   wherever it's dropped, since something sits hidden behind it. */
+.grid .card {
+  position: relative;
+  touch-action: none;
+  cursor: grab;
+  z-index: 1;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  transform: translate(var(--dragX, 0px), var(--dragY, 0px)) rotate(var(--extra-rot, 0deg)) scale(var(--scl, 1));
+}
+.grid .card:active { cursor: grabbing; }
+.grid .card.is-lifted {
+  z-index: 10;
+  box-shadow: 0 24px 34px rgba(0,0,0,0.55);
+}
+
+@media (max-width: 700px) {
+  .grid .card { transform: none !important; touch-action: auto; cursor: default; }
+}
+
+/* the hidden slot sitting behind Blue Marble's card specifically */
+.card-slot {
+  position: relative;
+  display: flex;
+}
+.card-slot .card {
+  flex: 1 1 auto;
+}.hidden-links {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+.hidden-links a {
+  font-family: var(--label);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+.hidden-links a:hover { color: var(--lamp); }
+
+/* ============================================================
+   TELLY ERROR PAGE
+   ============================================================ */
+.telly-header {
+  display: flex;
+  gap: 2rem;
+  align-items: start;
+  flex-wrap: wrap;
+  margin: 2rem 0;
+}
+.telly-broken-img {
+  width: 220px;
+  height: 220px;
+  flex: 0 0 auto;
+  background: #f4f4f4;
+  border: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.telly-broken-img svg { width: 70px; height: 70px; opacity: 0.4; }
+
+.telly-title {
+  font-family: var(--display);
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
+  color: var(--paper);
+}
+.telly-title .err { color: var(--urgent); }
+
+.telly-stats {
+  font-family: var(--body);
+  color: var(--ink);
+  line-height: 1.9;
+}
+
+/* the big scattered stage — tall, so the cascade has real room
+   to spread across and genuinely cover the page */
+.telly-errors {
+  position: relative;
+  min-height: 60vh;
+  margin: 3rem 0;
+  overflow: hidden;
+}
+
+/* every window: identical content (bar, icon, text, buttons) */
+.telly-window {
+  position: absolute;
+  width: 360px;
+  background: #c8c8c8;
+  border: 2px solid #808080;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+font-family: Tahoma, "Segoe UI", Verdana, Arial, sans-serif;
+  opacity: 0;
+  transform: scale(0.7) rotate(var(--tilt, 0deg));
+  transition: opacity 0.12s ease-out, transform 0.12s ease-out;
+}
+.telly-window.show {
+  opacity: 1;
+  transform: scale(1) rotate(var(--tilt, 0deg));
+}
+.telly-window-bar {
+  background: #a8ff3c;
+  color: #1a1a1a;
+  font-size: 0.85rem;
+  font-weight: bold;
+  padding: 0.3rem 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.telly-window-bar .x {
+  background: #c8c8c8;
+  border: 1px solid #808080;
+  width: 1.1rem;
+  height: 1.1rem;
+  text-align: center;
+  line-height: 1rem;
+  font-size: 0.75rem;
+  cursor: default;
+}
+.telly-window-body {
+  padding: 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  color: #1a1a1a;
+}
+.telly-window-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  padding: 0 1rem 1rem;
+}
+.telly-window-buttons button,
+.telly-window-buttons a {
+font-family: Tahoma, "Segoe UI", Verdana, Arial, sans-serif;
+  font-size: 0.78rem;
+  background: #c8c8c8;
+  border: 2px outset #e8e8e8;
+  padding: 0.3rem 0.8rem;
+  color: #1a1a1a;
+  text-decoration: none;
+  cursor: pointer;
+}
+.telly-window-buttons button[disabled] { color: #888; cursor: default; }
+.telly-window-buttons a:hover { background: #dcdcdc; }
+
+/* the final, largest window — dead center, appears last */
+.telly-window.final {
+  width: min(90vw, 440px);
+  transform: translate(-50%, -50%) scale(0.7) rotate(var(--tilt, 1deg));
+}
+.telly-window.final.show {
+  transform: translate(-50%, -50%) scale(1) rotate(var(--tilt, 1deg));
+}
+
+.telly-forwarded {
+font-family: Tahoma, "Segoe UI", Verdana, Arial, sans-serif;
+  color: var(--paper);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  max-width: 42rem;
+  margin: 2rem 0;
+}
+
+/* screen-reader-only text: keeps "Telly" announced properly even
+   while the visible copy is glitching through random symbols */
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 700px) {
+  .telly-window { width: 220px !important; }
+  .telly-window.final { width: min(90vw, 320px) !important; }
+}
+
+/* ---- EAS-style scrolling alert (the final message) ------------ */
+.telly-eas {
+  display: none;
+  background: #000;
+  border-top: 4px solid var(--urgent);
+  border-bottom: 4px solid var(--urgent);
+  overflow: hidden;
+  margin: 2rem 0;
+  padding: 0.8rem 0;
+}
+.telly-eas.show { display: block; }
+.telly-eas-track {
+  display: flex;
+  width: max-content;
+  animation: telly-eas-scroll 16s linear infinite;
+}
+.telly-eas-track span {
+  font-family: Tahoma, "Segoe UI", Verdana, Arial, sans-serif;
+  font-weight: bold;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  color: #fff;
+  white-space: nowrap;
+  padding-right: 4rem;
+}
+@keyframes telly-eas-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .telly-eas-track { animation: none; }
+}

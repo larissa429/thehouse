@@ -79,7 +79,29 @@ body::before {
 .wrap { max-width: 62rem; margin: 0 auto; padding: 0 1.5rem 5rem; }
 
 /* ---- MASTHEAD / NAV --------------------------------------- */
-header { padding: 2rem 1.5rem 1rem; max-width: 62rem; margin: 0 auto; }
+header {
+  padding: 2rem 1.5rem 1.2rem;
+  max-width: 62rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  border-bottom: var(--edge);
+}
+
+.header-nav-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.3rem;
+}
+
+@media (max-width: 600px) {
+  header { flex-direction: column; }
+}
+
 .sitename {
   font-family: var(--display);
   font-size: clamp(2rem, 6vw, 3.2rem);
@@ -94,13 +116,10 @@ header { padding: 2rem 1.5rem 1rem; max-width: 62rem; margin: 0 auto; }
   font-size: 0.8rem;
   letter-spacing: 0.14em;
   color: var(--ink-soft);
-  margin: 0.4rem 0 0;
+  margin: 0;
 }
 
 nav.rooms {
-  margin-top: 1.4rem;
-  padding-top: 1rem;
-  border-top: var(--edge);
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem 1.6rem;
@@ -1037,3 +1056,5 @@ a.tag { text-decoration: none; }
 .audition-lines[open] summary { margin-bottom: 0.8rem; }
 .audition-lines-body p { margin-bottom: 1.2rem; }
 .audition-lines-body strong { color: var(--paper); }
+
+.breadcrumb { margin-top: 1.5rem; }

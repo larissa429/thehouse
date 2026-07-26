@@ -31,16 +31,18 @@ var prefix = atRoot ? "" : "../";   // how to reach the site root from here
 /* ---- SITE HEADER (masthead + nav) ------------------------- */
 class SiteHeader extends HTMLElement {
   connectedCallback() {
-    this.innerHTML = `
+   this.innerHTML = `
       <header>
-        <h1 class="sitename"><a href="${prefix}index.html">The House</a></h1>
-        <p class="tagline">Stay a while.</p>
-        <nav class="rooms">
-          <a href="${prefix}index.html" data-key="">Home</a>
-          <a href="${prefix}about/" data-key="about">About</a>
-          <a href="${prefix}residents/" data-key="residents">Characters</a>
-          <a href="${prefix}audition/" data-key="audition">Audition</a>
-        </nav>
+        <img src="../images/logo.png" alt="The House" width="250" />
+        <div class="header-nav-wrap">
+          <nav class="rooms">
+            <a href="${prefix}index.html" data-key="">Home</a>
+            <a href="${prefix}about/" data-key="about">About</a>
+            <a href="${prefix}residents/" data-key="residents">Characters</a>
+            <a href="${prefix}audition/" data-key="audition">Audition</a>
+          </nav>
+          <p class="tagline">Stay a while.</p>
+        </div>
       </header>`;
 
     // auto-highlight the current page in the nav
@@ -67,7 +69,7 @@ class SiteFooter extends HTMLElement {
         <p class="listening">The House is listening.</p>
         <p>
           <a href="https://discord.com/invite/NpmUy79Qgy">Discord</a> \u00b7
-          <a href="https://www.tiktok.com/@thehouseobjectshow">TikTok</a> \u00b7
+          <a href="https://www.tiktok.com/@thehouseobjectshow">TikTok</a>
         </p>
       </footer>`;
   }

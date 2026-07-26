@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return { x: r.left + r.width / 2 - b.left, y: r.top - b.top };
     }
 
-    // persistent dots — created once, repositioned every frame
+    // every pin gets a dot — regardless of whether it has a string
     const allPins = [selfPin].concat(Array.from(board.querySelectorAll('.connection-pin[data-color]')));
     const dotEls = new Map();
     allPins.forEach(function (pin) {
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
       dotEls.set(pin, dot);
     });
 
-    // persistent strings — one physics object per connected pin
+    // only pins WITHOUT data-no-line get a string
     const strings = [];
     board.querySelectorAll('.connection-pin[data-color]').forEach(function (pin, i) {
       if (pin.hasAttribute('data-no-line')) return;
@@ -57,36 +57,31 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     });
 
-    /* ---- THE NUMBERS TO TWEAK -------------------------------
-       GRAVITY: how deep the sag is, as a fraction of the string's
-                own length. Bigger = droopier.
-       STIFFNESS: how strongly it springs back toward its resting
-                  sag. Bigger = snappier/faster settle.
-       DAMPING: 0-1, how quickly bounce dies down. Closer to 1 =
-                bouncier/jigglier for longer; lower = settles fast.
-       AMBIENT_SWAY: constant gentle wobble in pixels, even at rest.
-                     Set to 0 for zero motion when nothing's dragged.
-       ---------------------------------------------------------- */
     const GRAVITY = 0.22;
     const STIFFNESS = 0.02;
     const DAMPING = 0.88;
     const AMBIENT_SWAY = reduceMotion ? 0 : 4;
 
     function frame(t) {
-      if (mobileQuery.matches) { requestAnimationFrame(frame); return; } // skip work on the flattened mobile layout
+      if (mobileQuery.matches) { requestAnimationFrame(frame); return; }
 
       const b = board.getBoundingClientRect();
       svg.setAttribute('viewBox', '0 0 ' + b.width + ' ' + b.height);
 
-      const from = centerOf(selfPin);
-      dotEls.get(selfPin).style.left = from.x + 'px';
-      dotEls.get(selfPin).style.top = from.y + 'px';
+      // step 1: position EVERY pin's dot, every frame, no exceptions
+      const centers = new Map();
+      allPins.forEach(function (pin) {
+        const c = centerOf(pin);
+        centers.set(pin, c);
+        const dot = dotEls.get(pin);
+        dot.style.left = c.x + 'px';
+        dot.style.top = c.y + 'px';
+      });
 
+      // step 2: only pins with a string get the sag/curve math
+      const from = centers.get(selfPin);
       strings.forEach(function (s) {
-        const to = centerOf(s.pin);
-        dotEls.get(s.pin).style.left = to.x + 'px';
-        dotEls.get(s.pin).style.top = to.y + 'px';
-
+        const to = centers.get(s.pin);
         const midX = (from.x + to.x) / 2;
         const midY = (from.y + to.y) / 2;
         const dist = Math.hypot(to.x - from.x, to.y - from.y);
@@ -105,8 +100,6 @@ document.addEventListener('DOMContentLoaded', function () {
           s.sagX += s.velX; s.sagY += s.velY;
         }
 
-        // quadratic bezier control point, chosen so the curve
-        // visually passes through (sagX, sagY) at its midpoint
         const ctrlX = 2 * s.sagX - midX;
         const ctrlY = 2 * s.sagY - midY;
 
@@ -119,8 +112,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     requestAnimationFrame(frame);
 
-    // ---- dragging (same as before — the animation loop above
-    // now reads live positions every frame, so no draw() call needed) ----
     board.querySelectorAll('.connection-pin').forEach(function (pin) {
       let dragging = false, moved = false, justDragged = false;
       let startClientX, startClientY, startXPct, startYPct;

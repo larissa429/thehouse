@@ -1062,3 +1062,5 @@ a.tag { text-decoration: none; }
 
 .connection-pin { cursor: grab; }
 .connection-pin:active { cursor: grabbing; }
+
+.connection-pin { touch-action: none; }

@@ -1105,3 +1105,41 @@ a.tag { text-decoration: none; }
   .about-top { flex-direction: column; }
   .about-image { width: 100%; max-width: none; }
 }
+/* a link that gives away nothing — no color change, no underline,
+   no pointer cursor. Blends completely into surrounding text. */
+.silent-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: inherit;
+}
+.silent-link:hover,
+.silent-link:visited,
+.silent-link:active {
+  color: inherit;
+  text-decoration: none;
+}
+.house-playlist {
+  position: relative;
+  left: var(--dragX, 0px);
+  top: var(--dragY, 0px);
+  max-width: 400px;
+  margin: 2rem auto 4rem;
+  cursor: grab;
+  touch-action: none;
+  z-index: 1;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  transform: rotate(calc(var(--rest-rot, -1deg) + var(--extra-rot, 0deg))) scale(var(--scl, 1));
+}
+.house-playlist:active { cursor: grabbing; }
+.house-playlist.is-lifted { z-index: 10; }
+.house-playlist iframe {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  display: block;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.5);
+  transition: box-shadow 0.2s ease-out;
+}
+.house-playlist.is-lifted iframe {
+  box-shadow: 0 20px 34px rgba(0,0,0,0.6);
+}

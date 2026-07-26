@@ -145,8 +145,9 @@ document.addEventListener("click", (event) => {
     let dragging = false;
     let startClientX, startClientY, startA, startB;
 
-   el.addEventListener('pointerdown', function (e) {
+el.addEventListener('pointerdown', function (e) {
       if (isMobileLayout.matches) return; // mobile: skip entirely, regardless of CSS position
+      if (e.target.closest('a')) return;  // clicking a real link: don't hijack it into a drag
       dragging = true;
       el.classList.add('is-lifted');
       el.style.setProperty('--extra-rot', (Math.random() < 0.5 ? -1 : 1) * EXTRA_ROT + 'deg');
@@ -205,8 +206,8 @@ document.addEventListener("click", (event) => {
     });
   });
 
-  // ---- trivia note: position = raw px offset from resting spot ----
-  document.querySelectorAll('.trivia-note').forEach(function (el) {
+// ---- trivia note + house playlist: position = raw px offset ----
+  document.querySelectorAll('.trivia-note, .house-playlist').forEach(function (el) {
     makeDraggable(el, {
       getStart: function () {
         const x = parseFloat(el.style.getPropertyValue('--dragX')) || 0;

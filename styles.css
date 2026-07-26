@@ -284,19 +284,6 @@ a:hover { color: var(--paper); }
 
 /* ============================================================
    CHARACTER HEADER — free-form draggable board
-   ------------------------------------------------------------
-   Structure on each character page:
-     <div class="character-header">
-       <figure class="portrait"> <img/> <figcaption>Art by ...</figcaption> </figure>
-       <dl class="statblock"> ... </dl>
-       <div class="playlist"> ... </div>
-     </div>
-   Instead of a fixed 3-column grid, this is a free-form "board"
-   (same idea as the Connections wall below). Each of the three
-   pieces is absolutely positioned via --tx/--ty (percent of the
-   board) and can be dragged anywhere — including overlapping
-   each other. Drag/lift behavior lives in components.js.
-   On mobile it falls back to a plain stacked, non-draggable list.
    ============================================================ */
 .character-header {
   position: relative;
@@ -397,7 +384,6 @@ transform: translateX(-50%) rotate(calc(var(--rest-rot, 1.5deg) + var(--extra-ro
   text-transform: none;
   margin-bottom: 0.5rem;
 }
-/* placeholder box, shown until a real Spotify embed is added */
 .playlist-embed {
   border: 1px dashed rgba(227, 169, 78, 0.4);
   border-radius: 2px;
@@ -413,8 +399,6 @@ transform: translateX(-50%) rotate(calc(var(--rest-rot, 1.5deg) + var(--extra-ro
 }
 .playlist-embed iframe { width: 100%; border: 0; border-radius: 2px; }
 
-/* ---- the "picked up" state: grow + deeper shadow, driven by
-   components.js on pointerdown/pointerup ---------------------- */
 .portrait.is-lifted, .character-header .statblock.is-lifted {
   z-index: 10;
   box-shadow: 0 24px 34px rgba(0,0,0,0.55);
@@ -458,8 +442,6 @@ transform: translateX(-50%) rotate(calc(var(--rest-rot, 1.5deg) + var(--extra-ro
 }
 
 /* ---- CASTING CALL ----------------------------------------- */
-/* only on characters who still need a VA. to remove, delete the
-   whole <section class="casting"> ... </section> from their page. */
 .casting {
   border: 1px dashed rgba(227, 169, 78, 0.45);
   border-radius: 2px;
@@ -516,23 +498,13 @@ footer a:hover { color: var(--lamp); }
 .listening { color: var(--lamp); opacity: 0.75; }
 
 /* ---- GLITCH / CORRUPTED TEXT ------------------------------ */
-/* Wrap any text in <span class="glitch">TEXT</span> and include
-   glitch.js on that page. It cycles each character through random
-   letters/symbols — same length, monospace, so the width NEVER
-   changes and it can't overflow. Only safe ASCII is used, so no
-   missing-glyph squares on mobile. The real text is kept for screen
-   readers. Tune speed/charset at the top of glitch.js. */
 .glitch {
   font-family: var(--label);
-  color: #fff; /* bright white */
+  color: #fff;
   letter-spacing: 0.06em;
-
-  /* permanent CRT chroma split */
   text-shadow:
     -0.04em 0 rgba(255, 60, 80, 0.55),
      0.04em 0 rgba(60, 180, 255, 0.55);
-
-  /* optional tiny jitter (remove if you want zero movement) */
   animation: crt-jitter 0.08s steps(2) infinite;
   will-change: transform;
 }
@@ -541,7 +513,6 @@ footer a:hover { color: var(--lamp); }
   0%   { transform: translateX(0); }
   100% { transform: translateX(0.5px); }
 }
-
 
 /* ---- ACCESSIBILITY: focus + reduced motion --------------- */
 a:focus-visible, .card:focus-visible {
@@ -558,10 +529,6 @@ a:focus-visible, .card:focus-visible {
 }
 
 /* ---- BIG SCREENS / TVs ------------------------------------ */
-/* On very wide displays the centered column got lost between huge
-   margins. Widen the shell (and nudge the type up for viewing
-   distance). Body paragraphs stay capped by --measure, so lines
-   never get uncomfortably long. Tweak these rem values to taste. */
 @media (min-width: 1600px) {
   :root { font-size: 18px; }
   .wrap, header, footer { max-width: 84rem; }
@@ -581,15 +548,11 @@ a:focus-visible, .card:focus-visible {
   width: 110px;
   height: 110px;
   object-fit: contain;
-
   right: -15px;
   bottom: -15px;
-
   opacity: 0;
   transform: rotate(15deg) scale(0.7);
   transition: opacity 0.25s, transform 0.25s;
-  pointer-events: none;
-
   pointer-events: none;
 }
 
@@ -634,12 +597,6 @@ a:focus-visible, .card:focus-visible {
 
 /* ============================================================
    TRIVIA NOTE — pinned sticky note, also draggable
-   ------------------------------------------------------------
-   Two pieces of tape (top-left / top-right, spans with class
-   "tape tape-left" / "tape tape-right" — add them right after the
-   opening <div class="trivia-note"> tag). Position is tracked in
-   --dragX/--dragY (plain pixel offsets from its resting spot) —
-   drag physics live in components.js, shared with the top row.
    ============================================================ */
 .trivia-note {
   position: relative;
@@ -724,9 +681,6 @@ transform: rotate(calc(var(--rest-rot, -1deg) + var(--extra-rot, 0deg))) scale(v
   width: 100%;
   height: 100%;
 }
-/* ============================================================
-   CONNECTIONS — clean final version
-   ============================================================ */
 .connections { margin: 3rem 0 2rem; }
 .connections-board {
   position: relative;
@@ -735,7 +689,6 @@ transform: rotate(calc(var(--rest-rot, -1deg) + var(--extra-rot, 0deg))) scale(v
   margin: 1rem auto 2rem;
 }
 
-/* LAYER 1 (bottom): the photos themselves */
 .connection-pin {
   position: absolute;
   left: var(--x);
@@ -777,7 +730,6 @@ transform: rotate(calc(var(--rest-rot, -1deg) + var(--extra-rot, 0deg))) scale(v
   color: var(--ink-soft);
 }
 
-/* LAYER 2 (middle): the red strings */
 .connections-strings {
   position: absolute;
   inset: 0;
@@ -794,7 +746,6 @@ transform: rotate(calc(var(--rest-rot, -1deg) + var(--extra-rot, 0deg))) scale(v
   opacity: 0.85;
 }
 
-/* LAYER 3 (top): the pin dots — fully independent, always drawn on top */
 .connections-dots {
   position: absolute;
   inset: 0;
@@ -874,7 +825,6 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
 .note[data-color="cassette"] { background: #e0a8c8; }
 .note[data-color="geeky"]    { background: #c8b088; }
 
-/* one-off position nudge for Charlie's photo, keeps hover intact */
 .connection-pin[data-color="charlie"] img {
   transform: rotate(var(--tilt, 4deg)) translateY(-7px) translateX(-7px);
 }
@@ -882,18 +832,14 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
   transform: rotate(0deg) scale(1.08) translateY(-7px) translateX(-7px);
 }
 
-/* on the collapsed mobile layout, there's no web/strings to be
-   "the center of" anymore, so just hide the self-portrait entirely */
 @media (max-width: 700px) {
   .connection-self { display: none; }
 }
 
-/* new connection-note colors for Journal's page */
 .note[data-color="mirror"] { background: #cfe0d8; }
 .note[data-color="n528"]   { background: #b8d4c9; }
 .note[data-color="dream"]  { background: #c7b8d4; }
 
-/* more breathing room between the small casting tag and its heading */
 .casting .tag {
   display: inline-block;
   margin-bottom: 1rem;
@@ -904,8 +850,6 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
 
 a.tag { text-decoration: none; }
 
-/* top row: tag+heading on the left, voice-claim text + video on
-   the right (right-aligned text, video pinned to the corner) */
 .casting-top {
   display: flex;
   justify-content: space-between;
@@ -952,7 +896,6 @@ a.tag { text-decoration: none; }
   .casting-claim-text { text-align: left; max-width: none; }
   .casting-video { width: 100%; }
 }
-/* audition lines dropdown, matching the casting box's dashed style */
 .audition-lines {
   clear: both;
   margin: 1.6rem 0;
@@ -979,12 +922,8 @@ a.tag { text-decoration: none; }
 
 .connection-pin { touch-action: none; }
 
-/* ---- taller board so tall stat blocks can't reach the text -- */
 .character-header { min-height: 620px; }
 
-/* ---- CORKBOARD BACKGROUND for the connections wall ---------- */
-/* Base tan + layered speckle to fake cork grain, with a wooden
-   frame around it. All CSS, no image file needed. */
 .connections-board {
   background-color: #c19a5b;
   background-image:
@@ -1007,7 +946,6 @@ a.tag { text-decoration: none; }
   padding: 1rem;
 }
 
-/* the "?" on Bunny's torn photo needs to stay readable on cork */
 .connection-torn .torn-shape { color: #e8ddcc; }
 
 .connection-pin::before {
@@ -1051,7 +989,6 @@ a.tag { text-decoration: none; }
 .house-eye path { fill: var(--paper); stroke: var(--shadow); stroke-width: 2; }
 .house-eye .pupil { fill: var(--shadow); }
 
-/* small "VA needed" badge on a character's grid card */
 .va-badge {
   position: absolute;
   top: -0.6rem;
@@ -1067,7 +1004,6 @@ a.tag { text-decoration: none; }
   box-shadow: 0 3px 8px rgba(0,0,0,0.4);
   z-index: 2;
 }
-/* about page: thesis text + image side by side, like the casting video */
 .about-top {
   display: flex;
   justify-content: space-between;
@@ -1080,7 +1016,6 @@ a.tag { text-decoration: none; }
   flex: 1 1 auto;
   min-width: 0;
   margin-bottom: 0;
-
   font-size: 4rem;
 }
 .about-image {
@@ -1105,8 +1040,6 @@ a.tag { text-decoration: none; }
   .about-top { flex-direction: column; }
   .about-image { width: 100%; max-width: none; }
 }
-/* a link that gives away nothing — no color change, no underline,
-   no pointer cursor. Blends completely into surrounding text. */
 .silent-link {
   color: inherit;
   text-decoration: none;
@@ -1161,12 +1094,6 @@ a.tag { text-decoration: none; }
 }
 .char-pagination a:hover { color: var(--lamp); }
 
-/* ---- DRAGGABLE CHARACTER CARDS (residents grid) ---------------
-   Every card gets a little "give" — grows, deeper shadow, small
-   tilt on pickup, same tactile language as the rest of the site.
-   Most cards ease smoothly back to their original spot on release.
-   Blue Marble's card is the one exception (data-sticky) — it stays
-   wherever it's dropped, since something sits hidden behind it. */
 .grid .card {
   position: relative;
   touch-action: none;
@@ -1185,7 +1112,6 @@ a.tag { text-decoration: none; }
   .grid .card { transform: none !important; touch-action: auto; cursor: default; }
 }
 
-/* the hidden slot sitting behind Blue Marble's card specifically */
 .card-slot {
   position: relative;
   display: flex;
@@ -1217,7 +1143,7 @@ a.tag { text-decoration: none; }
    ============================================================ */
 .telly-stage {
   position: relative;
-  min-height: 100vh;
+  min-height: 50vh;
 }
 
 .telly-header {
@@ -1253,18 +1179,14 @@ a.tag { text-decoration: none; }
   line-height: 1.9;
 }
 
-/* the overlay sits ABSOLUTELY inside .telly-stage — not fixed to
-   the viewport, and not a separate box below <main>. This means
-   it can visually cover the header/title above it, while still
-   scrolling normally with the rest of the page. */
 .telly-errors {
   position: absolute;
   inset: 0;
   overflow: hidden;
   z-index: 40;
-  pointer-events: none; /* empty space lets clicks pass through... */
+  pointer-events: none;
 }
-.telly-window { pointer-events: auto; } /* ...windows stay clickable */
+.telly-window { pointer-events: auto; }
 
 .telly-window {
   position: absolute;
@@ -1331,7 +1253,6 @@ a.tag { text-decoration: none; }
 .telly-window-buttons button[disabled] { color: #888; cursor: default; }
 .telly-window-buttons a:hover { background: #dcdcdc; }
 
-/* the final, largest window — dead center, no tilt, appears last */
 .telly-window.final {
   width: min(90vw, 440px);
   transform: translate(-50%, -50%) scale(0.7);
@@ -1349,8 +1270,6 @@ a.tag { text-decoration: none; }
   margin: 2rem 0;
 }
 
-/* screen-reader-only text: keeps "Telly" announced properly even
-   while the visible copy is glitching through random symbols */
 .visually-hidden {
   position: absolute;
   width: 1px; height: 1px;
@@ -1366,9 +1285,6 @@ a.tag { text-decoration: none; }
   .telly-window.final { width: min(90vw, 320px) !important; }
 }
 
-/* ---- EAS-style scrolling alert (the final message) ------------ */
-/* fixed to the viewport (not .telly-stage) — stays locked in place
-   even while the page scrolls, and spans the full screen width. */
 .telly-eas {
   display: none;
   position: fixed;
@@ -1405,4 +1321,63 @@ a.tag { text-decoration: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .telly-eas-track { animation: none; }
+}
+
+/* ---- TELLY'S PLAYLIST: draggable, always wobbles back sideways */
+.telly-playlist-wrap {
+  position: relative;
+  max-width: 380px;
+  margin: 1rem auto 8rem;
+  left: var(--dragX, 0px);
+  top: var(--dragY, 0px);
+  transform-origin: 88% 6%;
+  transform: rotate(var(--swing-deg, -70deg));
+}
+.telly-playlist-wrap iframe {
+  width: 100%;
+  height: 352px;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.5);
+  display: block;
+}
+
+/* the actual draggable handle — a plain div, not the iframe, so
+   pointer events always reach it (iframes swallow mouse events
+   before they can reach the page's own JS) */
+.telly-drag-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3rem;
+  cursor: grab;
+  touch-action: none;
+  z-index: 5;
+}
+.telly-drag-handle:active { cursor: grabbing; }
+
+.telly-tape {
+  position: absolute;
+  top: -0.5rem;
+  right: 0.8rem;
+  width: 3.2rem;
+  height: 1.2rem;
+  background: rgba(227, 169, 78, 0.55);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+  transform: rotate(-8deg);
+}
+.telly-tape-curl {
+  position: absolute;
+  top: -0.9rem;
+  right: 2.4rem;
+  width: 1.6rem;
+  height: 1.5rem;
+  background: linear-gradient(135deg,
+    rgba(227,169,78,0.75) 0%,
+    rgba(200,145,60,0.55) 55%,
+    rgba(150,110,40,0.35) 100%);
+  clip-path: polygon(0% 100%, 100% 0%, 100% 55%, 40% 100%);
+  transform: rotate(18deg);
+  box-shadow: -2px 3px 5px rgba(0,0,0,0.35);
 }

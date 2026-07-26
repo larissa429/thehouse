@@ -3,19 +3,6 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!stage) return;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---- tuning knobs ----------------------------------------------
-     WINDOW_COUNT: total cascading windows before the real one.
-     BATCH_SIZE:   how many windows form one diagonal cluster before
-                   a new cluster starts somewhere else on the page.
-     STEP/JITTER:  spacing and randomness within a single cluster.
-     START_GAP:    pause (ms) before the very first window appears.
-     MIN_GAP:      the fastest gap reached near the end of the run.
-     CURVE:        higher = stays slow longer, then drops off harder.
-     GRID_COLS/ROWS: the screen is divided into this many regions,
-                   shuffled, so every batch claims a genuinely
-                   different area — guarantees real edge-to-edge
-                   spread instead of relying on pure random luck.
-     ------------------------------------------------------------------ */
   const WINDOW_COUNT = 70;
   const BATCH_SIZE = 10;
   const STEP = 11;
@@ -31,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
     el.className = 'telly-window' + (isFinal ? ' final' : '');
     el.innerHTML =
       '<div class="telly-window-bar">CRITICAL ERROR!! <span class="x">\u00d7</span></div>' +
-    '<div class="telly-window-body">' +
+      '<div class="telly-window-body">' +
         '<img src="../images/shredder.gif" alt="" width="40" height="40" />' +
         '<p>DIRECTORY "Telly" NOT FOUND</p>' +
       '</div>' +
@@ -107,7 +94,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (eas) setTimeout(function () { eas.classList.add('show'); }, elapsed + 400);
   }
 
-  /* ---- weighted glitch on "Telly" in the page title -------------- */
   const nameEl = document.querySelector('.telly-name-glitch');
   if (nameEl && !reduceMotion) {
     const REAL = nameEl.textContent;
@@ -124,3 +110,96 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 90);
   }
 });
+
+/* ---- TELLY'S PLAYLIST: draggable, always wobbles back sideways
+   ------------------------------------------------------------
+   The drag HANDLE is a plain div overlaying the top edge (not the
+   iframe itself) — the iframe is cross-origin content and silently
+   swallows pointer events before our JS ever sees them, which is
+   why dragging felt broken/unresponsive before this. ------------- */
+(function () {
+  const wrap = document.querySelector('.telly-playlist-wrap');
+  const handle = document.querySelector('.telly-drag-handle');
+  if (!wrap || !handle) return;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const REST_DEG = -70;
+  const STIFFNESS = 0.02;
+  const DAMPING = 0.9;
+  const SWING_SENSITIVITY = 0.02;
+
+  let posX = 0, posY = 0;
+  let angle = REST_DEG;
+  let angleVel = 0;
+  let dragging = false;
+  let startClientX = 0, startClientY = 0, startPosX = 0, startPosY = 0;
+  let lastClientX = 0;
+  let rafRunning = false;
+
+  function applyPos() {
+    wrap.style.setProperty('--dragX', posX + 'px');
+    wrap.style.setProperty('--dragY', posY + 'px');
+  }
+  function applyAngle() {
+    wrap.style.setProperty('--swing-deg', angle.toFixed(2) + 'deg');
+  }
+
+  function tick() {
+    angleVel += (REST_DEG - angle) * STIFFNESS;
+    angleVel *= DAMPING;
+    angle += angleVel;
+    applyAngle();
+
+    if (!dragging && Math.abs(angleVel) < 0.02 && Math.abs(angle - REST_DEG) < 0.05) {
+      angle = REST_DEG;
+      angleVel = 0;
+      applyAngle();
+      rafRunning = false;
+      return;
+    }
+    requestAnimationFrame(tick);
+  }
+  function ensureTicking() {
+    if (!rafRunning) { rafRunning = true; requestAnimationFrame(tick); }
+  }
+
+  if (reduceMotion) {
+    applyAngle();
+    return;
+  }
+
+  handle.addEventListener('pointerdown', function (e) {
+    dragging = true;
+    handle.setPointerCapture(e.pointerId);
+    startClientX = e.clientX;
+    startClientY = e.clientY;
+    lastClientX = e.clientX;
+    startPosX = posX;
+    startPosY = posY;
+    e.preventDefault();
+  });
+
+  handle.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    posX = startPosX + (e.clientX - startClientX);
+    posY = startPosY + (e.clientY - startClientY);
+    applyPos();
+
+    const dx = e.clientX - lastClientX;
+    angleVel += dx * SWING_SENSITIVITY;
+    lastClientX = e.clientX;
+
+    ensureTicking();
+  });
+
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    ensureTicking();
+  }
+  handle.addEventListener('pointerup', endDrag);
+  handle.addEventListener('pointercancel', endDrag);
+
+  applyPos();
+  applyAngle();
+})();

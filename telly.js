@@ -11,24 +11,28 @@ document.addEventListener('DOMContentLoaded', function () {
      START_GAP:    pause (ms) before the very first window appears.
      MIN_GAP:      the fastest gap reached near the end of the run.
      CURVE:        higher = stays slow longer, then drops off harder.
+     GRID_COLS/ROWS: the screen is divided into this many regions,
+                   shuffled, so every batch claims a genuinely
+                   different area — guarantees real edge-to-edge
+                   spread instead of relying on pure random luck.
      ------------------------------------------------------------------ */
   const WINDOW_COUNT = 70;
   const BATCH_SIZE = 10;
   const STEP = 11;
   const JITTER = 16;
-  const START_GAP = 1000;
-const MIN_GAP = 14;
-const CURVE = 1.6;
+  const START_GAP = 450;
+  const MIN_GAP = 6;
+  const CURVE = 1.2;
+  const GRID_COLS = 4;
+  const GRID_ROWS = 3;
 
   function makeWindow(isFinal) {
     const el = document.createElement('div');
     el.className = 'telly-window' + (isFinal ? ' final' : '');
     el.innerHTML =
       '<div class="telly-window-bar">CRITICAL ERROR!! <span class="x">\u00d7</span></div>' +
-      '<div class="telly-window-body">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="1.5">' +
-          '<rect x="2" y="4" width="20" height="14" rx="1"/><path d="M8 20h8M12 18v2"/>' +
-        '</svg>' +
+    '<div class="telly-window-body">' +
+        '<img src="../images/shredder.gif" alt="" width="40" height="40" />' +
         '<p>DIRECTORY "Telly" NOT FOUND</p>' +
       '</div>' +
       '<div class="telly-window-buttons">' +
@@ -39,22 +43,36 @@ const CURVE = 1.6;
     return el;
   }
 
-const stageW = Math.max(stage.clientWidth - 400, 200);
-const stageH = Math.max(stage.clientHeight - 260, 300);
+  const stageW = stage.offsetWidth || window.innerWidth;
+  const stageH = stage.offsetHeight || window.innerHeight;
+
+  const cellW = stageW / GRID_COLS;
+  const cellH = stageH / GRID_ROWS;
+
+  const regions = [];
+  for (let r = 0; r < GRID_ROWS; r++) {
+    for (let c = 0; c < GRID_COLS; c++) regions.push({ c: c, r: r });
+  }
+  for (let i = regions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = regions[i]; regions[i] = regions[j]; regions[j] = tmp;
+  }
+
   const windows = [];
   let batchX = 0, batchY = 0;
 
   for (let i = 0; i < WINDOW_COUNT; i++) {
     const posInBatch = i % BATCH_SIZE;
 
-    // start of a new batch: jump to a fresh random spot on the stage
     if (posInBatch === 0) {
-      batchX = Math.random() * stageW;
-      batchY = Math.random() * stageH;
+      const batchIndex = Math.floor(i / BATCH_SIZE);
+      const region = regions[batchIndex % regions.length];
+      batchX = region.c * cellW + Math.random() * Math.max(cellW - 380, 20);
+      batchY = region.r * cellH + Math.random() * Math.max(cellH - 200, 20);
     }
 
-    const x = (batchX + posInBatch * STEP + (Math.random() * JITTER - JITTER / 2) + stageW) % stageW;
-    const y = (batchY + posInBatch * STEP * 0.7 + (Math.random() * JITTER - JITTER / 2) + stageH) % stageH;
+    const x = Math.max(0, Math.min(stageW - 360, batchX + posInBatch * STEP + (Math.random() * JITTER - JITTER / 2)));
+    const y = Math.max(0, Math.min(stageH - 180, batchY + posInBatch * STEP * 0.7 + (Math.random() * JITTER - JITTER / 2)));
 
     const w = makeWindow(false);
     w.style.left = x + 'px';
@@ -78,17 +96,15 @@ const stageH = Math.max(stage.clientHeight - 260, 300);
     windows.forEach(function (w, i) {
       const isLast = i === windows.length - 1;
       const progress = i / (windows.length - 1);
-     const gap = isLast
-        ? 300 // one deliberate beat before the real window lands
+      const gap = isLast
+        ? 300
         : MIN_GAP + (START_GAP - MIN_GAP) * Math.pow(1 - progress, CURVE);
       elapsed += gap;
       setTimeout(function () { w.classList.add('show'); }, elapsed);
     });
 
-    // reveal the scrolling alert only after everything else has landed
     const eas = document.getElementById('telly-eas');
     if (eas) setTimeout(function () { eas.classList.add('show'); }, elapsed + 400);
-  }
   }
 
   /* ---- weighted glitch on "Telly" in the page title -------------- */

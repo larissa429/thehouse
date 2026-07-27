@@ -1143,7 +1143,6 @@ a.tag { text-decoration: none; }
    ============================================================ */
 .telly-stage {
   position: relative;
-  min-height: 50vh;
 }
 
 .telly-header {
@@ -1180,7 +1179,7 @@ a.tag { text-decoration: none; }
 }
 
 .telly-errors {
-  position: absolute;
+  position: fixed;
   inset: 0;
   overflow: hidden;
   z-index: 40;
@@ -1380,4 +1379,25 @@ a.tag { text-decoration: none; }
   clip-path: polygon(0% 100%, 100% 0%, 100% 55%, 40% 100%);
   transform: rotate(18deg);
   box-shadow: -2px 3px 5px rgba(0,0,0,0.35);
+}
+
+.hidden-door-icon {
+  width: 100px;
+  height: auto;
+  opacity: 0.25;
+  filter: grayscale(40%);
+  transition: opacity 0.2s, filter 0.2s;
+}
+.hidden-links a:hover .hidden-door-icon {
+  opacity: 1;
+  filter: grayscale(0%);
+}
+
+/* any plain image pasted directly into body text scales responsively
+   by default — this catches images that don't have their own
+   specific styling elsewhere (portraits, connections, etc. already
+   have their own rules and are unaffected by this) */
+main img {
+  max-width: 100%;
+  height: auto;
 }

@@ -3,15 +3,14 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!stage) return;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const WINDOW_COUNT = 144;
-  const BATCH_SIZE = 12;
-  const STEP = 13;
+const WINDOW_COUNT = 100;
+  const STEP = 40;
   const JITTER = 5;
   const START_GAP = 450;
-  const MIN_GAP = 5;
-  const CURVE = 1.2;
-  const GRID_COLS = 4;
-  const GRID_ROWS = 3;
+  const MIN_GAP = 25;
+  const CURVE = 3;
+  const WINDOW_W = 360;
+  const WINDOW_H = 180;
 
   function makeWindow(isFinal) {
     const el = document.createElement('div');
@@ -32,43 +31,42 @@ const WINDOW_COUNT = 144;
 
   const stageW = stage.offsetWidth || window.innerWidth;
   const stageH = stage.offsetHeight || window.innerHeight;
+  const maxX = Math.max(stageW - WINDOW_W, 0);
+  const maxY = Math.max(stageH - WINDOW_H, 0);
 
-  const cellW = stageW / GRID_COLS;
-  const cellH = stageH / GRID_ROWS;
-
-  const regions = [];
-  for (let r = 0; r < GRID_ROWS; r++) {
-    for (let c = 0; c < GRID_COLS; c++) regions.push({ c: c, r: r });
-  }
-  for (let i = regions.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const tmp = regions[i]; regions[i] = regions[j]; regions[j] = tmp;
-  }
-
+  /* ---- organic cascades: each stack starts at a fresh random spot
+     and keeps stepping diagonally until the NEXT step would run
+     off the screen edge — at which point a brand new stack begins
+     at a brand new random spot. Stack lengths naturally vary. ---- */
   const windows = [];
-  let batchX = 0, batchY = 0;
+  let placed = 0;
+  let batchX = 0, batchY = 0, posInBatch = 0;
 
-  for (let i = 0; i < WINDOW_COUNT; i++) {
-    const posInBatch = i % BATCH_SIZE;
-
+  while (placed < WINDOW_COUNT) {
     if (posInBatch === 0) {
-      const batchIndex = Math.floor(i / BATCH_SIZE);
-      const region = regions[batchIndex % regions.length];
-      batchX = region.c * cellW + Math.random() * Math.max(cellW - 380, 20);
-      batchY = region.r * cellH + Math.random() * Math.max(cellH - 200, 20);
+      batchX = Math.random() * maxX;
+      batchY = Math.random() * maxY;
     }
 
-    const x = Math.max(0, Math.min(stageW - 360, batchX + posInBatch * STEP + (Math.random() * JITTER - JITTER / 2)));
-    const y = Math.max(0, Math.min(stageH - 180, batchY + posInBatch * STEP * 0.7 + (Math.random() * JITTER - JITTER / 2)));
+    const rawX = batchX + posInBatch * STEP + (Math.random() * JITTER - JITTER / 2);
+    const rawY = batchY + posInBatch * STEP * 0.7 + (Math.random() * JITTER - JITTER / 2);
+
+    // hit an edge: end this stack, start a new one next loop
+    if (rawX > maxX || rawY > maxY || rawX < 0 || rawY < 0) {
+      posInBatch = 0;
+      continue;
+    }
 
     const w = makeWindow(false);
-    w.style.left = x + 'px';
-    w.style.top = y + 'px';
-    w.style.zIndex = i + 1;
+    w.style.left = rawX + 'px';
+    w.style.top = rawY + 'px';
+    w.style.zIndex = placed + 1;
     stage.appendChild(w);
     windows.push(w);
-  }
 
+    placed++;
+    posInBatch++;
+  }
   const finalWindow = makeWindow(true);
   finalWindow.style.left = '50%';
   finalWindow.style.top = '50%';

@@ -1112,6 +1112,13 @@ a.tag { text-decoration: none; }
   .grid .card { transform: none !important; touch-action: auto; cursor: default; }
 }
 
+@media (max-width: 700px) {
+  .grid .card[data-sticky] {
+    transform: translate(var(--dragX, 0px), var(--dragY, 0px)) !important;
+    touch-action: manipulation;   /* blocks the native double-tap-to-zoom gesture */
+  }
+}
+
 .card-slot {
   position: relative;
   display: flex;

@@ -333,7 +333,7 @@ el.addEventListener('pointerdown', function (e) {
         if (isDoubleTap) {
           e.preventDefault();
           revealed = !revealed;
-          card.style.setProperty('--dragY', revealed ? '-100px' : '0px');
+          card.style.setProperty('--dragY', revealed ? '-200px' : '0px');
         }
       });
     }

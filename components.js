@@ -321,6 +321,7 @@ el.addEventListener('pointerdown', function (e) {
   document.querySelectorAll('.grid .card').forEach(function (card) {
     const sticky = card.hasAttribute('data-sticky'); // Blue Marble's card only
     let dragging = false, moved = false;
+     const sticky = card.hasAttribute('data-sticky');
     let startClientX, startClientY, startX, startY;
 
     card.addEventListener('pointerdown', function (e) {

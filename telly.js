@@ -1,6 +1,12 @@
 document.addEventListener('DOMContentLoaded', function () {
   const stage = document.querySelector('.telly-errors');
   if (!stage) return;
+  stage.addEventListener('click', function (e) {
+  if (e.target.classList.contains('x')) {
+    const win = e.target.closest('.telly-window');
+    if (win) win.remove();
+  }
+});
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const WINDOW_COUNT = 100;

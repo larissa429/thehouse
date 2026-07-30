@@ -2,11 +2,46 @@ document.addEventListener('DOMContentLoaded', function () {
   const stage = document.querySelector('.telly-errors');
   if (!stage) return;
   stage.addEventListener('click', function (e) {
-  if (e.target.classList.contains('x')) {
-    const win = e.target.closest('.telly-window');
-    if (win) win.remove();
+    if (e.target.classList.contains('x')) {
+      const win = e.target.closest('.telly-window');
+      if (win) win.remove();
+      spawnReplacement(); // closing one just makes room for another
+    }
+  });
+
+  // ---- DRAG BY TITLE BAR ----
+  // delegated so it works on every window, including ones spawned later
+  let dragWin = null, dragOffsetX = 0, dragOffsetY = 0;
+
+  stage.addEventListener('pointerdown', function (e) {
+    if (e.target.classList.contains('x')) return; // don't drag from the close button
+    const bar = e.target.closest('.telly-window-bar');
+    if (!bar) return;
+    const win = bar.closest('.telly-window');
+    if (!win) return;
+    dragWin = win;
+    const stageRect = stage.getBoundingClientRect();
+    const winRect = win.getBoundingClientRect();
+    dragOffsetX = e.clientX - winRect.left;
+    dragOffsetY = e.clientY - winRect.top;
+    win.style.zIndex = ++topZ;
+    win.classList.add('dragging');
+    e.preventDefault();
+  });
+
+  document.addEventListener('pointermove', function (e) {
+    if (!dragWin) return;
+    const stageRect = stage.getBoundingClientRect();
+    dragWin.style.left = (e.clientX - stageRect.left - dragOffsetX) + 'px';
+    dragWin.style.top = (e.clientY - stageRect.top - dragOffsetY) + 'px';
+  });
+
+  function stopDrag() {
+    if (dragWin) dragWin.classList.remove('dragging');
+    dragWin = null;
   }
-});
+  document.addEventListener('pointerup', stopDrag);
+  document.addEventListener('pointercancel', stopDrag);
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const WINDOW_COUNT = 100;
@@ -79,6 +114,19 @@ const WINDOW_COUNT = 100;
   finalWindow.style.zIndex = WINDOW_COUNT + 5;
   stage.appendChild(finalWindow);
   windows.push(finalWindow);
+
+  // running z-index counter for anything created/raised AFTER the initial batch
+  let topZ = WINDOW_COUNT + 10;
+
+  function spawnReplacement() {
+    const w = makeWindow(false);
+    w.style.left = (Math.random() * maxX) + 'px';
+    w.style.top = (Math.random() * maxY) + 'px';
+    w.style.zIndex = ++topZ;
+    stage.appendChild(w);
+    // add 'show' on the next frame so its fade-in transition actually plays
+    requestAnimationFrame(function () { w.classList.add('show'); });
+  }
 
   if (reduceMotion) {
     windows.forEach(function (w) { w.classList.add('show'); });
@@ -207,3 +255,4 @@ const WINDOW_COUNT = 100;
   applyPos();
   applyAngle();
 })();
+      

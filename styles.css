@@ -1227,7 +1227,7 @@ a.tag { text-decoration: none; }
   text-align: center;
   line-height: 1rem;
   font-size: 0.75rem;
-  cursor: default;
+  cursor: pointer;
 }
 .telly-window-body {
   padding: 1rem;

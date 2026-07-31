@@ -269,6 +269,102 @@ a:hover { color: var(--paper); }
   .cal-weekdays span { font-size: 0.6rem; }
 }
 
+/* ---- WALL CALENDAR (tear-off stack) ------------------------- */
+.wall-calendar {
+  position: relative;
+  max-width: 36rem;
+  margin: 3rem auto 4rem;
+}
+.wall-calendar-mount {
+  position: absolute;
+  top: -0.7rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe680, #c9971f 70%, #8a6a12 100%);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+  z-index: 20;
+}
+
+.calendar-stack {
+  position: relative;
+  display: grid;
+}
+.calendar-sheet {
+  grid-area: 1 / 1;
+  position: relative;
+  background: var(--paper);
+  color: var(--ink-on-paper);
+  border-radius: 4px;
+  padding: 1.8rem 1.6rem 2.4rem;
+  box-shadow: 0 18px 34px rgba(0,0,0,0.45), 0 3px 6px rgba(0,0,0,0.3);
+  cursor: grab;
+  user-select: none;
+  transform: translate(calc(var(--stack-i, 0) * 5px), calc(var(--stack-i, 0) * 7px));
+  filter: brightness(calc(1 - var(--stack-i, 0) * 0.07));
+  transition: transform 0.3s ease;
+}
+.calendar-sheet:active { cursor: grabbing; }
+.calendar-sheet.dragging { transition: none; }
+.calendar-sheet header { margin-bottom: 0.6rem; }
+.calendar-sheet .eyebrow { color: var(--dt-on-paper); }
+.calendar-sheet h2 { color: var(--ink-on-paper); margin: 0.1rem 0 0; }
+
+/* perforated tear line along the bottom of every sheet */
+.calendar-sheet::after {
+  content: "";
+  position: absolute;
+  left: 0.6rem;
+  right: 0.6rem;
+  bottom: 0.7rem;
+  border-bottom: 2px dashed rgba(46, 33, 24, 0.25);
+}
+
+/* paper-sheet versions of the day cells (light card, not dark wall) */
+.calendar-sheet .cal-weekdays span { color: rgba(46, 33, 24, 0.55); }
+.calendar-sheet .cal-day {
+  background: rgba(46, 33, 24, 0.05);
+  border: 1px solid rgba(46, 33, 24, 0.15);
+}
+.calendar-sheet .cal-day .num { color: rgba(46, 33, 24, 0.55); }
+.calendar-sheet .cal-day.holiday {
+  background: rgba(227, 169, 78, 0.4);
+  border-color: rgba(180, 130, 40, 0.7);
+}
+.calendar-sheet .cal-day.holiday .num { color: #6b4a12; }
+.calendar-sheet .cal-day .holiday-name { color: var(--ink-on-paper); font-weight: 600; }
+.calendar-sheet button.cal-day {
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.calendar-sheet button.cal-day:hover { background: rgba(227, 169, 78, 0.55); }
+.calendar-sheet div.cal-day { cursor: default; }
+
+.calendar-controls {
+  position: relative;
+  z-index: 1;
+  margin-top: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: center;
+}
+.tear-hint {
+  font-family: var(--label);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 700px) {
+  .calendar-sheet { padding: 1.3rem 1rem 2rem; }
+}
+
 /* ---- CARDS ------------------------------------------------ */
 .grid {
   display: grid;

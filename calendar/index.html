@@ -7,7 +7,7 @@
   <meta name="description" content="The Inbetween's year — four seasons, eight holidays, 112 days." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
 </head>
 <body>
@@ -19,241 +19,286 @@
     <h1>The Inbetween Calendar</h1>
     <p class="calendar-intro">A year in the Inbetween runs 112 days &mdash; four seasons of
       28 days each, every one ending in a holiday the whole community turns out for.
-      Some are quiet. Some take over the Boardwalk for days at a time. Hover, or just
-      look for the lit-up squares.</p>
+      Tap a lit-up date for more, or grab the page itself and tear it off to move
+      on to the next month.</p>
 
-    <!-- ============================================================
-         SPRING
-         ============================================================ -->
-    <section class="calendar-season">
-      <span class="eyebrow">Season 1</span>
-      <h2>Spring</h2>
+    <div class="wall-calendar">
+      <div class="wall-calendar-mount"></div>
 
-      <div class="cal-weekdays">
-        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
-        <span>Fri</span><span>Sat</span><span>Sun</span>
+      <div class="calendar-stack" id="calendarStack">
+
+        <!-- ============================================================
+             SPRING
+             ============================================================ -->
+        <article class="calendar-sheet" data-season="spring">
+          <header>
+            <span class="eyebrow">Season 1</span>
+            <h2>Spring</h2>
+          </header>
+
+          <div class="cal-weekdays">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
+            <span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-day"><span class="num">1</span></div>
+            <div class="cal-day"><span class="num">2</span></div>
+            <div class="cal-day"><span class="num">3</span></div>
+            <div class="cal-day"><span class="num">4</span></div>
+            <div class="cal-day"><span class="num">5</span></div>
+            <div class="cal-day"><span class="num">6</span></div>
+            <button type="button" class="cal-day holiday" data-title="New Bloom"
+              data-desc="The Dream Garden blooms all at once, signaling the start of the New Year. Petals drift like confetti and showcase snippets of harmless memories.">
+              <span class="num">7</span><span class="holiday-name">New Bloom</span>
+            </button>
+
+            <div class="cal-day"><span class="num">8</span></div>
+            <div class="cal-day"><span class="num">9</span></div>
+            <div class="cal-day"><span class="num">10</span></div>
+            <div class="cal-day"><span class="num">11</span></div>
+            <div class="cal-day"><span class="num">12</span></div>
+            <div class="cal-day"><span class="num">13</span></div>
+            <div class="cal-day"><span class="num">14</span></div>
+
+            <div class="cal-day"><span class="num">15</span></div>
+            <div class="cal-day"><span class="num">16</span></div>
+            <div class="cal-day"><span class="num">17</span></div>
+            <div class="cal-day"><span class="num">18</span></div>
+            <div class="cal-day"><span class="num">19</span></div>
+            <div class="cal-day"><span class="num">20</span></div>
+            <div class="cal-day"><span class="num">21</span></div>
+
+            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 1"
+              data-desc="A week of cleaning &mdash; physically, spiritually, and mentally.">
+              <span class="num">22</span><span class="holiday-name">Spring Cleaning &middot; Day 1</span>
+            </button>
+            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 2"
+              data-desc="A week of cleaning &mdash; physically, spiritually, and mentally.">
+              <span class="num">23</span><span class="holiday-name">Spring Cleaning &middot; Day 2</span>
+            </button>
+            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 3"
+              data-desc="A week of cleaning &mdash; physically, spiritually, and mentally.">
+              <span class="num">24</span><span class="holiday-name">Spring Cleaning &middot; Day 3</span>
+            </button>
+            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 4"
+              data-desc="A week of cleaning &mdash; physically, spiritually, and mentally.">
+              <span class="num">25</span><span class="holiday-name">Spring Cleaning &middot; Day 4</span>
+            </button>
+            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 5"
+              data-desc="A week of cleaning &mdash; physically, spiritually, and mentally.">
+              <span class="num">26</span><span class="holiday-name">Spring Cleaning &middot; Day 5</span>
+            </button>
+            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 6"
+              data-desc="A week of cleaning &mdash; physically, spiritually, and mentally.">
+              <span class="num">27</span><span class="holiday-name">Spring Cleaning &middot; Day 6</span>
+            </button>
+            <button type="button" class="cal-day holiday" data-title="Sunrise Feast"
+              data-desc="The end of Spring Cleaning week starts with a morning-long banquet, from sunrise to just after noon, located on the Boardwalk.">
+              <span class="num">28</span><span class="holiday-name">Sunrise Feast</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ============================================================
+             SUMMER
+             ============================================================ -->
+        <article class="calendar-sheet" data-season="summer">
+          <header>
+            <span class="eyebrow">Season 2</span>
+            <h2>Summer</h2>
+          </header>
+
+          <div class="cal-weekdays">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
+            <span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-day"><span class="num">1</span></div>
+            <div class="cal-day"><span class="num">2</span></div>
+            <div class="cal-day"><span class="num">3</span></div>
+            <div class="cal-day"><span class="num">4</span></div>
+            <button type="button" class="cal-day holiday" data-title="Block Party &middot; Day 1"
+              data-desc="The Boardwalk turns into a street fair. Chalk art, flag bunting, body paint, and even a parade to celebrate your individuality.">
+              <span class="num">5</span><span class="holiday-name">Block Party &middot; Day 1</span>
+            </button>
+            <button type="button" class="cal-day holiday" data-title="Block Party &middot; Day 2"
+              data-desc="The Boardwalk turns into a street fair. Chalk art, flag bunting, body paint, and even a parade to celebrate your individuality.">
+              <span class="num">6</span><span class="holiday-name">Block Party &middot; Day 2</span>
+            </button>
+            <button type="button" class="cal-day holiday" data-title="Block Party &middot; Day 3"
+              data-desc="The Boardwalk turns into a street fair. Chalk art, flag bunting, body paint, and even a parade to celebrate your individuality.">
+              <span class="num">7</span><span class="holiday-name">Block Party &middot; Day 3</span>
+            </button>
+
+            <div class="cal-day"><span class="num">8</span></div>
+            <div class="cal-day"><span class="num">9</span></div>
+            <div class="cal-day"><span class="num">10</span></div>
+            <div class="cal-day"><span class="num">11</span></div>
+            <div class="cal-day"><span class="num">12</span></div>
+            <div class="cal-day"><span class="num">13</span></div>
+            <div class="cal-day"><span class="num">14</span></div>
+
+            <div class="cal-day"><span class="num">15</span></div>
+            <div class="cal-day"><span class="num">16</span></div>
+            <div class="cal-day"><span class="num">17</span></div>
+            <div class="cal-day"><span class="num">18</span></div>
+            <div class="cal-day"><span class="num">19</span></div>
+            <div class="cal-day"><span class="num">20</span></div>
+            <div class="cal-day"><span class="num">21</span></div>
+
+            <div class="cal-day"><span class="num">22</span></div>
+            <div class="cal-day"><span class="num">23</span></div>
+            <div class="cal-day"><span class="num">24</span></div>
+            <div class="cal-day"><span class="num">25</span></div>
+            <div class="cal-day"><span class="num">26</span></div>
+            <div class="cal-day"><span class="num">27</span></div>
+            <button type="button" class="cal-day holiday" data-title="Lantern Festival"
+              data-desc="A night of remembrance for worlds and loved ones lost or left behind. Lanterns are decorated and sent floating into the sky, or drifting on small boats from the Boardwalk carrying prayers.">
+              <span class="num">28</span><span class="holiday-name">Lantern Festival</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ============================================================
+             FALL
+             ============================================================ -->
+        <article class="calendar-sheet" data-season="fall">
+          <header>
+            <span class="eyebrow">Season 3</span>
+            <h2>Fall</h2>
+          </header>
+
+          <div class="cal-weekdays">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
+            <span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-day"><span class="num">1</span></div>
+            <div class="cal-day"><span class="num">2</span></div>
+            <div class="cal-day"><span class="num">3</span></div>
+            <div class="cal-day"><span class="num">4</span></div>
+            <div class="cal-day"><span class="num">5</span></div>
+            <div class="cal-day"><span class="num">6</span></div>
+            <div class="cal-day"><span class="num">7</span></div>
+
+            <div class="cal-day"><span class="num">8</span></div>
+            <div class="cal-day"><span class="num">9</span></div>
+            <div class="cal-day"><span class="num">10</span></div>
+            <button type="button" class="cal-day holiday" data-title="Grand Potluck"
+              data-desc="No one eats alone on Potluck Day. Residents bring food from all walks of the world to share, from snacks to delicacies.">
+              <span class="num">11</span><span class="holiday-name">Grand Potluck</span>
+            </button>
+            <div class="cal-day"><span class="num">12</span></div>
+            <div class="cal-day"><span class="num">13</span></div>
+            <div class="cal-day"><span class="num">14</span></div>
+
+            <div class="cal-day"><span class="num">15</span></div>
+            <div class="cal-day"><span class="num">16</span></div>
+            <div class="cal-day"><span class="num">17</span></div>
+            <div class="cal-day"><span class="num">18</span></div>
+            <div class="cal-day"><span class="num">19</span></div>
+            <div class="cal-day"><span class="num">20</span></div>
+            <div class="cal-day"><span class="num">21</span></div>
+
+            <div class="cal-day"><span class="num">22</span></div>
+            <div class="cal-day"><span class="num">23</span></div>
+            <div class="cal-day"><span class="num">24</span></div>
+            <div class="cal-day"><span class="num">25</span></div>
+            <button type="button" class="cal-day holiday" data-title="Night Market &middot; Day 1 (Candy Run!)"
+              data-desc="Three nights of glowing stalls lining the Boardwalk. Children of the Inbetween spend the first night collecting candy.">
+              <span class="num">26</span><span class="holiday-name">Night Market &middot; Day 1 (Candy Run!)</span>
+            </button>
+            <button type="button" class="cal-day holiday" data-title="Night Market &middot; Day 2"
+              data-desc="Three nights of glowing stalls lining the Boardwalk.">
+              <span class="num">27</span><span class="holiday-name">Night Market &middot; Day 2</span>
+            </button>
+            <button type="button" class="cal-day holiday" data-title="Night Market &middot; Day 3"
+              data-desc="Three nights of glowing stalls lining the Boardwalk.">
+              <span class="num">28</span><span class="holiday-name">Night Market &middot; Day 3</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- ============================================================
+             WINTER
+             ============================================================ -->
+        <article class="calendar-sheet" data-season="winter">
+          <header>
+            <span class="eyebrow">Season 4</span>
+            <h2>Winter</h2>
+          </header>
+
+          <div class="cal-weekdays">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
+            <span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-day"><span class="num">1</span></div>
+            <div class="cal-day"><span class="num">2</span></div>
+            <div class="cal-day"><span class="num">3</span></div>
+            <div class="cal-day"><span class="num">4</span></div>
+            <div class="cal-day"><span class="num">5</span></div>
+            <div class="cal-day"><span class="num">6</span></div>
+            <div class="cal-day"><span class="num">7</span></div>
+
+            <div class="cal-day"><span class="num">8</span></div>
+            <div class="cal-day"><span class="num">9</span></div>
+            <div class="cal-day"><span class="num">10</span></div>
+            <div class="cal-day"><span class="num">11</span></div>
+            <div class="cal-day"><span class="num">12</span></div>
+            <div class="cal-day"><span class="num">13</span></div>
+            <div class="cal-day"><span class="num">14</span></div>
+
+            <div class="cal-day"><span class="num">15</span></div>
+            <div class="cal-day"><span class="num">16</span></div>
+            <div class="cal-day"><span class="num">17</span></div>
+            <div class="cal-day"><span class="num">18</span></div>
+            <button type="button" class="cal-day holiday" data-title="Hearthlights &middot; Night 1"
+              data-desc="Three nights of gift-giving, candle-lighting, and finding warmth in friends and family. Games and harmless pranks are encouraged.">
+              <span class="num">19</span><span class="holiday-name">Hearthlights &middot; Night 1</span>
+            </button>
+            <button type="button" class="cal-day holiday" data-title="Hearthlights &middot; Night 2"
+              data-desc="Three nights of gift-giving, candle-lighting, and finding warmth in friends and family.">
+              <span class="num">20</span><span class="holiday-name">Hearthlights &middot; Night 2</span>
+            </button>
+            <button type="button" class="cal-day holiday" data-title="Hearthlights &middot; Night 3"
+              data-desc="Three nights of gift-giving, candle-lighting, and finding warmth in friends and family.">
+              <span class="num">21</span><span class="holiday-name">Hearthlights &middot; Night 3</span>
+            </button>
+
+            <div class="cal-day"><span class="num">22</span></div>
+            <div class="cal-day"><span class="num">23</span></div>
+            <div class="cal-day"><span class="num">24</span></div>
+            <div class="cal-day"><span class="num">25</span></div>
+            <div class="cal-day"><span class="num">26</span></div>
+            <div class="cal-day"><span class="num">27</span></div>
+            <button type="button" class="cal-day holiday" data-title="Year's End"
+              data-desc="The final night of the year. Fireworks, reflections, and a countdown to midnight collide in one last hurrah, and one last grand meal is shared.">
+              <span class="num">28</span><span class="holiday-name">Year's End</span>
+            </button>
+          </div>
+        </article>
+
       </div>
-      <div class="cal-grid">
-        <div class="cal-day"><span class="num">1</span></div>
-        <div class="cal-day"><span class="num">2</span></div>
-        <div class="cal-day"><span class="num">3</span></div>
-        <div class="cal-day"><span class="num">4</span></div>
-        <div class="cal-day"><span class="num">5</span></div>
-        <div class="cal-day"><span class="num">6</span></div>
-        <div class="cal-day holiday"><span class="num">7</span><span class="holiday-name">New Bloom</span></div>
 
-        <div class="cal-day"><span class="num">8</span></div>
-        <div class="cal-day"><span class="num">9</span></div>
-        <div class="cal-day"><span class="num">10</span></div>
-        <div class="cal-day"><span class="num">11</span></div>
-        <div class="cal-day"><span class="num">12</span></div>
-        <div class="cal-day"><span class="num">13</span></div>
-        <div class="cal-day"><span class="num">14</span></div>
-
-        <div class="cal-day"><span class="num">15</span></div>
-        <div class="cal-day"><span class="num">16</span></div>
-        <div class="cal-day"><span class="num">17</span></div>
-        <div class="cal-day"><span class="num">18</span></div>
-        <div class="cal-day"><span class="num">19</span></div>
-        <div class="cal-day"><span class="num">20</span></div>
-        <div class="cal-day"><span class="num">21</span></div>
-
-        <div class="cal-day holiday"><span class="num">22</span><span class="holiday-name">Spring Cleaning &middot; Day 1</span></div>
-        <div class="cal-day holiday"><span class="num">23</span><span class="holiday-name">Spring Cleaning &middot; Day 2</span></div>
-        <div class="cal-day holiday"><span class="num">24</span><span class="holiday-name">Spring Cleaning &middot; Day 3</span></div>
-        <div class="cal-day holiday"><span class="num">25</span><span class="holiday-name">Spring Cleaning &middot; Day 4</span></div>
-        <div class="cal-day holiday"><span class="num">26</span><span class="holiday-name">Spring Cleaning &middot; Day 5</span></div>
-        <div class="cal-day holiday"><span class="num">27</span><span class="holiday-name">Spring Cleaning &middot; Day 6</span></div>
-        <div class="cal-day holiday"><span class="num">28</span><span class="holiday-name">Sunrise Feast</span></div>
+      <div class="calendar-controls">
+        <span class="tear-hint">Drag the page down to tear it off</span>
+        <button type="button" class="btn" id="tearNextBtn">Tear off this month &rarr;</button>
       </div>
-
-      <dl class="calendar-key">
-        <dt>New Bloom</dt>
-        <dd>The Dream Garden blooms all at once, signaling the start of the New Year.
-          Petals drift like confetti and showcase snippets of harmless memories.</dd>
-        <dt>Spring Cleaning &amp; the Sunrise Feast</dt>
-        <dd>A week of cleaning &mdash; physically, spiritually, and mentally. The end of
-          the week starts with a morning-long banquet from sunrise to just after noon,
-          located on the Boardwalk.</dd>
-      </dl>
-    </section>
-
-    <hr class="threshold" />
-
-    <!-- ============================================================
-         SUMMER
-         ============================================================ -->
-    <section class="calendar-season">
-      <span class="eyebrow">Season 2</span>
-      <h2>Summer</h2>
-
-      <div class="cal-weekdays">
-        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
-        <span>Fri</span><span>Sat</span><span>Sun</span>
-      </div>
-      <div class="cal-grid">
-        <div class="cal-day"><span class="num">1</span></div>
-        <div class="cal-day"><span class="num">2</span></div>
-        <div class="cal-day"><span class="num">3</span></div>
-        <div class="cal-day"><span class="num">4</span></div>
-        <div class="cal-day holiday"><span class="num">5</span><span class="holiday-name">Block Party &middot; Day 1</span></div>
-        <div class="cal-day holiday"><span class="num">6</span><span class="holiday-name">Block Party &middot; Day 2</span></div>
-        <div class="cal-day holiday"><span class="num">7</span><span class="holiday-name">Block Party &middot; Day 3</span></div>
-
-        <div class="cal-day"><span class="num">8</span></div>
-        <div class="cal-day"><span class="num">9</span></div>
-        <div class="cal-day"><span class="num">10</span></div>
-        <div class="cal-day"><span class="num">11</span></div>
-        <div class="cal-day"><span class="num">12</span></div>
-        <div class="cal-day"><span class="num">13</span></div>
-        <div class="cal-day"><span class="num">14</span></div>
-
-        <div class="cal-day"><span class="num">15</span></div>
-        <div class="cal-day"><span class="num">16</span></div>
-        <div class="cal-day"><span class="num">17</span></div>
-        <div class="cal-day"><span class="num">18</span></div>
-        <div class="cal-day"><span class="num">19</span></div>
-        <div class="cal-day"><span class="num">20</span></div>
-        <div class="cal-day"><span class="num">21</span></div>
-
-        <div class="cal-day"><span class="num">22</span></div>
-        <div class="cal-day"><span class="num">23</span></div>
-        <div class="cal-day"><span class="num">24</span></div>
-        <div class="cal-day"><span class="num">25</span></div>
-        <div class="cal-day"><span class="num">26</span></div>
-        <div class="cal-day"><span class="num">27</span></div>
-        <div class="cal-day holiday"><span class="num">28</span><span class="holiday-name">Lantern Festival</span></div>
-      </div>
-
-      <dl class="calendar-key">
-        <dt>Block Party</dt>
-        <dd>The Boardwalk turns into a street fair. Chalk art, flag bunting, body paint,
-          and even a parade to celebrate your individuality.</dd>
-        <dt>Lantern Festival</dt>
-        <dd>A night of remembrance for worlds and loved ones lost or left behind.
-          Lanterns are decorated and sent floating into the sky, or drifting on small
-          boats from the Boardwalk carrying prayers.</dd>
-      </dl>
-    </section>
-
-    <hr class="threshold" />
-
-    <!-- ============================================================
-         FALL
-         ============================================================ -->
-    <section class="calendar-season">
-      <span class="eyebrow">Season 3</span>
-      <h2>Fall</h2>
-
-      <div class="cal-weekdays">
-        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
-        <span>Fri</span><span>Sat</span><span>Sun</span>
-      </div>
-      <div class="cal-grid">
-        <div class="cal-day"><span class="num">1</span></div>
-        <div class="cal-day"><span class="num">2</span></div>
-        <div class="cal-day"><span class="num">3</span></div>
-        <div class="cal-day"><span class="num">4</span></div>
-        <div class="cal-day"><span class="num">5</span></div>
-        <div class="cal-day"><span class="num">6</span></div>
-        <div class="cal-day"><span class="num">7</span></div>
-
-        <div class="cal-day"><span class="num">8</span></div>
-        <div class="cal-day"><span class="num">9</span></div>
-        <div class="cal-day"><span class="num">10</span></div>
-        <div class="cal-day holiday"><span class="num">11</span><span class="holiday-name">Grand Potluck</span></div>
-        <div class="cal-day"><span class="num">12</span></div>
-        <div class="cal-day"><span class="num">13</span></div>
-        <div class="cal-day"><span class="num">14</span></div>
-
-        <div class="cal-day"><span class="num">15</span></div>
-        <div class="cal-day"><span class="num">16</span></div>
-        <div class="cal-day"><span class="num">17</span></div>
-        <div class="cal-day"><span class="num">18</span></div>
-        <div class="cal-day"><span class="num">19</span></div>
-        <div class="cal-day"><span class="num">20</span></div>
-        <div class="cal-day"><span class="num">21</span></div>
-
-        <div class="cal-day"><span class="num">22</span></div>
-        <div class="cal-day"><span class="num">23</span></div>
-        <div class="cal-day"><span class="num">24</span></div>
-        <div class="cal-day"><span class="num">25</span></div>
-        <div class="cal-day holiday"><span class="num">26</span><span class="holiday-name">Night Market &middot; Day 1 (Candy Run!)</span></div>
-        <div class="cal-day holiday"><span class="num">27</span><span class="holiday-name">Night Market &middot; Day 2</span></div>
-        <div class="cal-day holiday"><span class="num">28</span><span class="holiday-name">Night Market &middot; Day 3</span></div>
-      </div>
-
-      <dl class="calendar-key">
-        <dt>Grand Potluck</dt>
-        <dd>No one eats alone on Potluck Day. Residents bring food from all walks of
-          the world to share, from snacks to delicacies.</dd>
-        <dt>Night Market</dt>
-        <dd>Three nights of glowing stalls lining the Boardwalk. Children of the
-          Inbetween spend the first night collecting candy.</dd>
-      </dl>
-    </section>
-
-    <hr class="threshold" />
-
-    <!-- ============================================================
-         WINTER
-         ============================================================ -->
-    <section class="calendar-season">
-      <span class="eyebrow">Season 4</span>
-      <h2>Winter</h2>
-
-      <div class="cal-weekdays">
-        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
-        <span>Fri</span><span>Sat</span><span>Sun</span>
-      </div>
-      <div class="cal-grid">
-        <div class="cal-day"><span class="num">1</span></div>
-        <div class="cal-day"><span class="num">2</span></div>
-        <div class="cal-day"><span class="num">3</span></div>
-        <div class="cal-day"><span class="num">4</span></div>
-        <div class="cal-day"><span class="num">5</span></div>
-        <div class="cal-day"><span class="num">6</span></div>
-        <div class="cal-day"><span class="num">7</span></div>
-
-        <div class="cal-day"><span class="num">8</span></div>
-        <div class="cal-day"><span class="num">9</span></div>
-        <div class="cal-day"><span class="num">10</span></div>
-        <div class="cal-day"><span class="num">11</span></div>
-        <div class="cal-day"><span class="num">12</span></div>
-        <div class="cal-day"><span class="num">13</span></div>
-        <div class="cal-day"><span class="num">14</span></div>
-
-        <div class="cal-day"><span class="num">15</span></div>
-        <div class="cal-day"><span class="num">16</span></div>
-        <div class="cal-day"><span class="num">17</span></div>
-        <div class="cal-day"><span class="num">18</span></div>
-        <div class="cal-day holiday"><span class="num">19</span><span class="holiday-name">Hearthlights &middot; Night 1</span></div>
-        <div class="cal-day holiday"><span class="num">20</span><span class="holiday-name">Hearthlights &middot; Night 2</span></div>
-        <div class="cal-day holiday"><span class="num">21</span><span class="holiday-name">Hearthlights &middot; Night 3</span></div>
-
-        <div class="cal-day"><span class="num">22</span></div>
-        <div class="cal-day"><span class="num">23</span></div>
-        <div class="cal-day"><span class="num">24</span></div>
-        <div class="cal-day"><span class="num">25</span></div>
-        <div class="cal-day"><span class="num">26</span></div>
-        <div class="cal-day"><span class="num">27</span></div>
-        <div class="cal-day holiday"><span class="num">28</span><span class="holiday-name">Year's End</span></div>
-      </div>
-
-      <dl class="calendar-key">
-        <dt>Hearthlights</dt>
-        <dd>Three nights of gift-giving, candle-lighting, and finding warmth in
-          friends and family. Games and harmless pranks are encouraged.</dd>
-        <dt>Year's End</dt>
-        <dd>The final night of the year. Fireworks, reflections, and a countdown to
-          midnight collide in one last hurrah, and one last grand meal is shared.</dd>
-      </dl>
-    </section>
+    </div>
 
   </main>
+
+  <div class="note-overlay" id="note-overlay">
+    <div class="note" id="note-content">
+      <button class="note-close" id="note-close">&times;</button>
+      <div id="note-body"></div>
+    </div>
+  </div>
 
   <site-footer></site-footer>
 
   <script src="../components.js" defer></script>
+  <script src="../calendar.js" defer></script>
 </body>
 </html>

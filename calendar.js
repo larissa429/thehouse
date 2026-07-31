@@ -45,21 +45,29 @@
 
   function tearOff(sheet) {
     if (sheets[0] !== sheet) return; // safety: only the front sheet can tear
+
+    var advanced = false;
+    function advance() {
+      if (advanced) return; // transitionend AND the timeout fallback can both
+      advanced = true;      // fire — only run this once, whichever comes first
+      sheet.style.transition = '';
+      sheet.style.transform = '';
+      sheet.style.opacity = '';
+      sheets.push(sheets.shift());
+      layout();
+    }
+
     sheet.style.transition = 'transform 0.5s cubic-bezier(.4,0,.7,1), opacity 0.5s ease-in';
     var dir = Math.random() < 0.5 ? -1 : 1;
     sheet.style.transform = 'translate(' + (dir * 40) + 'px, 140%) rotate(' + (dir * 16) + 'deg)';
     sheet.style.opacity = '0';
     sheet.style.pointerEvents = 'none';
 
-    sheet.addEventListener('transitionend', function handler(e) {
-      if (e.propertyName !== 'transform') return;
-      sheet.removeEventListener('transitionend', handler);
-      sheet.style.transition = '';
-      sheet.style.transform = '';
-      sheet.style.opacity = '';
-      sheets.push(sheets.shift());
-      layout();
-    }, { once: true });
+    // don't filter by e.propertyName — transform and opacity finish at the
+    // same time, and {once:true} would consume the listener on whichever
+    // one fires first, silently dropping the other
+    sheet.addEventListener('transitionend', advance, { once: true });
+    setTimeout(advance, 600); // safety net in case transitionend never fires
   }
 
   sheets.forEach(function (sheet) {

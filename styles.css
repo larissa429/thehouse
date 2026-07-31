@@ -199,6 +199,76 @@ a:hover { color: var(--paper); }
   opacity: 0.5;
 }
 
+/* ============================================================
+   CALENDAR PAGE
+   ============================================================ */
+.calendar-intro { max-width: var(--measure); }
+
+.calendar-season { margin: 2rem 0; }
+.calendar-season h2 { margin-top: 0.3rem; }
+
+.cal-weekdays, .cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.4rem;
+}
+.cal-weekdays {
+  margin-bottom: 0.4rem;
+}
+.cal-weekdays span {
+  font-family: var(--label);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.cal-day {
+  background: var(--wall);
+  border: var(--edge);
+  border-radius: 2px;
+  min-height: 3.8rem;
+  padding: 0.35rem 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.cal-day .num {
+  font-family: var(--label);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+.cal-day.holiday {
+  background: var(--wall-lit);
+  border-color: rgba(227, 169, 78, 0.5);
+  box-shadow: inset 0 0 12px rgba(227, 169, 78, 0.12);
+}
+.cal-day.holiday .num { color: var(--lamp); }
+.cal-day .holiday-name {
+  font-family: var(--display);
+  font-size: 0.82rem;
+  line-height: 1.2;
+  color: var(--paper);
+}
+
+.calendar-key { margin-top: 1.2rem; }
+.calendar-key dt {
+  font-family: var(--display);
+  color: var(--lamp);
+  font-size: 1.05rem;
+  margin-top: 1rem;
+}
+.calendar-key dd {
+  margin: 0.2rem 0 0;
+  color: var(--ink);
+}
+
+@media (max-width: 700px) {
+  .cal-day { min-height: 3.2rem; padding: 0.3rem; }
+  .cal-day .holiday-name { font-size: 0.7rem; }
+  .cal-weekdays span { font-size: 0.6rem; }
+}
+
 /* ---- CARDS ------------------------------------------------ */
 .grid {
   display: grid;

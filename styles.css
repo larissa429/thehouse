@@ -1031,9 +1031,9 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
 .note[data-color="charlie"]  { background: #bcd6ea; }
 .note[data-color="bunny"]    { background: #cfc4d4; }
 .note[data-color="mirror"]   { background: #cfe0d8; }
-.note[data-color="lp"]       { background: #d4c4b8; }
+.note[data-color="lp"]       { background: #cfa8d4; }
 .note[data-color="indigo"]   { background: #b8a8d4; }
-.note[data-color="cassette"] { background: #e0a8c8; }
+.note[data-color="cassette"] { background: #f0a878; }
 .note[data-color="geeky"]    { background: #c8b088; }
 
 .connection-pin[data-color="charlie"] img {
@@ -1052,6 +1052,8 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
 .note[data-color="dream"]  { background: #c7b8d4; }
 .note[data-color="liz"]    { background: #f2c6d6; }
 .note[data-color="pbc"]    { background: #e8781e; }
+.note[data-color="cools"]     { background: #c4b0e8; }
+.note[data-color="dumptruck"] { background: #e8c65a; }
 
 .casting .tag {
   display: inline-block;

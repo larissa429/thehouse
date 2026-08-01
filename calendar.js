@@ -43,6 +43,12 @@
       sheet.style.setProperty('--stack-i', i);
       sheet.style.zIndex = sheets.length - i;
       sheet.style.pointerEvents = i === 0 ? 'auto' : 'none';
+      // dimming only applies to sheets behind the front one — kept off the
+      // front sheet entirely (not even set to a no-op brightness(1)),
+      // because `filter` promotes an element onto its own GPU compositing
+      // layer, a known source of touch hit-testing glitches on mobile
+      // Chrome for elements inside a scrolling page
+      sheet.style.filter = i === 0 ? '' : 'brightness(' + (1 - i * 0.07) + ')';
       sheet.setAttribute('aria-hidden', i === 0 ? 'false' : 'true');
     });
   }

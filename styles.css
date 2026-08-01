@@ -314,8 +314,9 @@ a:hover { color: var(--paper); }
   touch-action: none; /* must be set here, not dynamically in JS on pointerdown —
                           by then the browser may have already committed to scrolling */
   transform: translate(calc(var(--stack-i, 0) * 5px), calc(var(--stack-i, 0) * 7px));
-  filter: brightness(calc(1 - var(--stack-i, 0) * 0.07));
   transition: transform 0.3s ease;
+  /* dimming (filter) for sheets behind the front one is applied via JS in
+     calendar.js's layout(), not here — see the comment there for why */
 }
 .calendar-sheet:active { cursor: grabbing; }
 .calendar-sheet.dragging { transition: none; }

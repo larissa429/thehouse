@@ -1609,3 +1609,129 @@ main img {
   max-width: 100%;
   height: auto;
 }
+
+/* ============================================================
+   ART: MISC DESK
+   ============================================================ */
+.desk-scene {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin: 2rem 0 3rem;
+}
+.desk {
+  position: relative;
+  flex: 1;
+  min-height: 34rem;
+  border-radius: 6px;
+  /* no overflow:hidden — a dragged paper needs to visibly cross into the
+     trash-zone beside the desk, not get clipped at the desk's own edge */
+  touch-action: none;
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.06) 0 2px, transparent 2px 7px),
+    linear-gradient(160deg, #8a5a34, #6b4226 55%, #4e331e);
+  box-shadow: inset 0 0 50px rgba(0,0,0,0.55), 0 10px 26px rgba(0,0,0,0.4);
+}
+
+/* just the can, bottom-right beside the desk — no panel/background of its
+   own, so it doesn't read as a big colored bar next to the table */
+.trash-zone {
+  flex: 0 0 auto;
+  align-self: flex-end;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0.5rem;
+}
+
+.desk-paper {
+  position: absolute;
+  left: var(--x, 50%);
+  top: var(--y, 50%);
+  width: 9rem;
+  max-width: 26%;
+  transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) scale(var(--scale, 1));
+  cursor: grab;
+  touch-action: none;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.45));
+  transition: transform 0.25s ease;
+  z-index: 1;
+}
+.desk-paper:active { cursor: grabbing; }
+.desk-paper.dragging { transition: none; z-index: 50; cursor: grabbing; }
+
+.desk-paper img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 6px solid #fff;
+  border-radius: 2px;
+  background: #fff;
+  pointer-events: none; /* the wrapper div handles dragging, not the image */
+  user-select: none;
+}
+
+.desk-paper.entering {
+  animation: paper-flutter-in 0.9s cubic-bezier(.2,.8,.3,1) both;
+}
+@keyframes paper-flutter-in {
+  /* top-down view, so scale (not vertical movement) is the only real cue
+     for "falling from above the desk" — starts oversized (like it's still
+     up near the camera) and shrinks down to its resting size, landing */
+  0%   { opacity: 0; transform: translate(-50%, -50%) translateY(-14px) scale(1.8) rotate(calc(var(--rot, 0deg) - 45deg)); }
+  40%  { opacity: 1; transform: translate(-50%, -50%) translateY(4px) scale(0.9) rotate(calc(var(--rot, 0deg) + 14deg)); }
+  65%  { transform: translate(-50%, -50%) translateY(-2px) scale(1.05) rotate(calc(var(--rot, 0deg) - 7deg)); }
+  100% { opacity: 1; transform: translate(-50%, -50%) translateY(0) scale(var(--scale, 1)) rotate(var(--rot, 0deg)); }
+}
+
+.desk-paper.crumpling {
+  transition: transform 0.4s ease-in, filter 0.4s ease-in, left 0.35s ease-in, top 0.35s ease-in;
+}
+.desk-paper.crumpling img,
+.desk-paper.bouncing img {
+  border: none;
+  background: none;
+}
+
+/* the little in-can bounce, applied to the <img> rather than .desk-paper
+   itself — the img has no transform of its own, so it can be driven
+   directly by JS (real position/velocity physics, reflecting off the can's
+   circular rim) completely independently of the outer element's
+   --x/--y/--rot/--scale system, with zero risk of fighting over the same
+   `transform` property (the exact bug the `entering` animation caused
+   earlier). No @keyframes here on purpose — see runBounce() in desk.js. */
+
+.trash-can.wobble {
+  animation: trashWobble 0.45s ease-out;
+}
+@keyframes trashWobble {
+  0%   { transform: rotate(0deg); }
+  18%  { transform: rotate(3deg); }
+  36%  { transform: rotate(-2deg); }
+  55%  { transform: rotate(1.5deg); }
+  72%  { transform: rotate(-1deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.trash-can {
+  width: 6.5rem;
+  pointer-events: none; /* purely a visual target — JS checks overlap by rect */
+}
+.trash-can img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 880px) {
+  .desk-scene { flex-direction: column; }
+  .trash-zone {
+    align-self: flex-end; /* still bottom-right, now of the stacked column */
+    padding: 0.5rem 0.5rem 0 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .desk { min-height: 26rem; }
+  .desk-paper { width: 6.5rem; max-width: 34%; }
+  .trash-can { width: 4.5rem; }
+}

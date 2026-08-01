@@ -21,21 +21,26 @@
 /* the small, fixed set of non-character utility pages. Anything else
    one level deep is assumed to be a character page — so new
    character folders NEVER need to be added here manually again. */
-var UTILITY_FOLDERS = ["about", "residents", "audition", "calendar", "resources"];
+var UTILITY_FOLDERS = ["about", "residents", "audition", "calendar", "resources", "art"];
 
 var pathParts = location.pathname.split("/").filter(Boolean);
 var here = pathParts[pathParts.length - 1] || "";
 
 /* depth is read from this script's own src attribute (which every
    page already writes correctly) instead of guessing from folder
-   names — so it's automatically right for every character, forever. */
+   names — so it's automatically right for every character, forever.
+   Counts how many "../" segments are actually in the src, so this
+   works for any depth (root, one folder deep, two folders deep like
+   art/misc/, etc.) instead of only ever handling exactly one level. */
 var scriptSrc = document.currentScript ? document.currentScript.getAttribute("src") : "components.js";
-var prefix = scriptSrc.indexOf("../") === 0 ? "../" : "";
-var atRoot = prefix === "";
+var depth = (scriptSrc.match(/\.\.\//g) || []).length;
+var prefix = "../".repeat(depth);
+var atRoot = depth === 0;
 
-/* is this a character page? one level deep, and not one of the
-   fixed utility pages above */
-var isCharacterPage = !atRoot && UTILITY_FOLDERS.indexOf(here) === -1;
+/* is this a character page? EXACTLY one level deep, and not one of the
+   fixed utility pages above (two-levels-deep pages, like art/misc/,
+   are never character pages regardless of their folder name) */
+var isCharacterPage = depth === 1 && UTILITY_FOLDERS.indexOf(here) === -1;
 
 /* ---- FAVICON (auto-injected on every page) -------------------- */
 (function () {
@@ -57,6 +62,7 @@ class SiteHeader extends HTMLElement {
             <a href="${prefix}index.html" data-key="">Home</a>
             <a href="${prefix}about/" data-key="about">About</a>
             <a href="${prefix}residents/" data-key="residents">Characters</a>
+            <a href="${prefix}art/" data-key="art">Art</a>
             <a href="${prefix}resources/" data-key="resources">Resources</a>
             <a href="${prefix}audition/" data-key="audition">Audition</a>
           </nav>

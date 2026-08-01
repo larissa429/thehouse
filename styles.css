@@ -1989,3 +1989,126 @@ main img {
   .theater-controls { gap: 0.8rem; }
   .theater-clip-title { min-width: 0; font-size: 0.75rem; }
 }
+
+/* ============================================================
+   ART: OFFICIAL GALLERY
+   ============================================================ */
+.gallery-room {
+  position: relative;
+  margin: 2rem 0 3rem;
+  padding: 2.5rem 2rem;
+  border-radius: 6px;
+  background: radial-gradient(120% 100% at 50% 0%, var(--wall-lit) 0%, var(--shadow) 70%);
+  overflow: hidden;
+}
+
+.gallery-wall {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.4rem 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.gallery-frame {
+  position: relative;
+  margin: 0;
+  width: 15rem;
+  max-width: 100%;
+  padding-top: 1.6rem; /* room for the lamp fixture above the frame */
+  text-align: center;
+}
+.gallery-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #14100d;
+  border: 10px solid #3a2a1c;
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.5),
+    0 18px 34px rgba(0,0,0,0.55);
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.gallery-frame img:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.5),
+    0 24px 42px rgba(0,0,0,0.65);
+}
+
+/* a little gold museum placard, just the artist's name — corners curve
+   inward like a ticket stub (via mask, cutting a small circle out of
+   each corner rather than rounding it outward) */
+.gallery-plate {
+  display: inline-block;
+  margin-top: 0.7rem;
+  padding: 0.3rem 1.1rem;
+  font-family: var(--display);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #4a3410;
+  background: linear-gradient(180deg, #f3d98a, #c8a24a 55%, #a9822f);
+  border: 1px solid #8a6a2a;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.4);
+  --notch: 0.5rem;
+  mask-image:
+    radial-gradient(circle at top left, transparent var(--notch), #000 calc(var(--notch) + 0.5px)),
+    radial-gradient(circle at top right, transparent var(--notch), #000 calc(var(--notch) + 0.5px)),
+    radial-gradient(circle at bottom left, transparent var(--notch), #000 calc(var(--notch) + 0.5px)),
+    radial-gradient(circle at bottom right, transparent var(--notch), #000 calc(var(--notch) + 0.5px));
+  mask-composite: intersect;
+}
+
+/* the static picture-lamp fixture above each frame */
+.gallery-frame::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 2;
+  width: 2.6rem;
+  height: 0.55rem;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #5a5a5a, #2b2b2b);
+  border: 1px solid #1a1a1a;
+  border-radius: 0 0 5px 5px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+}
+
+/* its light cone, off by default, switching on only while THIS frame is
+   hovered — apex at the lamp, widening downward over the frame, with a
+   soft gradient falloff (same warm glow feel as the old cursor-tracking
+   spotlight) rather than a flat-colored shape */
+.gallery-frame::after {
+  content: "";
+  position: absolute;
+  top: 0.5rem;
+  left: 50%;
+  z-index: 1;
+  width: 14rem;
+  height: 13rem;
+  transform: translateX(-50%);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  background: radial-gradient(
+    ellipse 70% 90% at 50% 0%,
+    rgba(255, 214, 130, 0.55),
+    rgba(255, 214, 130, 0.18) 55%,
+    transparent 80%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.gallery-frame:hover::after {
+  opacity: 1;
+}
+
+@media (max-width: 700px) {
+  .gallery-frame { width: 11rem; }
+}

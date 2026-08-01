@@ -23,15 +23,26 @@
   var noteBody = document.getElementById('note-body');
   var closeBtn = document.getElementById('note-close');
 
+  var lastOpenedAt = 0;
+
   function closeNote() { if (overlay) overlay.classList.remove('open'); }
   if (overlay) {
     closeBtn.addEventListener('click', closeNote);
-    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeNote(); });
+    overlay.addEventListener('click', function (e) {
+      if (e.target !== overlay) return;
+      // some mobile browsers fire a duplicate/ghost click shortly after the
+      // real one that opened this — ignore a backdrop "click outside to
+      // close" that happens implausibly fast after opening, since a human
+      // can't see the popup and decide to dismiss it in under ~350ms
+      if (Date.now() - lastOpenedAt < 350) return;
+      closeNote();
+    });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNote(); });
   }
 
   function openHoliday(btn) {
     if (!overlay) return;
+    lastOpenedAt = Date.now();
     var title = btn.getAttribute('data-title') || '';
     var desc = btn.getAttribute('data-desc') || '';
     noteBody.innerHTML = '<h4>' + title + '</h4><p>' + desc + '</p>';

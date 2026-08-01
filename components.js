@@ -102,6 +102,11 @@ customElements.define("site-footer", SiteFooter);
 /* ---- ICONS ------------------------------------------ */
 document.querySelectorAll(".card").forEach(card => {
   card.addEventListener("click", function(event) {
+    // this two-tap-to-reveal behavior only applies to cards with a hover-only
+    // icon that needs a first tap to reveal (the residents grid) — cards
+    // without one (like the Resources grid) should just navigate on one tap
+    if (!this.querySelector(".character-icon")) return;
+
     if (window.innerWidth <= 700) {
 
       if (this.classList.contains("show-icon")) {

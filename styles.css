@@ -243,15 +243,42 @@ a:hover { color: var(--paper); }
   color: var(--ink-soft);
 }
 .cal-day.holiday {
+  position: relative;
   background: var(--wall-lit);
   border-color: rgba(227, 169, 78, 0.5);
   box-shadow: inset 0 0 12px rgba(227, 169, 78, 0.12);
 }
 .cal-day.holiday .num { color: var(--lamp); }
 .cal-day .holiday-name {
-  /* full name lives in the button's title (hover) and aria-label
+  /* full name lives in the tooltip below (hover) and aria-label
      (screen readers) instead — the icon is the only visible content */
   display: none;
+}
+/* custom tooltip, shown from data-title — near-instant, styled to the
+   site, instead of the browser's own slow/plain title-attribute tooltip */
+.cal-day.holiday::after {
+  content: attr(data-title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  background: var(--shadow);
+  color: var(--paper);
+  font-family: var(--label);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  padding: 0.35rem 0.6rem;
+  border-radius: 3px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+  z-index: 30;
+}
+.cal-day.holiday:hover::after,
+.cal-day.holiday:focus-visible::after {
+  opacity: 1;
 }
 .cal-day .holiday-icon {
   display: block;

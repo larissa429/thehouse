@@ -1059,6 +1059,7 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
 .note[data-color="cools"]     { background: #c4b0e8; }
 .note[data-color="dumptruck"] { background: #3f6b32; }
 .note[data-color="greendaisy"] { background: #a8d4a0; }
+.note[data-color="clickbaity"] { background: #c4b0e8; }
 
 .casting .tag {
   display: inline-block;
@@ -1636,10 +1637,23 @@ main img {
   /* no overflow:hidden — a dragged paper needs to visibly cross into the
      trash-zone beside the desk, not get clipped at the desk's own edge */
   touch-action: none;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.4);
+}
+/* the desk's own wood texture lives on a pseudo-element (rather than
+   directly on .desk) so it paints in front of the drawer (a plain child
+   with no stacking of its own) but behind the papers (z-index 2) — that's
+   what lets the closed drawer look tucked away behind the desk surface
+   instead of floating in front of it */
+.desk::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 6px;
   background:
     repeating-linear-gradient(90deg, rgba(0,0,0,0.06) 0 2px, transparent 2px 7px),
     linear-gradient(160deg, #8a5a34, #6b4226 55%, #4e331e);
-  box-shadow: inset 0 0 50px rgba(0,0,0,0.55), 0 10px 26px rgba(0,0,0,0.4);
+  box-shadow: inset 0 0 50px rgba(0,0,0,0.55);
 }
 
 /* just the can, bottom-right beside the desk — no panel/background of its
@@ -1663,7 +1677,7 @@ main img {
   touch-action: none;
   filter: drop-shadow(0 6px 10px rgba(0,0,0,0.45));
   transition: transform 0.25s ease;
-  z-index: 1;
+  z-index: 2;
 }
 .desk-paper:active { cursor: grabbing; }
 .desk-paper.dragging { transition: none; z-index: 50; cursor: grabbing; }
@@ -1677,6 +1691,29 @@ main img {
   background: #fff;
   pointer-events: none; /* the wrapper div handles dragging, not the image */
   user-select: none;
+}
+
+/* the pen: no white card frame (it's a transparent PNG, not a "page"),
+   and shrunk way down — at the base 9rem paper size it was rendering
+   enormous */
+.desk-paper[data-pen] {
+  width: 0.5rem;
+}
+.desk-paper[data-pen] img {
+  border: none;
+  background: none;
+  border-radius: 0;
+}
+
+/* the password sticky note: same deal, no white frame, and small like an
+   actual sticky note rather than a full sheet of paper */
+.desk-paper[data-password] {
+  width: 2.6rem;
+}
+.desk-paper[data-password] img {
+  border: none;
+  background: none;
+  border-radius: 0;
 }
 
 .desk-paper.entering {
@@ -1773,4 +1810,73 @@ main img {
   font-size: 2.2rem;
   line-height: 1;
   cursor: pointer;
+}
+
+/* text reveal (used for the password slip) inside the same overlay
+   the photo lightbox uses — swapped in place of the <img> */
+#photoOverlayText {
+  background: #f0e0a0;
+  color: var(--ink-on-paper);
+  font-family: var(--label);
+  font-size: 1.4rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  padding: 2rem 2.5rem;
+  border-radius: 2px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  transform: rotate(-1.5deg);
+}
+
+/* ---- desk drawer secret ------------------------------------- */
+/* sits right at the desk's bottom edge, behind the desk's own texture
+   (.desk::before is z-index 1, this has no z-index of its own so it
+   paints underneath) — closed, it reads as tucked away under the table.
+   Opening it slides it DOWN and out, like pulling a real drawer out from
+   underneath rather than popping up through the tabletop. */
+.desk-drawer {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 11rem;
+  transform: translate(-50%, 0%);
+  transition: transform 0.5s ease-out;
+  pointer-events: none;
+}
+.desk-drawer.open { transform: translate(-50%, 100%); }
+/* a deeper box (not just a thin front lip) so the sticky note has room
+   to sit visibly inside it once open, rather than perching on the edge */
+.desk-drawer-front {
+  position: relative;
+  height: 6.5rem;
+  background: linear-gradient(160deg, #6b4226, #4e331e);
+  border: 2px solid #3a2415;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+  transform: scaleY(-1);
+}
+/* the recessed interior floor of the drawer, sitting a little below the
+   front lip — this is what the sticky note visually rests on */
+.desk-drawer-front::before {
+  content: "";
+  position: absolute;
+  top: 1.6rem;
+  left: 0.4rem;
+  right: 0.4rem;
+  bottom: 0.4rem;
+  background: #2e1c11;
+  border-radius: 0 0 4px 4px;
+  box-shadow: inset 0 4px 8px rgba(0,0,0,0.6);
+}
+.desk-drawer-front::after {
+  content: "";
+  position: absolute;
+  top: 0.55rem;
+  left: 50%;
+  width: 2.4rem;
+  height: 0.5rem;
+  transform: translateX(-50%);
+  background: #1e120a;
+  border-radius: 2px;
+  z-index: 1;
 }

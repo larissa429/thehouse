@@ -24,12 +24,21 @@
   var photoOverlayText = document.getElementById('photoOverlayText');
   var photoClose = document.getElementById('photoClose');
 
+  // the pointerup that opens the overlay is often followed by a synthetic
+  // click event at the same coordinates, which now land on the overlay
+  // backdrop itself — without this guard that reads as "clicked outside"
+  // and closes the overlay in the same frame it opened (the flash-and-
+  // close bug also fixed this way on the calendar page)
+  var openedAt = 0;
+  var OPEN_GUARD_MS = 300;
+
   function openImage(src) {
     if (!photoOverlay) return;
     photoOverlayImg.style.display = '';
     photoOverlayImg.setAttribute('src', src);
     if (photoOverlayText) photoOverlayText.style.display = 'none';
     photoOverlay.classList.add('open');
+    openedAt = Date.now();
   }
   function openText(text) {
     if (!photoOverlay || !photoOverlayText) return;
@@ -37,6 +46,7 @@
     photoOverlayText.textContent = text;
     photoOverlayText.style.display = '';
     photoOverlay.classList.add('open');
+    openedAt = Date.now();
   }
   function closePhoto() {
     if (photoOverlay) photoOverlay.classList.remove('open');
@@ -44,6 +54,7 @@
   if (photoOverlay) {
     photoClose.addEventListener('click', closePhoto);
     photoOverlay.addEventListener('click', function (e) {
+      if (Date.now() - openedAt < OPEN_GUARD_MS) return;
       if (e.target === photoOverlay) closePhoto();
     });
     document.addEventListener('keydown', function (e) {

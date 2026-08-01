@@ -7,12 +7,74 @@
   <meta name="description" content="The Inbetween's year — four seasons, eight holidays, 112 days." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&display=optional" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
 </head>
 <body>
 
   <site-header></site-header>
+
+  <!-- hand-drawn icon set for the holiday buttons — inline SVG symbols so
+       they render identically everywhere, no emoji font/glyph dependency -->
+  <svg style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
+    <defs>
+      <!-- icons from Lucide (lucide.dev), ISC license, used as static inline SVG -->
+      <symbol id="i-bloom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5a3 3 0 1 1 3 3m-3-3a3 3 0 1 0-3 3m3-3v1M9 8a3 3 0 1 0 3 3M9 8h1m5 0a3 3 0 1 1-3 3m3-3h-1m-2 3v-1" />
+        <circle cx="12" cy="8" r="2" />
+        <path d="M12 10v12" />
+        <path d="M12 22c4.2 0 7-1.667 7-5-4.2 0-7 1.667-7 5Z" />
+        <path d="M12 22c-4.2 0-7-1.667-7-5 4.2 0 7 1.667 7 5Z" />
+      </symbol>
+      <symbol id="i-broom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 19v2" />
+        <path d="M9 4h7.459a3 3 0 0 1 2.959 2.507l.577 3.464l.81 4.865a1 1 0 0 1 -.985 1.164h-16.82a7 7 0 0 1 7 -7h9.8" />
+        <path d="M8 19l-1 2" />
+        <path d="M16 19l1 2" />
+      </symbol>
+      <symbol id="i-sunrise" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 18 A8 8 0 0 1 20 18"/>
+        <line x1="2" y1="18" x2="22" y2="18"/>
+        <line x1="12" y1="6" x2="12" y2="2"/>
+        <line x1="5" y1="10" x2="3" y2="8"/>
+        <line x1="19" y1="10" x2="21" y2="8"/>
+      </symbol>
+      <symbol id="i-party" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5.8 11.3 2 22l10.7-3.79" />
+        <path d="M4 3h.01" /><path d="M22 8h.01" /><path d="M15 2h.01" /><path d="M22 20h.01" />
+        <path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10" />
+        <path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17" />
+        <path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7" />
+        <path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z" />
+      </symbol>
+      <!-- lantern icon: Hugeicons (via Iconify), MIT license -->
+      <symbol id="i-lantern" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 7.5h12v11H6zm0 0C6.717 5.41 8.729 4 10.995 4h2.01C15.271 4 17.283 5.41 18 7.5zm12 11c-.717 2.09-2.729 3.5-4.995 3.5h-2.01C8.729 22 6.717 20.59 6 18.5zM6 7.5H5l1 1m12-1h1l-1 1m0 10h1l-1-1m-12 1H5l1-1M21 11l1-.5M21 15l1 .5M3 11l-1-.5M3 15l-1 .5M12 12v2m0-12v2" />
+      </symbol>
+      <symbol id="i-potluck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15.4 15.63a7.875 6 135 1 1 6.23-6.23 4.5 3.43 135 0 0-6.23 6.23" />
+        <path d="m8.29 12.71-2.6 2.6a2.5 2.5 0 1 0-1.65 4.65A2.5 2.5 0 1 0 8.7 18.3l2.59-2.59" />
+      </symbol>
+      <symbol id="i-candy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 7v10.9" /><path d="M14 6.1V17" />
+        <path d="M16 7V3a1 1 0 0 1 1.707-.707 2.5 2.5 0 0 0 2.152.717 1 1 0 0 1 1.131 1.131 2.5 2.5 0 0 0 .717 2.152A1 1 0 0 1 21 8h-4" />
+        <path d="M16.536 7.465a5 5 0 0 0-7.072 0l-2 2a5 5 0 0 0 0 7.07 5 5 0 0 0 7.072 0l2-2a5 5 0 0 0 0-7.07" />
+        <path d="M8 17v4a1 1 0 0 1-1.707.707 2.5 2.5 0 0 0-2.152-.717 1 1 0 0 1-1.131-1.131 2.5 2.5 0 0 0-.717-2.152A1 1 0 0 1 3 16h4" />
+      </symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 5h4" /><path d="M20 3v4" />
+        <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />
+      </symbol>
+      <symbol id="i-candle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4" />
+      </symbol>
+      <symbol id="i-fireworks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" />
+        <path d="M20 2v4" /><path d="M22 4h-4" />
+        <circle cx="4" cy="20" r="2" />
+      </symbol>
+    </defs>
+  </svg>
 
   <main class="wrap">
 
@@ -47,9 +109,9 @@
             <div class="cal-day"><span class="num">4</span></div>
             <div class="cal-day"><span class="num">5</span></div>
             <div class="cal-day"><span class="num">6</span></div>
-            <button type="button" class="cal-day holiday" data-title="New Bloom"
+            <button type="button" class="cal-day holiday" data-title="New Bloom" aria-label="New Bloom" title="New Bloom"
               data-desc="The Dream Garden blooms all at once, signaling the start of the New Year. Petals drift like confetti and showcase snippets of harmless memories.">
-              <span class="num">7</span><span class="holiday-name">New Bloom</span>
+              <span class="num">7</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-bloom"></use></svg><span class="holiday-name">New Bloom</span>
             </button>
 
             <div class="cal-day"><span class="num">8</span></div>
@@ -68,33 +130,33 @@
             <div class="cal-day"><span class="num">20</span></div>
             <div class="cal-day"><span class="num">21</span></div>
 
-            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 1"
+            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 1" aria-label="Spring Cleaning, Day 1" title="Spring Cleaning, Day 1"
               data-desc="A week of cleaning &mdash; physically, spiritually, and mentally.">
-              <span class="num">22</span><span class="holiday-name">Spring Cleaning &middot; Day 1</span>
+              <span class="num">22</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-broom"></use></svg><span class="holiday-name">Day 1</span>
             </button>
-            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 2"
+            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 2" aria-label="Spring Cleaning, Day 2" title="Spring Cleaning, Day 2"
               data-desc="A week of cleaning &mdash; physically, spiritually, and mentally.">
-              <span class="num">23</span><span class="holiday-name">Spring Cleaning &middot; Day 2</span>
+              <span class="num">23</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-broom"></use></svg><span class="holiday-name">Day 2</span>
             </button>
-            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 3"
+            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 3" aria-label="Spring Cleaning, Day 3" title="Spring Cleaning, Day 3"
               data-desc="A week of cleaning &mdash; physically, spiritually, and mentally.">
-              <span class="num">24</span><span class="holiday-name">Spring Cleaning &middot; Day 3</span>
+              <span class="num">24</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-broom"></use></svg><span class="holiday-name">Day 3</span>
             </button>
-            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 4"
+            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 4" aria-label="Spring Cleaning, Day 4" title="Spring Cleaning, Day 4"
               data-desc="A week of cleaning &mdash; physically, spiritually, and mentally.">
-              <span class="num">25</span><span class="holiday-name">Spring Cleaning &middot; Day 4</span>
+              <span class="num">25</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-broom"></use></svg><span class="holiday-name">Day 4</span>
             </button>
-            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 5"
+            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 5" aria-label="Spring Cleaning, Day 5" title="Spring Cleaning, Day 5"
               data-desc="A week of cleaning &mdash; physically, spiritually, and mentally.">
-              <span class="num">26</span><span class="holiday-name">Spring Cleaning &middot; Day 5</span>
+              <span class="num">26</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-broom"></use></svg><span class="holiday-name">Day 5</span>
             </button>
-            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 6"
+            <button type="button" class="cal-day holiday" data-title="Spring Cleaning &middot; Day 6" aria-label="Spring Cleaning, Day 6" title="Spring Cleaning, Day 6"
               data-desc="A week of cleaning &mdash; physically, spiritually, and mentally.">
-              <span class="num">27</span><span class="holiday-name">Spring Cleaning &middot; Day 6</span>
+              <span class="num">27</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-broom"></use></svg><span class="holiday-name">Day 6</span>
             </button>
-            <button type="button" class="cal-day holiday" data-title="Sunrise Feast"
+            <button type="button" class="cal-day holiday" data-title="Sunrise Feast" aria-label="Sunrise Feast" title="Sunrise Feast"
               data-desc="The end of Spring Cleaning week starts with a morning-long banquet, from sunrise to just after noon, located on the Boardwalk.">
-              <span class="num">28</span><span class="holiday-name">Sunrise Feast</span>
+              <span class="num">28</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-sunrise"></use></svg><span class="holiday-name">Feast</span>
             </button>
           </div>
         </article>
@@ -117,17 +179,17 @@
             <div class="cal-day"><span class="num">2</span></div>
             <div class="cal-day"><span class="num">3</span></div>
             <div class="cal-day"><span class="num">4</span></div>
-            <button type="button" class="cal-day holiday" data-title="Block Party &middot; Day 1"
+            <button type="button" class="cal-day holiday" data-title="Block Party &middot; Day 1" aria-label="Block Party, Day 1" title="Block Party, Day 1"
               data-desc="The Boardwalk turns into a street fair. Chalk art, flag bunting, body paint, and even a parade to celebrate your individuality.">
-              <span class="num">5</span><span class="holiday-name">Block Party &middot; Day 1</span>
+              <span class="num">5</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-party"></use></svg><span class="holiday-name">Day 1</span>
             </button>
-            <button type="button" class="cal-day holiday" data-title="Block Party &middot; Day 2"
+            <button type="button" class="cal-day holiday" data-title="Block Party &middot; Day 2" aria-label="Block Party, Day 2" title="Block Party, Day 2"
               data-desc="The Boardwalk turns into a street fair. Chalk art, flag bunting, body paint, and even a parade to celebrate your individuality.">
-              <span class="num">6</span><span class="holiday-name">Block Party &middot; Day 2</span>
+              <span class="num">6</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-party"></use></svg><span class="holiday-name">Day 2</span>
             </button>
-            <button type="button" class="cal-day holiday" data-title="Block Party &middot; Day 3"
+            <button type="button" class="cal-day holiday" data-title="Block Party &middot; Day 3" aria-label="Block Party, Day 3" title="Block Party, Day 3"
               data-desc="The Boardwalk turns into a street fair. Chalk art, flag bunting, body paint, and even a parade to celebrate your individuality.">
-              <span class="num">7</span><span class="holiday-name">Block Party &middot; Day 3</span>
+              <span class="num">7</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-party"></use></svg><span class="holiday-name">Day 3</span>
             </button>
 
             <div class="cal-day"><span class="num">8</span></div>
@@ -152,9 +214,9 @@
             <div class="cal-day"><span class="num">25</span></div>
             <div class="cal-day"><span class="num">26</span></div>
             <div class="cal-day"><span class="num">27</span></div>
-            <button type="button" class="cal-day holiday" data-title="Lantern Festival"
+            <button type="button" class="cal-day holiday" data-title="Lantern Festival" aria-label="Lantern Festival" title="Lantern Festival"
               data-desc="A night of remembrance for worlds and loved ones lost or left behind. Lanterns are decorated and sent floating into the sky, or drifting on small boats from the Boardwalk carrying prayers.">
-              <span class="num">28</span><span class="holiday-name">Lantern Festival</span>
+              <span class="num">28</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-lantern"></use></svg><span class="holiday-name">Lanterns</span>
             </button>
           </div>
         </article>
@@ -184,9 +246,9 @@
             <div class="cal-day"><span class="num">8</span></div>
             <div class="cal-day"><span class="num">9</span></div>
             <div class="cal-day"><span class="num">10</span></div>
-            <button type="button" class="cal-day holiday" data-title="Grand Potluck"
+            <button type="button" class="cal-day holiday" data-title="Grand Potluck" aria-label="Grand Potluck" title="Grand Potluck"
               data-desc="No one eats alone on Potluck Day. Residents bring food from all walks of the world to share, from snacks to delicacies.">
-              <span class="num">11</span><span class="holiday-name">Grand Potluck</span>
+              <span class="num">11</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-potluck"></use></svg><span class="holiday-name">Potluck</span>
             </button>
             <div class="cal-day"><span class="num">12</span></div>
             <div class="cal-day"><span class="num">13</span></div>
@@ -204,17 +266,17 @@
             <div class="cal-day"><span class="num">23</span></div>
             <div class="cal-day"><span class="num">24</span></div>
             <div class="cal-day"><span class="num">25</span></div>
-            <button type="button" class="cal-day holiday" data-title="Night Market &middot; Day 1 (Candy Run!)"
+            <button type="button" class="cal-day holiday" data-title="Night Market &middot; Day 1 (Candy Run!)" aria-label="Night Market, Day 1, Candy Run" title="Night Market, Day 1: Candy Run!"
               data-desc="Three nights of glowing stalls lining the Boardwalk. Children of the Inbetween spend the first night collecting candy.">
-              <span class="num">26</span><span class="holiday-name">Night Market &middot; Day 1 (Candy Run!)</span>
+              <span class="num">26</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-candy"></use></svg><span class="holiday-name">Candy Run!</span>
             </button>
-            <button type="button" class="cal-day holiday" data-title="Night Market &middot; Day 2"
+            <button type="button" class="cal-day holiday" data-title="Night Market &middot; Day 2" aria-label="Night Market, Day 2" title="Night Market, Day 2"
               data-desc="Three nights of glowing stalls lining the Boardwalk.">
-              <span class="num">27</span><span class="holiday-name">Night Market &middot; Day 2</span>
+              <span class="num">27</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-moon"></use></svg><span class="holiday-name">Day 2</span>
             </button>
-            <button type="button" class="cal-day holiday" data-title="Night Market &middot; Day 3"
+            <button type="button" class="cal-day holiday" data-title="Night Market &middot; Day 3" aria-label="Night Market, Day 3" title="Night Market, Day 3"
               data-desc="Three nights of glowing stalls lining the Boardwalk.">
-              <span class="num">28</span><span class="holiday-name">Night Market &middot; Day 3</span>
+              <span class="num">28</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-moon"></use></svg><span class="holiday-name">Day 3</span>
             </button>
           </div>
         </article>
@@ -253,17 +315,17 @@
             <div class="cal-day"><span class="num">16</span></div>
             <div class="cal-day"><span class="num">17</span></div>
             <div class="cal-day"><span class="num">18</span></div>
-            <button type="button" class="cal-day holiday" data-title="Hearthlights &middot; Night 1"
+            <button type="button" class="cal-day holiday" data-title="Hearthlights &middot; Night 1" aria-label="Hearthlights, Night 1" title="Hearthlights, Night 1"
               data-desc="Three nights of gift-giving, candle-lighting, and finding warmth in friends and family. Games and harmless pranks are encouraged.">
-              <span class="num">19</span><span class="holiday-name">Hearthlights &middot; Night 1</span>
+              <span class="num">19</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-candle"></use></svg><span class="holiday-name">Night 1</span>
             </button>
-            <button type="button" class="cal-day holiday" data-title="Hearthlights &middot; Night 2"
+            <button type="button" class="cal-day holiday" data-title="Hearthlights &middot; Night 2" aria-label="Hearthlights, Night 2" title="Hearthlights, Night 2"
               data-desc="Three nights of gift-giving, candle-lighting, and finding warmth in friends and family.">
-              <span class="num">20</span><span class="holiday-name">Hearthlights &middot; Night 2</span>
+              <span class="num">20</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-candle"></use></svg><span class="holiday-name">Night 2</span>
             </button>
-            <button type="button" class="cal-day holiday" data-title="Hearthlights &middot; Night 3"
+            <button type="button" class="cal-day holiday" data-title="Hearthlights &middot; Night 3" aria-label="Hearthlights, Night 3" title="Hearthlights, Night 3"
               data-desc="Three nights of gift-giving, candle-lighting, and finding warmth in friends and family.">
-              <span class="num">21</span><span class="holiday-name">Hearthlights &middot; Night 3</span>
+              <span class="num">21</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-candle"></use></svg><span class="holiday-name">Night 3</span>
             </button>
 
             <div class="cal-day"><span class="num">22</span></div>
@@ -272,9 +334,9 @@
             <div class="cal-day"><span class="num">25</span></div>
             <div class="cal-day"><span class="num">26</span></div>
             <div class="cal-day"><span class="num">27</span></div>
-            <button type="button" class="cal-day holiday" data-title="Year's End"
+            <button type="button" class="cal-day holiday" data-title="Year's End" aria-label="Year's End" title="Year's End"
               data-desc="The final night of the year. Fireworks, reflections, and a countdown to midnight collide in one last hurrah, and one last grand meal is shared.">
-              <span class="num">28</span><span class="holiday-name">Year's End</span>
+              <span class="num">28</span><svg class="holiday-icon" aria-hidden="true"><use href="#i-fireworks"></use></svg><span class="holiday-name">Year's End</span>
             </button>
           </div>
         </article>

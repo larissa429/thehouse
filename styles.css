@@ -249,12 +249,15 @@ a:hover { color: var(--paper); }
 }
 .cal-day.holiday .num { color: var(--lamp); }
 .cal-day .holiday-name {
-  font-family: var(--display);
-  font-size: 0.82rem;
-  line-height: 1.2;
-  color: var(--paper);
-  overflow-wrap: break-word;
-  word-break: break-word;
+  /* full name lives in the button's title (hover) and aria-label
+     (screen readers) instead — the icon is the only visible content */
+  display: none;
+}
+.cal-day .holiday-icon {
+  display: block;
+  width: 1.4rem;
+  height: 1.4rem;
+  color: var(--paper); /* icon uses stroke="currentColor" internally */
 }
 
 .calendar-key { margin-top: 1.2rem; }
@@ -271,7 +274,6 @@ a:hover { color: var(--paper); }
 
 @media (max-width: 700px) {
   .cal-day { min-height: 3.2rem; padding: 0.3rem; }
-  .cal-day .holiday-name { font-size: 0.7rem; }
   .cal-weekdays span { font-size: 0.6rem; }
 }
 
@@ -309,6 +311,8 @@ a:hover { color: var(--paper); }
   box-shadow: 0 18px 34px rgba(0,0,0,0.45), 0 3px 6px rgba(0,0,0,0.3);
   cursor: grab;
   user-select: none;
+  touch-action: none; /* must be set here, not dynamically in JS on pointerdown —
+                          by then the browser may have already committed to scrolling */
   transform: translate(calc(var(--stack-i, 0) * 5px), calc(var(--stack-i, 0) * 7px));
   filter: brightness(calc(1 - var(--stack-i, 0) * 0.07));
   transition: transform 0.3s ease;
@@ -342,6 +346,7 @@ a:hover { color: var(--paper); }
 }
 .calendar-sheet .cal-day.holiday .num { color: #6b4a12; }
 .calendar-sheet .cal-day .holiday-name { color: var(--ink-on-paper); font-weight: 600; }
+.calendar-sheet .cal-day .holiday-icon { color: #6b4a12; }
 .calendar-sheet button.cal-day {
   font-family: inherit;
   text-align: left;
@@ -499,6 +504,8 @@ transform: translateX(-50%) rotate(calc(var(--rest-rot, -2.5deg) + var(--extra-r
 }
 .portrait figcaption {
   font-family: var(--hand);
+  font-size-adjust: 0.46; /* keeps the fallback cursive font (often Comic Sans)
+                             from rendering visibly larger than Caveat while it loads */
   font-size: 1.3rem;
   color: var(--ink-on-paper);
   margin-top: 0.5rem;
@@ -552,6 +559,7 @@ transform: translateX(-50%) rotate(calc(var(--rest-rot, 1.5deg) + var(--extra-ro
 .playlist .eyebrow {
   color: var(--paper);
   font-family: var(--hand);
+  font-size-adjust: 0.46;
   font-size: 1.2rem;
   letter-spacing: normal;
   text-transform: none;
@@ -796,6 +804,7 @@ transform: rotate(calc(var(--rest-rot, -1deg) + var(--extra-rot, 0deg))) scale(v
 }
 .trivia-note h3 {
   font-family: var(--hand);
+  font-size-adjust: 0.46;
   color: #2e2118;
   font-size: 1.6rem;
   margin: 0 0 0.6rem;
@@ -968,6 +977,7 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
   box-shadow: 0 20px 40px rgba(0,0,0,0.5);
   transform: rotate(-1.5deg);
   font-family: var(--hand);
+  font-size-adjust: 0.46;
   font-size: 1.25rem;
   color: var(--ink-on-paper);
   background: #f0e0a0;

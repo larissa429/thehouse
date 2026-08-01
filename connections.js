@@ -121,8 +121,13 @@ document.addEventListener('DOMContentLoaded', function () {
         dragging = true; moved = false;
         pin.setPointerCapture(e.pointerId);
         startClientX = e.clientX; startClientY = e.clientY;
-        startXPct = parseFloat(pin.style.getPropertyValue('--x')) || 50;
-        startYPct = parseFloat(pin.style.getPropertyValue('--y')) || 50;
+        // NOT `|| 50` — that silently breaks at exactly 0% (the top/left
+        // edge), since 0 is falsy in JS and would wrongly fall back to
+        // center. Only an actually-missing/unparseable value should do that.
+        const parsedX = parseFloat(pin.style.getPropertyValue('--x'));
+        const parsedY = parseFloat(pin.style.getPropertyValue('--y'));
+        startXPct = isNaN(parsedX) ? 50 : parsedX;
+        startYPct = isNaN(parsedY) ? 50 : parsedY;
         e.preventDefault();
       });
 

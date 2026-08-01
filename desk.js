@@ -137,8 +137,12 @@
       paper.setPointerCapture(e.pointerId);
       startClientX = e.clientX;
       startClientY = e.clientY;
-      startXPct = parseFloat(paper.style.getPropertyValue('--x')) || 50;
-      startYPct = parseFloat(paper.style.getPropertyValue('--y')) || 50;
+      // NOT `|| 50` — breaks at exactly 0% since 0 is falsy in JS (same
+      // bug fixed in connections.js's pin dragging)
+      const parsedX = parseFloat(paper.style.getPropertyValue('--x'));
+      const parsedY = parseFloat(paper.style.getPropertyValue('--y'));
+      startXPct = isNaN(parsedX) ? 50 : parsedX;
+      startYPct = isNaN(parsedY) ? 50 : parsedY;
       e.preventDefault();
     });
 

@@ -1685,7 +1685,7 @@ main img {
   display: block;
   width: 100%;
   height: auto;
-  border: 6px solid #fff;
+  border: none;
   border-radius: 2px;
   background: #fff;
   pointer-events: none; /* the wrapper div handles dragging, not the image */
@@ -1878,4 +1878,114 @@ main img {
   background: #1e120a;
   border-radius: 2px;
   z-index: 1;
+}
+
+/* ============================================================
+   ART: ANIMATION THEATER
+   ============================================================ */
+.theater {
+  max-width: 46rem;
+  margin: 2rem auto 3rem;
+}
+
+.theater-marquee {
+  font-family: var(--label);
+  font-size: 0.85rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--lamp);
+  text-shadow: 0 0 14px rgba(227, 169, 78, 0.5);
+  margin-bottom: 0.8rem;
+}
+
+.theater-stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #050403;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 60px rgba(0,0,0,0.8);
+}
+
+/* a dim wash of light on the stage floor, behind the video, so an empty
+   stage (no clips yet) doesn't read as a plain black rectangle */
+.theater-spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(ellipse 60% 70% at 50% 40%, rgba(227,169,78,0.16), transparent 70%);
+  pointer-events: none;
+}
+
+.theater-video {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+/* real curtain art (drawn to overlap a little at center so the closed
+   pair reads as one seamless photo) covering the stage on load — pulled
+   open via .open, revealing whatever's already loaded behind them
+   rather than waiting to load anything after the reveal */
+.theater-curtain {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: calc(51% + 6px);
+  z-index: 2;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: transform 2s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+.theater-curtain-left {
+  left: 0;
+  background-image: url('videos/curtainleft.png');
+}
+.theater-curtain-right {
+  right: 0;
+  background-image: url('videos/curtainright.png');
+}
+.theater-stage.open .theater-curtain-left { transform: translateX(-100%); }
+.theater-stage.open .theater-curtain-right { transform: translateX(100%); }
+
+.theater-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-top: 1rem;
+}
+.theater-btn {
+  font-family: var(--label);
+  font-size: 1.1rem;
+  color: var(--paper);
+  background: var(--wall);
+  border: var(--edge);
+  border-radius: 4px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.theater-btn:hover {
+  color: var(--lamp);
+  border-color: var(--lamp);
+}
+.theater-clip-title {
+  font-family: var(--label);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  min-width: 10rem;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .theater-controls { gap: 0.8rem; }
+  .theater-clip-title { min-width: 0; font-size: 0.75rem; }
 }

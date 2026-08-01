@@ -328,4 +328,41 @@
   document.querySelectorAll('.desk-paper').forEach(function (paper) {
     setupPaper(paper);
   });
+
+  // the pen spawns somewhere new every load/refresh rather than sitting
+  // in the same spot — set before its flutter-in entrance plays, so it
+  // just repositions instantly with no visible jump. It also avoids
+  // landing within 10px of any other paper's spawn point, so it doesn't
+  // spawn stacked directly on top of one.
+  var PEN_MIN_DIST = 100;
+  var pen = document.querySelector('.desk-paper[data-pen]');
+  if (pen) {
+    var deskRect = desk.getBoundingClientRect();
+    var otherCenters = [];
+    document.querySelectorAll('.desk-paper').forEach(function (p) {
+      if (p === pen) return;
+      var px = parseFloat(p.style.getPropertyValue('--x'));
+      var py = parseFloat(p.style.getPropertyValue('--y'));
+      if (isNaN(px) || isNaN(py)) return;
+      otherCenters.push({
+        x: (px / 100) * deskRect.width,
+        y: (py / 100) * deskRect.height
+      });
+    });
+
+    var spot, attempts = 0;
+    do {
+      spot = randomScatterSpot();
+      attempts++;
+      var sx = (parseFloat(spot.x) / 100) * deskRect.width;
+      var sy = (parseFloat(spot.y) / 100) * deskRect.height;
+      var tooClose = otherCenters.some(function (c) {
+        return Math.hypot(sx - c.x, sy - c.y) < PEN_MIN_DIST;
+      });
+    } while (tooClose && attempts < 30);
+
+    pen.style.setProperty('--x', spot.x);
+    pen.style.setProperty('--y', spot.y);
+    pen.style.setProperty('--rot', spot.rot);
+  }
 })();

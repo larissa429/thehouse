@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Animation &middot; Art &middot; The House</title>
+  <meta name="description" content="Animated shorts and clips from The House, presented like a little theater." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+    <div class="theater">
+      <div class="theater-marquee">Now Showing</div>
+
+      <div class="theater-stage">
+        <div class="theater-spotlight"></div>
+
+        <video class="theater-video" id="theaterVideo" playsinline controls></video>
+
+        <div class="theater-curtain theater-curtain-left"></div>
+        <div class="theater-curtain theater-curtain-right"></div>
+      </div>
+
+      <div class="theater-controls">
+        <button class="theater-btn" id="theaterPrev" aria-label="Previous clip">&#9664;</button>
+        <span class="theater-clip-title" id="theaterTitle"></span>
+        <button class="theater-btn" id="theaterNext" aria-label="Next clip">&#9654;</button>
+      </div>
+    </div>
+
+  </main>
+
+  <site-footer></site-footer>
+
+  <script src="../../components.js" defer></script>
+  <script src="../../animation.js" defer></script>
+</body>
+</html>

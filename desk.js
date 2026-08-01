@@ -13,6 +13,28 @@
   var trashCan = document.getElementById('trashCan');
   if (!desk || !trashCan) return;
 
+  var photoOverlay = document.getElementById('photoOverlay');
+  var photoOverlayImg = document.getElementById('photoOverlayImg');
+  var photoClose = document.getElementById('photoClose');
+
+  function openPhoto(src) {
+    if (!photoOverlay) return;
+    photoOverlayImg.setAttribute('src', src);
+    photoOverlay.classList.add('open');
+  }
+  function closePhoto() {
+    if (photoOverlay) photoOverlay.classList.remove('open');
+  }
+  if (photoOverlay) {
+    photoClose.addEventListener('click', closePhoto);
+    photoOverlay.addEventListener('click', function (e) {
+      if (e.target === photoOverlay) closePhoto();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closePhoto();
+    });
+  }
+
   var CRUMPLE_IMAGES = [
     '../../images/crumple1.png',
     '../../images/crumple2.png',
@@ -139,7 +161,13 @@
       if (!dragging) return;
       dragging = false;
       paper.classList.remove('dragging');
-      if (!moved) return;
+      if (!moved) {
+        // a plain click/tap, no dragging — show the full image, unless
+        // it's mid-crumple (in which case realSrc still points at the
+        // correct artwork anyway, just don't pop it up over the bounce)
+        if (!crumpling) openPhoto(realSrc);
+        return;
+      }
 
       var paperRect = paper.getBoundingClientRect();
       var canRect = trashCan.getBoundingClientRect();

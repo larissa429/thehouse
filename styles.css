@@ -211,6 +211,9 @@ a:hover { color: var(--paper); }
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.4rem;
+  min-width: 0; /* grid tracks default to min-width:auto, which lets long
+                   unbreakable holiday-name text force the whole grid wider
+                   than the viewport — this is the actual mobile overflow fix */
 }
 .cal-weekdays {
   margin-bottom: 0.4rem;
@@ -227,6 +230,7 @@ a:hover { color: var(--paper); }
   background: var(--wall);
   border: var(--edge);
   border-radius: 2px;
+  min-width: 0;
   min-height: 3.8rem;
   padding: 0.35rem 0.4rem;
   display: flex;
@@ -249,6 +253,8 @@ a:hover { color: var(--paper); }
   font-size: 0.82rem;
   line-height: 1.2;
   color: var(--paper);
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .calendar-key { margin-top: 1.2rem; }
@@ -295,6 +301,7 @@ a:hover { color: var(--paper); }
 .calendar-sheet {
   grid-area: 1 / 1;
   position: relative;
+  min-width: 0;
   background: var(--paper);
   color: var(--ink-on-paper);
   border-radius: 4px;

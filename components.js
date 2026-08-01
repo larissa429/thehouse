@@ -62,7 +62,6 @@ class SiteHeader extends HTMLElement {
             <a href="${prefix}index.html" data-key="">Home</a>
             <a href="${prefix}about/" data-key="about">About</a>
             <a href="${prefix}residents/" data-key="residents">Characters</a>
-            <a href="${prefix}art/" data-key="art">Art</a>
             <a href="${prefix}resources/" data-key="resources">Resources</a>
             <a href="${prefix}audition/" data-key="audition">Audition</a>
           </nav>

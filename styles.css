@@ -1636,7 +1636,6 @@ main img {
   border-radius: 6px;
   /* no overflow:hidden — a dragged paper needs to visibly cross into the
      trash-zone beside the desk, not get clipped at the desk's own edge */
-  touch-action: none;
   box-shadow: 0 10px 26px rgba(0,0,0,0.4);
 }
 /* the desk's own wood texture lives on a pseudo-element (rather than
@@ -1780,12 +1779,6 @@ main img {
   .desk { min-height: 26rem; }
   .desk-paper { width: 4.5rem; max-width: 24%; }
   .trash-can { width: 4.5rem; }
-
-  /* letting a touch that starts on empty desk space pan the page
-     vertically, instead of forcing you to find dead space above/below
-     the desk to scroll — papers themselves stay touch-action:none
-     (more specific selector) so dragging them still works as normal */
-  .desk { touch-action: pan-y; }
 }
 
 /* click (not drag) a desk-paper to view the full image */

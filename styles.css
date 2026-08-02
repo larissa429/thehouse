@@ -2241,9 +2241,39 @@ main img {
 }
 
 @media (max-width: 620px) {
-  .daisy-block { flex-direction: column; align-items: center; text-align: center; padding-left: 1.6rem; }
+  /* collapsed to just the handle, name, and footnote by default — the
+     full bio only shows once tapped, so a block never grows taller than
+     one screen and dragging to reorder stays physically possible */
+  .daisy-block {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.4rem 1rem 1.4rem 1.6rem;
+    margin: 1rem 0;
+    cursor: pointer;
+  }
   .daisy-drag-handle { left: 50%; top: 0.4rem; transform: translateX(-50%) rotate(90deg); }
-  .daisy-portrait { width: 6rem; }
+  .daisy-portrait { width: 4rem; }
+
+  .daisy-text p:not(.daisy-aside) { display: none; }
+  .daisy-block.expanded .daisy-text p:not(.daisy-aside) { display: block; }
+
+  .daisy-aside {
+    border-top: none;
+    padding-top: 0.3rem;
+  }
+  .daisy-tap-hint {
+    display: block;
+    font-family: var(--label);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 0.5rem;
+  }
+}
+@media (min-width: 621px) {
+  .daisy-tap-hint { display: none; }
 }
 
 /* the reward: a small system-popup that slides up from the bottom of the

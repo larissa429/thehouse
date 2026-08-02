@@ -93,4 +93,17 @@
   }
   list.addEventListener('pointerup', endDrag);
   list.addEventListener('pointercancel', endDrag);
+
+  // mobile: panels collapse to just the name + footnote (CSS handles the
+  // actual hiding) since a fully expanded panel can be taller than the
+  // screen, making it impossible to drag anywhere. Tapping anywhere on a
+  // panel other than the handle expands/collapses it; the handle itself
+  // is excluded so it keeps triggering a drag instead.
+  list.addEventListener('click', function (e) {
+    if (e.target.closest('.daisy-drag-handle')) return;
+    if (e.target.closest('a')) return; // let "Read more" links behave normally
+    var block = e.target.closest('.daisy-block');
+    if (!block) return;
+    block.classList.toggle('expanded');
+  });
 })();

@@ -45,7 +45,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyALJut-42S2SOUz7pZXJj2A5AMe3QHd0o0",
@@ -66,6 +66,14 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
+
+    // browserLocalPersistence is actually the SDK default already, but
+    // setting it explicitly rules out any doubt — if sign-in still
+    // doesn't survive a refresh after this, it's the browser (private
+    // browsing, blocked storage, etc.) rather than the code
+    setPersistence(auth, browserLocalPersistence).catch(error => {
+      console.error('Could not set auth persistence: ', error);
+    });
 
     const signedOutView = document.getElementById('signedOutView');
     const signedInView = document.getElementById('signedInView');

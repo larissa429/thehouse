@@ -118,6 +118,15 @@
 
   </main>
 
+  <div class="photo-overlay" id="guestbookOverlay">
+    <button class="photo-close" id="guestbookOverlayClose">&times;</button>
+    <div class="guestbook-lightbox">
+      <img id="guestbookOverlayImg" src="" alt="" />
+      <p class="guestbook-lightbox-name" id="guestbookOverlayName"></p>
+      <p class="guestbook-lightbox-message" id="guestbookOverlayMessage"></p>
+    </div>
+  </div>
+
   <site-footer></site-footer>
 
   <script src="../components.js" defer></script>
@@ -167,6 +176,11 @@
           img.src = entry.imageUrl;
           img.alt = '';
           img.draggable = false;
+          // the frame only has room for the drawing + name plate — the
+          // message (if any) is stashed here and revealed via the
+          // lightbox on click, see the click listener below
+          frame.dataset.name = entry.example ? entry.name + ' (example)' : entry.name;
+          frame.dataset.message = entry.message || '';
           frame.appendChild(img);
         } else {
           const note = document.createElement('div');
@@ -183,6 +197,36 @@
         galleryWall.appendChild(frame);
       });
     }
+
+    // --- LIGHTBOX: click a drawing to see its name + message full-size ---
+    const guestbookOverlay = document.getElementById('guestbookOverlay');
+    const guestbookOverlayImg = document.getElementById('guestbookOverlayImg');
+    const guestbookOverlayName = document.getElementById('guestbookOverlayName');
+    const guestbookOverlayMessage = document.getElementById('guestbookOverlayMessage');
+    const guestbookOverlayClose = document.getElementById('guestbookOverlayClose');
+
+    function closeGuestbookLightbox() {
+      guestbookOverlay.classList.remove('open');
+    }
+    guestbookOverlayClose.addEventListener('click', closeGuestbookLightbox);
+    guestbookOverlay.addEventListener('click', (e) => {
+      if (e.target === guestbookOverlay) closeGuestbookLightbox();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeGuestbookLightbox();
+    });
+
+    galleryWall.addEventListener('click', (e) => {
+      const img = e.target.closest('.gallery-frame img');
+      if (!img) return;
+      const frame = img.closest('.gallery-frame');
+      guestbookOverlayImg.src = img.src;
+      guestbookOverlayName.textContent = frame.dataset.name || '';
+      const message = frame.dataset.message || '';
+      guestbookOverlayMessage.textContent = message;
+      guestbookOverlayMessage.style.display = message ? '' : 'none';
+      guestbookOverlay.classList.add('open');
+    });
 
     async function loadGallery() {
       try {

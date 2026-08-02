@@ -2586,6 +2586,27 @@ main img {
   justify-content: flex-start;
 }
 
+/* text-only submissions (no drawing) — styled to match the picture
+   frames' border/shadow language so it still reads as belonging on
+   the same wall, just holding a note instead of an image */
+.guestbook-text-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 10rem;
+  background: #fdf6e3;
+  color: #241a12;
+  border: 10px solid #3a2a1c;
+  border-radius: 2px;
+  padding: 1.2rem;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 18px 34px rgba(0,0,0,0.55);
+  font-family: var(--hand);
+  font-size: 1.15rem;
+  line-height: 1.4;
+  text-align: center;
+  cursor: default;
+}
+
 @media (max-width: 900px) {
   .guestbook-layout { flex-direction: column; }
 }

@@ -160,11 +160,20 @@
         const frame = document.createElement('figure');
         frame.className = 'gallery-frame';
 
-        const img = document.createElement('img');
-        img.src = entry.imageUrl;
-        img.alt = '';
-        img.draggable = false;
-        frame.appendChild(img);
+        // text-only submissions (no drawing) get a note card instead of
+        // an <img> — there's nothing to show a picture of
+        if (entry.imageUrl) {
+          const img = document.createElement('img');
+          img.src = entry.imageUrl;
+          img.alt = '';
+          img.draggable = false;
+          frame.appendChild(img);
+        } else {
+          const note = document.createElement('div');
+          note.className = 'guestbook-text-card';
+          note.textContent = entry.message ? entry.message : '— left no message —';
+          frame.appendChild(note);
+        }
 
         const plate = document.createElement('figcaption');
         plate.className = 'gallery-plate';
@@ -198,8 +207,19 @@
     const clearBtn = document.getElementById('clearBtn');
     const submitBtn = document.getElementById('submitBtn');
     let isDrawing = false;
+    let hasDrawn = false; // tracks whether anything's actually been drawn/stamped
 
     ctx.lineCap = 'round';
+
+    // the canvas's white background is only CSS on the <canvas> element
+    // itself — the actual pixel bitmap starts fully transparent, so
+    // toDataURL() would export a transparent PNG unless we explicitly
+    // paint white into the real pixel data first
+    function fillWhite() {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    fillWhite();
 
     // --- PALETTE GROUPS: click a group's label to expand/collapse its row ---
     const paletteToggles = document.querySelectorAll('.guestbook-palette-toggle');
@@ -397,6 +417,7 @@
       pushUndoSnapshot();
       const s = Math.max(24, strokeWidth * 3);
       drawStampShape(currentStamp, x, y, s, strokeColor);
+      hasDrawn = true;
     }
 
     function getCoordinates(e) {
@@ -444,6 +465,7 @@
       }
       pushUndoSnapshot();
       isDrawing = true;
+      hasDrawn = true;
       draw(e);
     }
 
@@ -476,7 +498,8 @@
 
     clearBtn.addEventListener('click', () => {
       pushUndoSnapshot();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      fillWhite();
+      hasDrawn = false;
     });
 
     // --- EXPORT (save locally before submitting) ---
@@ -502,28 +525,38 @@
         alert("Please enter your name!");
         return;
       }
+      if (!hasDrawn && !message) {
+        alert("Leave a drawing or a message before submitting!");
+        return;
+      }
 
       submitBtn.disabled = true;
       submitBtn.innerText = "Submitting...";
 
       try {
-        const imageUrl = canvas.toDataURL('image/png');
-
-        await addDoc(collection(db, "guestbook"), {
+        // text-only entries skip the image entirely — a blank canvas
+        // has nothing worth saving, and forcing one in kept producing
+        // an all-white square with no information in it
+        const entry = {
           name: name,
           message: message,
-          imageUrl: imageUrl,
           submittedAt: serverTimestamp()
-        });
+        };
+        if (hasDrawn) {
+          entry.imageUrl = canvas.toDataURL('image/png');
+        }
+
+        await addDoc(collection(db, "guestbook"), entry);
 
         alert("Successfully sent! Thank you for your message.");
 
         document.getElementById('visitorName').value = "";
         document.getElementById('visitorMessage').value = "";
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        fillWhite();
+        hasDrawn = false;
         undoStack.length = 0;
         redoStack.length = 0;
-        loadGallery(); // show the new drawing on the wall right away
+        loadGallery(); // show the new entry on the wall right away
 
       } catch (error) {
         console.error("Error submitting entry:", error);

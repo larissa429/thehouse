@@ -1781,6 +1781,22 @@ main img {
   border-radius: 0;
 }
 
+/* generic "this is a transparent object, not a paper page" marker — no
+   white card frame, and sized way down from the base 9rem paper size */
+.desk-paper[data-object] {
+  width: 3.5rem;
+}
+.desk-paper[data-object] img {
+  border: none;
+  background: none;
+  border-radius: 0;
+}
+
+/* the die specifically is much smaller than other objects */
+.desk-paper[data-dice] {
+  width: 1.4rem;
+}
+
 .desk-paper.entering {
   animation: paper-flutter-in 0.9s cubic-bezier(.2,.8,.3,1) both;
 }

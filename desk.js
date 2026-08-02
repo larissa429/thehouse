@@ -13,6 +13,11 @@
    hidden drawer slides out from the bottom edge of the desk with a
    password slip inside. That slip behaves like any other paper from
    then on (draggable, clickable to reveal its text, throwable too).
+
+   Any element marked [data-trinket] gets the same no-crumple shrink/
+   bounce/respawn treatment as the pen, just without triggering the
+   drawer secret — for small object doodles (a die, a paper crane...)
+   that should feel like real objects on the desk rather than paper.
    ============================================================ */
 (function () {
   var desk = document.getElementById('desk');
@@ -183,13 +188,31 @@
   function setupPaper(paper, opts) {
     opts = opts || {};
     var isPen = paper.hasAttribute('data-pen');
+    var isTrinket = isPen || paper.hasAttribute('data-trinket');
+    var noPreview = paper.hasAttribute('data-no-preview');
     var revealText = opts.revealText || null;
     var img = paper.querySelector('img');
     var realSrc = img.getAttribute('src');
 
+    // optional dice-style "rolling" faces: data-roll-frames="a.webp,b.webp,..."
+    // cycles through them while it bounces in the can, then settles on a
+    // random one — same idea as the comic pages swapping to a crumple
+    // texture, just for an object instead of paper
+    var rollFrames = (paper.dataset.rollFrames || '')
+      .split(',')
+      .map(function (s) { return s.trim(); })
+      .filter(Boolean);
+
     var dragging = false, moved = false;
     var startClientX, startClientY, startXPct, startYPct;
     var crumpling = false;
+
+    // release velocity, for rolling a die across the desk when let go —
+    // tracked as px/ms between the last two pointermove samples, not the
+    // whole drag, so a drag that ends slow doesn't inherit speed from
+    // earlier in the gesture
+    var lastMoveTime = 0, lastMoveClientX = 0, lastMoveClientY = 0;
+    var releaseVelX = 0, releaseVelY = 0;
 
     paper.addEventListener('pointerdown', function (e) {
       if (crumpling) return;
@@ -199,6 +222,9 @@
       paper.setPointerCapture(e.pointerId);
       startClientX = e.clientX;
       startClientY = e.clientY;
+      lastMoveTime = 0;
+      releaseVelX = 0;
+      releaseVelY = 0;
       // NOT `|| 50` — breaks at exactly 0% since 0 is falsy in JS
       var parsedX = parseFloat(paper.style.getPropertyValue('--x'));
       var parsedY = parseFloat(paper.style.getPropertyValue('--y'));
@@ -217,6 +243,20 @@
       var newY = Math.max(-10, Math.min(110, startYPct + (dy / b.height) * 100));
       paper.style.setProperty('--x', newX + '%');
       paper.style.setProperty('--y', newY + '%');
+
+      if (rollFrames.length) {
+        var now = performance.now();
+        if (lastMoveTime) {
+          var dt = now - lastMoveTime;
+          if (dt > 0) {
+            releaseVelX = (e.clientX - lastMoveClientX) / dt;
+            releaseVelY = (e.clientY - lastMoveClientY) / dt;
+          }
+        }
+        lastMoveTime = now;
+        lastMoveClientX = e.clientX;
+        lastMoveClientY = e.clientY;
+      }
     });
 
     function endDrag() {
@@ -224,7 +264,7 @@
       dragging = false;
       paper.classList.remove('dragging');
       if (!moved) {
-        if (!crumpling && !isPen) {
+        if (!crumpling && !isTrinket && !noPreview) {
           if (revealText) openText(revealText);
           else openImage(realSrc);
         }
@@ -240,12 +280,73 @@
         paperCy > canRect.top && paperCy < canRect.bottom;
 
       if (overCan) {
-        if (isPen) sinkPen();
+        if (isTrinket) sinkTrinket();
         else crumpleThenRestore();
+      } else if (rollFrames.length) {
+        // released on the open desk with some speed left — let it roll
+        // rather than just stopping dead where the pointer let go
+        rollAcrossDesk(releaseVelX, releaseVelY);
       }
     }
     paper.addEventListener('pointerup', endDrag);
     paper.addEventListener('pointercancel', endDrag);
+
+    // die-only: after release, keeps moving in the direction it was
+    // dragged, bouncing off the desk's edges and losing speed to
+    // friction, cycling through face images the whole time it's moving —
+    // same physics shape as runBounce(), just bounded by a rectangle
+    // (the desk) instead of the trash can's circular rim
+    function rollAcrossDesk(pxPerMsX, pxPerMsY) {
+      var b = desk.getBoundingClientRect();
+      var FRAME_MS = 16.67; // ~60fps, matching requestAnimationFrame's typical cadence
+      var vx = (pxPerMsX * FRAME_MS / b.width) * 100;  // %/frame
+      var vy = (pxPerMsY * FRAME_MS / b.height) * 100; // %/frame
+
+      var MIN_SPEED = 0.15; // %/frame — below this it's just a placed drop, not a throw
+      if (Math.hypot(vx, vy) < MIN_SPEED) return;
+
+      crumpling = true; // reuses the "don't let it be re-grabbed mid-animation" gate
+
+      var x = parseFloat(paper.style.getPropertyValue('--x'));
+      var y = parseFloat(paper.style.getPropertyValue('--y'));
+      if (isNaN(x)) x = 50;
+      if (isNaN(y)) y = 50;
+      var rot = parseFloat(paper.style.getPropertyValue('--rot'));
+      if (isNaN(rot)) rot = 0;
+      var spin = Math.hypot(vx, vy) * 40 * (Math.random() < 0.5 ? -1 : 1);
+
+      var MIN_X = 6, MAX_X = 94, MIN_Y = 6, MAX_Y = 94; // stay fully on the visible desk
+
+      var rollInterval = setInterval(function () {
+        img.setAttribute('src', randomRollFrame());
+      }, 90);
+
+      function frame() {
+        x += vx;
+        y += vy;
+        if (x < MIN_X) { x = MIN_X; vx *= -0.6; }
+        if (x > MAX_X) { x = MAX_X; vx *= -0.6; }
+        if (y < MIN_Y) { y = MIN_Y; vy *= -0.6; }
+        if (y > MAX_Y) { y = MAX_Y; vy *= -0.6; }
+        vx *= 0.94; // friction
+        vy *= 0.94;
+        rot += spin;
+        spin *= 0.94;
+
+        paper.style.setProperty('--x', x + '%');
+        paper.style.setProperty('--y', y + '%');
+        paper.style.setProperty('--rot', rot.toFixed(1) + 'deg');
+
+        if (Math.hypot(vx, vy) > 0.02) {
+          requestAnimationFrame(frame);
+        } else {
+          clearInterval(rollInterval);
+          img.setAttribute('src', randomRollFrame());
+          crumpling = false;
+        }
+      }
+      requestAnimationFrame(frame);
+    }
 
     // shared "shrink and slide toward the can" step — swapImage controls
     // whether it also swaps to a random crumpled texture (comic pages) or
@@ -306,21 +407,40 @@
       });
     }
 
-    function sinkPen() {
-      shrinkTowardCan(false); // no image swap — it's still the pen
+    function randomRollFrame() {
+      return rollFrames[Math.floor(Math.random() * rollFrames.length)];
+    }
+
+    function sinkTrinket() {
+      shrinkTowardCan(false); // no image swap by default — it stays looking like itself
+
+      // if this trinket has roll frames (a die's different faces), cycle
+      // through them rapidly while it's airborne/bouncing, like it's
+      // actually tumbling — starts as soon as it's thrown, not just once
+      // it lands in the can
+      var rollInterval = null;
+      if (rollFrames.length) {
+        rollInterval = setInterval(function () {
+          img.setAttribute('src', randomRollFrame());
+        }, 90);
+      }
+
       startBounce(function () {
-        // the pen re-scatters same as any paper, so the trick can be
-        // found again later — then the drawer answers back
+        if (rollInterval) clearInterval(rollInterval);
+
+        // re-scatters same as any paper, so the trick (if it is one)
+        // can be found again later
         var spot = randomScatterSpot();
         paper.classList.remove('bouncing');
         paper.style.setProperty('--x', spot.x);
         paper.style.setProperty('--y', spot.y);
         paper.style.setProperty('--rot', spot.rot);
         paper.style.setProperty('--scale', '1');
+        if (rollFrames.length) img.setAttribute('src', randomRollFrame());
         replayEntrance(paper, 0);
         crumpling = false;
 
-        openDrawerAndSpawnPassword();
+        if (isPen) openDrawerAndSpawnPassword();
       });
     }
   }

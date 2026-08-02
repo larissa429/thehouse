@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guestbook Review &middot; The House</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+    <h1>Guestbook Review</h1>
+    <p>Private moderation queue — not linked anywhere on the public site.</p>
+
+    <div id="signedOutView">
+      <button type="button" id="signInBtn" class="guestbook-btn guestbook-btn-submit" style="max-width: 16rem;">Sign in with Google</button>
+      <p id="authStatus" class="review-status"></p>
+    </div>
+
+    <div id="signedInView" hidden>
+      <p class="review-status" id="whoAmI"></p>
+      <button type="button" id="signOutBtn" class="guestbook-btn guestbook-btn-tool" style="max-width: 10rem; margin-bottom: 1.5rem;">Sign out</button>
+
+      <h2 class="review-section-title">Pending (<span id="pendingCount">0</span>)</h2>
+      <div id="pendingList" class="review-list"></div>
+
+      <h2 class="review-section-title">Approved (<span id="approvedCount">0</span>)</h2>
+      <div id="approvedList" class="review-list"></div>
+    </div>
+
+  </main>
+
+  <site-footer></site-footer>
+
+  <script src="../../components.js" defer></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyALJut-42S2SOUz7pZXJj2A5AMe3QHd0o0",
+      authDomain: "thehouse-f578b.firebaseapp.com",
+      projectId: "thehouse-f578b",
+      storageBucket: "thehouse-f578b.firebasestorage.app",
+      messagingSenderId: "60360197597",
+      appId: "1:60360197597:web:21d011ec9ac8111f15a234",
+      measurementId: "G-CMQQ8JFV2V"
+    };
+
+    // this is a UI convenience only — the actual security boundary is
+    // the Firestore rules, which check the signed-in account's email
+    // server-side. This constant just decides what the page SHOWS.
+    const ADMIN_EMAIL = 'larissa.nava29@gmail.com';
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    const signedOutView = document.getElementById('signedOutView');
+    const signedInView = document.getElementById('signedInView');
+    const signInBtn = document.getElementById('signInBtn');
+    const signOutBtn = document.getElementById('signOutBtn');
+    const authStatus = document.getElementById('authStatus');
+    const whoAmI = document.getElementById('whoAmI');
+
+    signInBtn.addEventListener('click', () => {
+      signInWithPopup(auth, provider).catch(error => {
+        authStatus.textContent = 'Sign-in failed: ' + error.message;
+      });
+    });
+    signOutBtn.addEventListener('click', () => signOut(auth));
+
+    onAuthStateChanged(auth, (user) => {
+      if (user && user.email === ADMIN_EMAIL) {
+        signedOutView.hidden = true;
+        signedInView.hidden = false;
+        whoAmI.textContent = 'Signed in as ' + user.email;
+        loadEntries();
+      } else if (user) {
+        // signed in, but not the admin account — Firestore rules will
+        // block reading pending entries regardless, so this is just a
+        // clear message rather than a silent empty page
+        signedOutView.hidden = false;
+        signedInView.hidden = true;
+        authStatus.textContent = 'Signed in as ' + user.email + ', which is not the admin account.';
+      } else {
+        signedOutView.hidden = false;
+        signedInView.hidden = true;
+        authStatus.textContent = '';
+      }
+    });
+
+    const pendingList = document.getElementById('pendingList');
+    const approvedList = document.getElementById('approvedList');
+    const pendingCount = document.getElementById('pendingCount');
+    const approvedCount = document.getElementById('approvedCount');
+
+    function renderEntry(id, data) {
+      const card = document.createElement('div');
+      card.className = 'review-entry';
+
+      if (data.imageUrl) {
+        const img = document.createElement('img');
+        img.src = data.imageUrl;
+        img.alt = '';
+        card.appendChild(img);
+      }
+
+      const info = document.createElement('div');
+      info.className = 'review-info';
+      const nameEl = document.createElement('strong');
+      nameEl.textContent = data.name || '(no name)';
+      const msgEl = document.createElement('p');
+      msgEl.textContent = data.message || '';
+      info.appendChild(nameEl);
+      info.appendChild(msgEl);
+      card.appendChild(info);
+
+      const actions = document.createElement('div');
+      actions.className = 'review-actions';
+
+      if (data.status !== 'approved') {
+        const approveBtn = document.createElement('button');
+        approveBtn.type = 'button';
+        approveBtn.className = 'guestbook-btn review-btn-approve';
+        approveBtn.textContent = 'Approve';
+        approveBtn.addEventListener('click', async () => {
+          await updateDoc(doc(db, 'guestbook', id), { status: 'approved' });
+          loadEntries();
+        });
+        actions.appendChild(approveBtn);
+      }
+
+      const rejectBtn = document.createElement('button');
+      rejectBtn.type = 'button';
+      rejectBtn.className = 'guestbook-btn review-btn-reject';
+      rejectBtn.textContent = data.status === 'approved' ? 'Remove' : 'Reject';
+      rejectBtn.addEventListener('click', async () => {
+        if (!confirm('Delete this entry permanently?')) return;
+        await deleteDoc(doc(db, 'guestbook', id));
+        loadEntries();
+      });
+      actions.appendChild(rejectBtn);
+
+      card.appendChild(actions);
+      return card;
+    }
+
+    async function loadEntries() {
+      pendingList.innerHTML = '';
+      approvedList.innerHTML = '';
+
+      const q = query(collection(db, 'guestbook'), orderBy('submittedAt', 'desc'));
+      const snap = await getDocs(q);
+
+      let pending = 0, approved = 0;
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        const card = renderEntry(docSnap.id, data);
+        if (data.status === 'approved') {
+          approvedList.appendChild(card);
+          approved++;
+        } else {
+          pendingList.appendChild(card);
+          pending++;
+        }
+      });
+      pendingCount.textContent = pending;
+      approvedCount.textContent = approved;
+    }
+  </script>
+
+</body>
+</html>

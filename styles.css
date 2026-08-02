@@ -2610,3 +2610,70 @@ main img {
 @media (max-width: 900px) {
   .guestbook-layout { flex-direction: column; }
 }
+
+/* ============================================================
+   GUESTBOOK REVIEW (private moderation queue)
+   ============================================================ */
+.review-status {
+  font-family: var(--label);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+.review-section-title {
+  margin-top: 2.5rem;
+}
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.review-entry {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  background: var(--wall);
+  border: var(--edge);
+  border-radius: 4px;
+  padding: 1rem 1.2rem;
+  flex-wrap: wrap;
+}
+.review-entry img {
+  width: 5rem;
+  height: 5rem;
+  object-fit: cover;
+  border-radius: 3px;
+  background: #fff;
+  flex: 0 0 auto;
+}
+.review-info {
+  flex: 1 1 12rem;
+}
+.review-info strong {
+  color: var(--paper);
+  font-family: var(--display);
+  font-size: 1.05rem;
+}
+.review-info p {
+  margin: 0.3rem 0 0;
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+.review-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex: 0 0 auto;
+}
+.review-btn-approve {
+  background: #2e7d32;
+  color: #fff;
+  border-color: #2e7d32;
+  padding: 0.5rem 1rem;
+}
+.review-btn-approve:hover { background: #388e3c; }
+.review-btn-reject {
+  background: var(--urgent);
+  color: #fff;
+  border-color: var(--urgent);
+  padding: 0.5rem 1rem;
+}
+.review-btn-reject:hover { background: #d9564a; }

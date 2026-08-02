@@ -125,7 +125,7 @@
   <script type="module">
     // 1. Import Firebase from the official Google CDN
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, query, where, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
@@ -186,7 +186,15 @@
 
     async function loadGallery() {
       try {
-        const q = query(collection(db, 'guestbook'), orderBy('submittedAt', 'desc'), limit(12));
+        // only ever show entries a moderator has approved — new
+        // submissions start as "pending" and are invisible here until
+        // then (see the review page for approving/rejecting them)
+        const q = query(
+          collection(db, 'guestbook'),
+          where('status', '==', 'approved'),
+          orderBy('submittedAt', 'desc'),
+          limit(12)
+        );
         const snap = await getDocs(q);
         if (snap.empty) {
           renderGalleryEntries([EXAMPLE_ENTRY]);
@@ -540,6 +548,7 @@
         const entry = {
           name: name,
           message: message,
+          status: 'pending', // a moderator has to approve it before it's public
           submittedAt: serverTimestamp()
         };
         if (hasDrawn) {
@@ -548,7 +557,7 @@
 
         await addDoc(collection(db, "guestbook"), entry);
 
-        alert("Successfully sent! Thank you for your message.");
+        alert("Thanks! Your entry is pending review and will appear here once approved.");
 
         document.getElementById('visitorName').value = "";
         document.getElementById('visitorMessage').value = "";

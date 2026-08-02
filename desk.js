@@ -449,18 +449,21 @@
     setupPaper(paper);
   });
 
-  // the pen spawns somewhere new every load/refresh rather than sitting
-  // in the same spot — set before its flutter-in entrance plays, so it
-  // just repositions instantly with no visible jump. It also avoids
-  // landing within 10px of any other paper's spawn point, so it doesn't
-  // spawn stacked directly on top of one.
-  var PEN_MIN_DIST = 100;
-  var pen = document.querySelector('.desk-paper[data-pen]');
-  if (pen) {
+  // hidden/secret objects (the pen, the die, the crane) spawn somewhere
+  // new every load/refresh rather than sitting in the same spot — set
+  // before their flutter-in entrance plays, so they just reposition
+  // instantly with no visible jump. Each also avoids landing within
+  // MIN_DIST of any other paper's spawn point (including each other,
+  // since this runs in order and reads whatever --x/--y is already set),
+  // so they don't spawn stacked directly on top of something else.
+  var RANDOM_SPAWN_MIN_DIST = 100;
+
+  function randomizeSpawnPoint(el) {
+    if (!el) return;
     var deskRect = desk.getBoundingClientRect();
     var otherCenters = [];
     document.querySelectorAll('.desk-paper').forEach(function (p) {
-      if (p === pen) return;
+      if (p === el) return;
       var px = parseFloat(p.style.getPropertyValue('--x'));
       var py = parseFloat(p.style.getPropertyValue('--y'));
       if (isNaN(px) || isNaN(py)) return;
@@ -477,12 +480,16 @@
       var sx = (parseFloat(spot.x) / 100) * deskRect.width;
       var sy = (parseFloat(spot.y) / 100) * deskRect.height;
       var tooClose = otherCenters.some(function (c) {
-        return Math.hypot(sx - c.x, sy - c.y) < PEN_MIN_DIST;
+        return Math.hypot(sx - c.x, sy - c.y) < RANDOM_SPAWN_MIN_DIST;
       });
     } while (tooClose && attempts < 30);
 
-    pen.style.setProperty('--x', spot.x);
-    pen.style.setProperty('--y', spot.y);
-    pen.style.setProperty('--rot', spot.rot);
+    el.style.setProperty('--x', spot.x);
+    el.style.setProperty('--y', spot.y);
+    el.style.setProperty('--rot', spot.rot);
   }
+
+  randomizeSpawnPoint(document.querySelector('.desk-paper[data-pen]'));
+  randomizeSpawnPoint(document.querySelector('.desk-paper[data-dice]'));
+  randomizeSpawnPoint(document.querySelector('.desk-paper[data-crane]'));
 })();

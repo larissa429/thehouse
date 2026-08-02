@@ -2178,3 +2178,102 @@ main img {
 @media (max-width: 700px) {
   .gallery-frame { width: 11rem; }
 }
+
+/* ============================================================
+   THE D.A.I.S.Y.s
+   ============================================================ */
+.daisy-list {
+  display: flex;
+  flex-direction: column;
+}
+.daisy-block {
+  position: relative;
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  background: var(--wall);
+  border: var(--edge);
+  border-left: 4px solid var(--daisy-clr, var(--lamp));
+  border-radius: 2px;
+  padding: 1.4rem 1.6rem 1.4rem 3rem;
+  margin: 2rem 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.daisy-block.dragging {
+  z-index: 20;
+  cursor: grabbing;
+  box-shadow: 0 16px 30px rgba(0,0,0,0.5);
+}
+.daisy-drag-handle {
+  position: absolute;
+  left: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  padding: 0.4rem;
+}
+.daisy-drag-handle:active { cursor: grabbing; }
+.daisy-portrait {
+  width: 8rem;
+  flex: 0 0 auto;
+  height: auto;
+  pointer-events: none;
+}
+.daisy-text h2 {
+  margin: 0 0 0.6rem;
+  color: var(--daisy-clr, var(--lamp));
+}
+.daisy-text p {
+  margin: 0 0 0.9rem;
+}
+.daisy-text p:last-child { margin-bottom: 0; }
+.daisy-aside {
+  font-family: var(--label);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  border-top: var(--edge);
+  padding-top: 0.8rem;
+}
+
+@media (max-width: 620px) {
+  .daisy-block { flex-direction: column; align-items: center; text-align: center; padding-left: 1.6rem; }
+  .daisy-drag-handle { left: 50%; top: 0.4rem; transform: translateX(-50%) rotate(90deg); }
+  .daisy-portrait { width: 6rem; }
+}
+
+/* the reward: a small system-popup that slides up from the bottom of the
+   viewport once the D.A.I.S.Y. panels are dragged into the right order
+   (Green landing directly between Yellow and Blue) — see daisy-drag.js */
+.daisy-reward {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 100;
+  width: 14rem;
+  transform: translate(-50%, 100%);
+  transition: transform 0.5s cubic-bezier(.2,.8,.3,1);
+  background: #c0c0c0;
+  border: 2px solid #000;
+  box-shadow: 0 -6px 20px rgba(0,0,0,0.6);
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.daisy-reward.open { transform: translate(-50%, 0); }
+.daisy-reward-bar {
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #fff;
+  font-weight: bold;
+  padding: 0.3rem 0.5rem;
+  letter-spacing: 0.04em;
+}
+.daisy-reward-body {
+  padding: 0.6rem 0.7rem;
+  color: #111;
+}
+.daisy-reward-body a { color: #00008b; }

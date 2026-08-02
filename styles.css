@@ -2309,3 +2309,82 @@ main img {
   color: #111;
 }
 .daisy-reward-body a { color: #00008b; }
+
+/* ============================================================
+   GUESTBOOK
+   ============================================================ */
+.guestbook-card {
+  max-width: 26rem;
+  margin: 2rem 0;
+  padding: 1.6rem;
+  background: var(--wall);
+  border: var(--edge);
+  border-radius: 4px;
+}
+.guestbook-input,
+.guestbook-textarea {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  margin-bottom: 1rem;
+  background: var(--wall-lit);
+  border: var(--edge);
+  border-radius: 2px;
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+.guestbook-textarea {
+  height: 5rem;
+  resize: none;
+}
+.guestbook-input::placeholder,
+.guestbook-textarea::placeholder {
+  color: var(--ink-soft);
+}
+.guestbook-canvas {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  background: #fff;
+  border: 2px solid var(--edgeclr);
+  border-radius: 3px;
+  margin-bottom: 1rem;
+  touch-action: none;
+  cursor: crosshair;
+}
+.guestbook-btn-row {
+  display: flex;
+  gap: 0.7rem;
+}
+.guestbook-btn {
+  flex: 1;
+  padding: 0.7rem;
+  border: var(--edge);
+  border-radius: 2px;
+  font-family: var(--label);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.guestbook-btn-clear {
+  background: var(--wall-lit);
+  color: var(--ink);
+}
+.guestbook-btn-clear:hover { background: var(--wall); }
+.guestbook-btn-submit {
+  background: var(--lamp);
+  color: #241a12;
+  border-color: var(--lamp);
+}
+.guestbook-btn-submit:hover { background: var(--paper); }
+.guestbook-btn-submit:disabled {
+  background: var(--wall-lit);
+  color: var(--ink-soft);
+  border-color: var(--edgeclr);
+  cursor: default;
+}

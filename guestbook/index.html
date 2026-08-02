@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guestbook &middot; The House</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+    <h1>Guestbook</h1>
+    <p>Leave a doodle and a note for the residents to find. Everything here is public — sign it however you like.</p>
+
+    <div class="guestbook-card">
+      <input type="text" id="visitorName" class="guestbook-input" placeholder="Your Name" required />
+      <textarea id="visitorMessage" class="guestbook-textarea" placeholder="Your Message..."></textarea>
+
+      <canvas id="artCanvas" class="guestbook-canvas" width="400" height="400"></canvas>
+
+      <div class="guestbook-btn-row">
+        <button type="button" id="clearBtn" class="guestbook-btn guestbook-btn-clear">Clear Canvas</button>
+        <button type="button" id="submitBtn" class="guestbook-btn guestbook-btn-submit">Submit</button>
+      </div>
+    </div>
+
+  </main>
+
+  <site-footer></site-footer>
+
+  <script src="../components.js" defer></script>
+
+  <script type="module">
+    // 1. Import Firebase from the official Google CDN
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyALJut-42S2SOUz7pZXJj2A5AMe3QHd0o0",
+      authDomain: "thehouse-f578b.firebaseapp.com",
+      projectId: "thehouse-f578b",
+      storageBucket: "thehouse-f578b.firebasestorage.app",
+      messagingSenderId: "60360197597",
+      appId: "1:60360197597:web:21d011ec9ac8111f15a234",
+      measurementId: "G-CMQQ8JFV2V"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    const auth = getAuth(app);
+
+    signInAnonymously(auth)
+      .then(() => {
+        console.log("Logged in anonymously!");
+      })
+      .catch((error) => {
+        console.error("Anonymous login failed: ", error);
+      });
+
+    // --- DRAWING CANVAS LOGIC ---
+    const canvas = document.getElementById('artCanvas');
+    const ctx = canvas.getContext('2d');
+    const clearBtn = document.getElementById('clearBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    let isDrawing = false;
+
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#000000';
+
+    function getCoordinates(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      draw(e);
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+      ctx.beginPath();
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const { x, y } = getCoordinates(e);
+
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+    canvas.addEventListener('mousemove', draw);
+
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); });
+    canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+
+    clearBtn.addEventListener('click', () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // --- SUBMISSION LOGIC ---
+    submitBtn.addEventListener('click', () => {
+      const name = document.getElementById('visitorName').value.trim();
+      const message = document.getElementById('visitorMessage').value.trim();
+
+      if (!name) {
+        alert("Please enter your name!");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Submitting...";
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          alert("Canvas error!");
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Submit";
+          return;
+        }
+
+        try {
+          const filename = `guestbook_drawings/${Date.now()}.png`;
+          const storageRef = ref(storage, filename);
+          const snapshot = await uploadBytes(storageRef, blob);
+
+          const imageUrl = await getDownloadURL(snapshot.ref);
+
+          await addDoc(collection(db, "guestbook"), {
+            name: name,
+            message: message,
+            imageUrl: imageUrl,
+            submittedAt: serverTimestamp()
+          });
+
+          alert("Successfully sent! Thank you for your message.");
+
+          document.getElementById('visitorName').value = "";
+          document.getElementById('visitorMessage').value = "";
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        } catch (error) {
+          console.error("Error submitting entry:", error);
+          alert("Error saving. Make sure your database and storage rules allow anonymous writes!");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Submit";
+        }
+      }, 'image/png');
+    });
+  </script>
+
+</body>
+</html>

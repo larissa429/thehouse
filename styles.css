@@ -2240,10 +2240,13 @@ main img {
   padding-top: 0.8rem;
 }
 
-@media (max-width: 620px) {
+@media (max-width: 900px) {
   /* collapsed to just the handle, name, and footnote by default — the
      full bio only shows once tapped, so a block never grows taller than
-     one screen and dragging to reorder stays physically possible */
+     one screen and dragging to reorder stays physically possible.
+     900px (not 620px) so this also covers tablets like iPad, where the
+     viewport is wider than a phone but still too narrow/short for a
+     full-size expanded panel to be draggable in one screen. */
   .daisy-block {
     flex-direction: column;
     align-items: center;
@@ -2252,7 +2255,6 @@ main img {
     margin: 1rem 0;
     cursor: pointer;
   }
-  .daisy-drag-handle { left: 50%; top: 0.4rem; transform: translateX(-50%) rotate(90deg); }
   .daisy-portrait { width: 4rem; }
 
   .daisy-text p:not(.daisy-aside) { display: none; }
@@ -2272,7 +2274,7 @@ main img {
     margin-top: 0.5rem;
   }
 }
-@media (min-width: 621px) {
+@media (min-width: 901px) {
   .daisy-tap-hint { display: none; }
 }
 

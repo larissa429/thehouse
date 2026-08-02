@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Penny · The House</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+<span class="eyebrow breadcrumb"><a href="../pass.html">← GO BACK</a></span>
+
+    <div class="character-header">
+      <figure class="portrait">
+        <img src="../images/penny.webp" alt="Portrait of Penny" />
+        <figcaption class="credit">Art by timbrainpopkinnie on Discord</figcaption>
+      </figure>
+      <dl class="statblock">
+        <div class="stat"><dt>Alias</dt><dd>Penny</dd></div>
+        <div class="stat"><dt>Object</dt><dd>Dip Pen</dd></div>
+        <div class="stat"><dt>Identity</dt><dd>She/her, female</dd></div>
+        <div class="stat"><dt>Time in the Inbetween</dt><dd>~2,200 blooms</dd></div>
+        <div class="stat"><dt>Favorite food</dt><dd>—</dd></div>
+        <div class="stat"><dt>Favorite drink</dt><dd>—</dd></div>
+        <div class="stat"><dt>Hobbies</dt><dd>—</dd></div>
+        <div class="stat"><dt>Favorite thing to do</dt><dd>—</dd></div>
+        <div class="stat"><dt>Favorite resident</dt><dd>—</dd></div>
+      </dl>
+      <div class="swing-playlist-wrap">
+        <div class="swing-drag-handle"></div>
+        <span class="swing-tape"></span>
+        <iframe data-testid="embed-iframe" src="https://open.spotify.com/embed/playlist/3NXQxKG2cFRxKbxO9vs4Zi?utm_source=generator&si=ec5cae8269c54558" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <div class="tags">
+      <span class="tag">SHE/HER</span>
+      <span class="tag">~2,200 BLOOMS</span>
+      <span class="tag">ISOLATED</span>
+    </div>
+
+    <p>She was the first.</p>
+
+    <div class="connections">
+      <span class="eyebrow">Connections</span>
+      <div class="connections-board">
+        <svg class="connections-strings"></svg>
+
+        <div class="connection-pin connection-self" style="--x:50%; --y:44%;">
+          <img src="../images/icons/penny.png" alt="Penny" />
+        </div>
+
+        <button class="connection-pin" style="--x:18%; --y:16%; --tilt:-4deg;" data-color="journal">
+          <img src="../images/icons/journal.png" alt="Journal" />
+          <template>
+            <h4>Journal</h4>
+            <p>Convinced he's the devil.</p>
+          </template>
+        </button>
+
+        <button class="connection-pin connection-torn" style="--x:78%; --y:74%; --tilt:6deg;" data-color="telly" data-no-line>
+          <div class="torn-shape">?</div>
+          <template>
+            <h4></h4>
+            <p>The voices in her head. They tormented her, but she's a lot lonelier now that they're gone.</p>
+          </template>
+        </button>
+      </div>
+    </div>
+
+    <div class="trivia-note">
+      <span class="tape tape-left"></span>
+      <span class="tape tape-right"></span>
+      <h3>Trivia</h3>
+      <hr class="trivia-rule" />
+      <ul>
+        <li>???</li>
+        <li>???</li>
+        <li>???</li>
+        <li>???</li>
+      </ul>
+    </div>
+
+  </main>
+
+  <div class="note-overlay" id="note-overlay">
+    <div class="note" id="note-content">
+      <button class="note-close" id="note-close">×</button>
+      <div id="note-body"></div>
+    </div>
+  </div>
+
+  <site-footer></site-footer>
+
+  <script src="../components.js" defer></script>
+  <script src="../connections.js" defer></script>
+  <script src="../playlist-swing.js" defer></script>
+</body>
+</html>

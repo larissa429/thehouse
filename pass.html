@@ -308,7 +308,6 @@
     </div>
   </div>
 
-  <div class="dev-tag">test password: summer7</div>
 
 <script>
   async function sha256(text) {
@@ -319,11 +318,11 @@
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  let LIVE_TEST_HASH = null;
+  let SUMMER_HASH = null;
+  let PENNY_HASH = null;
   (async () => {
-    LIVE_TEST_HASH = await sha256("summer7");
-    console.log("Test password:", "summer7");
-    console.log("Its hash:", LIVE_TEST_HASH);
+    SUMMER_HASH = await sha256("summer7");
+    PENNY_HASH = await sha256("penny");
   })();
 
   const win = document.getElementById('win');
@@ -348,7 +347,9 @@
 
     const guessHash = await sha256(guess);
 
-    if (guessHash === LIVE_TEST_HASH) {
+    if (guessHash === PENNY_HASH) {
+      window.location.href = 'penny/';
+    } else if (guessHash === SUMMER_HASH) {
       windowBody.classList.add('hide');
       unlockedBody.classList.add('show');
     } else {

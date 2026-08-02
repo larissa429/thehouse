@@ -20,6 +20,14 @@
     return el.getBoundingClientRect();
   }
 
+  // how far (as a fraction of a neighbor's height) the dragged panel
+  // needs to reach into it before they swap — lower means less finger
+  // travel is needed per swap, which matters a lot on tablets where the
+  // panels are still full-size (not collapsed the way they are on
+  // phones) and dragging the full height of one to trigger a swap isn't
+  // always physically possible on a fixed screen
+  var SWAP_THRESHOLD = 0.25;
+
   function updateDrag(clientY) {
     var naturalRect = naturalRectOf(dragging);
     var desiredTop = clientY - grabOffsetY;
@@ -31,7 +39,7 @@
     var next = dragging.nextElementSibling;
     if (next) {
       var nRect = next.getBoundingClientRect();
-      if (draggedCenter > nRect.top + nRect.height / 2) {
+      if (draggedCenter > nRect.top + nRect.height * SWAP_THRESHOLD) {
         list.insertBefore(next, dragging);
         updateDrag(clientY);
         return;
@@ -41,7 +49,7 @@
     var prev = dragging.previousElementSibling;
     if (prev) {
       var pRect = prev.getBoundingClientRect();
-      if (draggedCenter < pRect.top + pRect.height / 2) {
+      if (draggedCenter < pRect.top + pRect.height * (1 - SWAP_THRESHOLD)) {
         list.insertBefore(dragging, prev);
         updateDrag(clientY);
         return;

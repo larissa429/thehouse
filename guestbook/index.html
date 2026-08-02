@@ -430,11 +430,19 @@
 
     function getCoordinates(e) {
       const rect = canvas.getBoundingClientRect();
+      // the canvas's internal bitmap is a fixed 400x400, but CSS renders
+      // it at whatever size the layout gives it (much smaller than 400
+      // on a phone) — without this scale factor, raw CSS-pixel offsets
+      // get used directly as bitmap coordinates, so the drawing point
+      // drifts away from the actual finger position the smaller the
+      // canvas is rendered on screen
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
       };
     }
 

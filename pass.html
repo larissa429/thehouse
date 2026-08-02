@@ -330,7 +330,17 @@
     const guess = input.value;
     if (!guess) return;
 
-    const guessHash = await sha256(guess);
+    let guessHash;
+    try {
+      guessHash = await sha256(guess);
+    } catch (err) {
+      // crypto.subtle (used for hashing) only works in a secure context
+      // (HTTPS) — without this catch, a failure here would silently
+      // kill the whole handler and nothing would happen on submit at all
+      console.error('Password check failed: ', err);
+      status.textContent = "Something went wrong checking that — try reloading, or make sure you're on https://.";
+      return;
+    }
 
     if (guessHash === PENNY_HASH) {
       window.location.href = 'penny/';

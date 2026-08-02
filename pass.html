@@ -240,29 +240,6 @@
     80% { transform: translateX(3px); }
   }
 
-  .unlocked-body {
-    display: none;
-    padding: 20px 16px;
-    font-size: 12px;
-    line-height: 1.6;
-    color: var(--text);
-    background: white;
-  }
-  .unlocked-body.show {
-    display: block;
-  }
-  .window-body.hide {
-    display: none;
-  }
-
-  .dev-tag {
-    position: fixed;
-    bottom: 10px;
-    left: 10px;
-    font-family: monospace;
-    font-size: 11px;
-    color: rgba(255,255,255,0.55);
-  }
 </style>
 </head>
 <body>
@@ -290,7 +267,7 @@
         <div class="input-row">
           <div class="input-field-wrap">
             <div class="placeholder-overlay" id="placeholderOverlay">ENTER PASSWORD</div>
-            <input type="password" id="pwInput" autocomplete="off">
+            <input type="text" id="pwInput" autocomplete="off">
           </div>
         </div>
 
@@ -301,10 +278,6 @@
       </form>
 
       <div class="status-line" id="status"></div>
-    </div>
-
-    <div class="unlocked-body" id="unlockedBody">
-      <img src="images/200w.gif">
     </div>
   </div>
 
@@ -321,7 +294,7 @@
   let SUMMER_HASH = null;
   let PENNY_HASH = null;
   (async () => {
-    SUMMER_HASH = await sha256("summer7");
+    SUMMER_HASH = await sha256("summer28");
     PENNY_HASH = await sha256("penny");
   })();
 
@@ -330,8 +303,6 @@
   const input = document.getElementById('pwInput');
   const overlay = document.getElementById('placeholderOverlay');
   const status = document.getElementById('status');
-  const windowBody = document.getElementById('windowBody');
-  const unlockedBody = document.getElementById('unlockedBody');
   const cancelBtn = document.getElementById('cancelBtn');
 
   input.addEventListener('input', () => {
@@ -350,8 +321,7 @@
     if (guessHash === PENNY_HASH) {
       window.location.href = 'penny/';
     } else if (guessHash === SUMMER_HASH) {
-      windowBody.classList.add('hide');
-      unlockedBody.classList.add('show');
+      window.location.href = 'archive/';
     } else {
       status.textContent = "Incorrect password.";
       win.classList.remove('shake');

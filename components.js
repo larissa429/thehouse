@@ -14,8 +14,8 @@
    instead of .../journal.html. This file detects which depth the
    current page is at and builds the right relative links either way
    — so it keeps working whether you're testing at
-   yourname.github.io/thehouse/journal/ or later on a plain custom
-   domain like thehouseos.com/journal/.
+   larissa429.github.io/thehouse/journal/ or on the custom domain
+   thehouseosc.com/journal/.
    ============================================================ */
 
 /* the small, fixed set of non-character utility pages. Anything else

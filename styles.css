@@ -2011,11 +2011,11 @@ main img {
 }
 .theater-curtain-left {
   left: 0;
-  background-image: url('videos/curtainleft.png');
+  background-image: url('videos/curtainleft.webp');
 }
 .theater-curtain-right {
   right: 0;
-  background-image: url('videos/curtainright.png');
+  background-image: url('videos/curtainright.webp');
 }
 .theater-stage.open .theater-curtain-left { transform: translateX(-100%); }
 .theater-stage.open .theater-curtain-right { transform: translateX(100%); }

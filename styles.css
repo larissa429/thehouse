@@ -2389,15 +2389,50 @@ main img {
   cursor: default;
 }
 
-.guestbook-palette {
-  display: flex;
-  justify-content: center;
-  gap: 0.9rem;
-  margin-bottom: 1rem;
+/* ---- palette groups: three expandable rows (Bright/Pastel/Dark) ---- */
+.guestbook-palette-groups {
+  margin-bottom: 0.8rem;
 }
+.guestbook-palette-group + .guestbook-palette-group {
+  margin-top: 0.5rem;
+}
+.guestbook-palette-toggle {
+  padding: 0.35rem 0.8rem;
+  background: var(--wall-lit);
+  border: var(--edge);
+  border-radius: 4px;
+  color: var(--ink);
+  font-family: var(--label);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.guestbook-palette-toggle.active {
+  background: var(--lamp);
+  color: #241a12;
+  border-color: var(--lamp);
+}
+.guestbook-palette-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: var(--edge);
+}
+/* the [hidden] attribute needs an explicit override here — otherwise
+   the unconditional display:flex above wins the cascade and the row
+   stays visible even while "hidden" */
+.guestbook-palette-row[hidden] {
+  display: none;
+}
+
 .guestbook-swatch {
   width: 1.9rem;
   height: 1.9rem;
+  flex: 0 0 auto;
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid transparent;
@@ -2410,52 +2445,147 @@ main img {
   transform: scale(1.15);
 }
 
+/* ---- recently-used colors ---- */
+.guestbook-history-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  min-height: 1.9rem;
+}
+.guestbook-history-label {
+  font-family: var(--label);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  flex: 0 0 auto;
+}
+.guestbook-history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.guestbook-history-swatch {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+/* ---- brush size slider + eraser ---- */
 .guestbook-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 0.8rem;
   margin-bottom: 1rem;
 }
-.guestbook-sizes {
+.guestbook-size-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1 1 auto;
+  min-width: 10rem;
+}
+.guestbook-size-label {
+  font-family: var(--label);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.guestbook-slider {
+  flex: 1 1 auto;
+  min-width: 5rem;
+  accent-color: var(--lamp);
+}
+.guestbook-size-value {
+  font-family: var(--label);
+  font-size: 0.75rem;
+  color: var(--ink);
+  min-width: 2.4rem;
+  text-align: right;
+}
+
+.guestbook-btn-eraser {
+  flex: 0 0 auto;
+  padding: 0.5rem 0.9rem;
+  background: rgba(192, 70, 60, 0.2);
+  border-color: var(--urgent);
+  color: var(--paper);
+}
+.guestbook-btn-eraser.active {
+  background: var(--urgent);
+  color: #fff;
+}
+
+.guestbook-tools-row {
+  display: flex;
+  gap: 0.7rem;
+  margin-bottom: 0.8rem;
+}
+.guestbook-btn-tool {
+  background: var(--wall-lit);
+  color: var(--ink);
+}
+.guestbook-btn-tool:hover { background: var(--wall); }
+
+.guestbook-stamps-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.guestbook-stamps {
   display: flex;
   gap: 0.4rem;
 }
-.guestbook-size-btn {
-  width: 2.2rem;
-  height: 2.2rem;
+.guestbook-stamp-btn {
+  width: 2.4rem;
+  height: 2.4rem;
   border-radius: 6px;
   border: var(--edge);
   background: var(--wall-lit);
-  color: var(--ink);
-  font-family: var(--label);
-  font-weight: bold;
-  font-size: 0.62rem;
+  font-size: 1.1rem;
+  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.1s ease, color 0.1s ease;
+  transition: background 0.1s ease, border-color 0.1s ease;
 }
-.guestbook-size-btn.active {
+.guestbook-stamp-btn:hover { background: var(--wall); }
+.guestbook-stamp-btn.active {
   background: var(--lamp);
-  color: #241a12;
   border-color: var(--lamp);
 }
-.guestbook-eraser-btn {
-  padding: 0.5rem 0.9rem;
-  background: rgba(192, 70, 60, 0.2);
-  border: 1px solid var(--urgent);
-  border-radius: 6px;
-  color: var(--paper);
-  font-family: var(--label);
-  font-size: 0.75rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.1s ease, color 0.1s ease;
+
+/* ---- two-column layout: form on the left, submitted-drawing wall on
+   the right — the wall reuses .gallery-frame/.gallery-plate as-is from
+   the Official Art gallery, hover-lamp effect included for free ---- */
+.guestbook-layout {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
-.guestbook-eraser-btn.active {
-  background: var(--urgent);
-  color: #fff;
+.guestbook-layout .guestbook-card {
+  flex: 1 1 24rem;
+  margin: 2rem 0;
+}
+.guestbook-gallery {
+  flex: 1 1 20rem;
+  margin: 2rem 0;
+}
+.guestbook-gallery-title {
+  margin-top: 0;
+}
+.guestbook-gallery .gallery-wall {
+  justify-content: flex-start;
+}
+
+@media (max-width: 900px) {
+  .guestbook-layout { flex-direction: column; }
 }

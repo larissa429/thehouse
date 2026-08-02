@@ -19,34 +19,101 @@
     <h1>Guestbook</h1>
     <p>Leave a doodle and a note for the residents to find. Everything here is public — sign it however you like.</p>
 
+    <div class="guestbook-layout">
     <div class="guestbook-card">
       <input type="text" id="visitorName" class="guestbook-input" placeholder="Your Name" required />
       <textarea id="visitorMessage" class="guestbook-textarea" placeholder="Your Message..."></textarea>
 
-      <div class="guestbook-palette">
-        <div class="guestbook-swatch active" style="background-color: #000000;" data-color="#000000"></div>
-        <div class="guestbook-swatch" style="background-color: #ff3333;" data-color="#ff3333"></div>
-        <div class="guestbook-swatch" style="background-color: #0066ff;" data-color="#0066ff"></div>
-        <div class="guestbook-swatch" style="background-color: #33cc33;" data-color="#33cc33"></div>
-        <div class="guestbook-swatch" style="background-color: #ffcc00;" data-color="#ffcc00"></div>
+      <div class="guestbook-palette-groups">
+        <div class="guestbook-palette-group">
+          <button type="button" class="guestbook-palette-toggle active" data-palette="bright">Bright</button>
+          <div class="guestbook-palette-row" data-palette-row="bright">
+            <div class="guestbook-swatch active" style="background-color: #000000;" data-color="#000000"></div>
+            <div class="guestbook-swatch" style="background-color: #ff1a4b;" data-color="#ff1a4b"></div>
+            <div class="guestbook-swatch" style="background-color: #ff8c00;" data-color="#ff8c00"></div>
+            <div class="guestbook-swatch" style="background-color: #ffe600;" data-color="#ffe600"></div>
+            <div class="guestbook-swatch" style="background-color: #39ff14;" data-color="#39ff14"></div>
+            <div class="guestbook-swatch" style="background-color: #00bfff;" data-color="#00bfff"></div>
+            <div class="guestbook-swatch" style="background-color: #b026ff;" data-color="#b026ff"></div>
+            <div class="guestbook-swatch" style="background-color: #ff3ec8;" data-color="#ff3ec8"></div>
+          </div>
+        </div>
+
+        <div class="guestbook-palette-group">
+          <button type="button" class="guestbook-palette-toggle" data-palette="pastel">Pastel</button>
+          <div class="guestbook-palette-row" data-palette-row="pastel" hidden>
+            <div class="guestbook-swatch" style="background-color: #cfcfcf;" data-color="#cfcfcf"></div>
+            <div class="guestbook-swatch" style="background-color: #ffb3ba;" data-color="#ffb3ba"></div>
+            <div class="guestbook-swatch" style="background-color: #ffdfba;" data-color="#ffdfba"></div>
+            <div class="guestbook-swatch" style="background-color: #ffffba;" data-color="#ffffba"></div>
+            <div class="guestbook-swatch" style="background-color: #baffc9;" data-color="#baffc9"></div>
+            <div class="guestbook-swatch" style="background-color: #bae1ff;" data-color="#bae1ff"></div>
+            <div class="guestbook-swatch" style="background-color: #d5baff;" data-color="#d5baff"></div>
+            <div class="guestbook-swatch" style="background-color: #ffbaf0;" data-color="#ffbaf0"></div>
+          </div>
+        </div>
+
+        <div class="guestbook-palette-group">
+          <button type="button" class="guestbook-palette-toggle" data-palette="dark">Dark</button>
+          <div class="guestbook-palette-row" data-palette-row="dark" hidden>
+            <div class="guestbook-swatch" style="background-color: #000000;" data-color="#000000"></div>
+            <div class="guestbook-swatch" style="background-color: #7a1f2b;" data-color="#7a1f2b"></div>
+            <div class="guestbook-swatch" style="background-color: #7a4a1f;" data-color="#7a4a1f"></div>
+            <div class="guestbook-swatch" style="background-color: #7a6a1f;" data-color="#7a6a1f"></div>
+            <div class="guestbook-swatch" style="background-color: #1f4a2b;" data-color="#1f4a2b"></div>
+            <div class="guestbook-swatch" style="background-color: #1f2f5c;" data-color="#1f2f5c"></div>
+            <div class="guestbook-swatch" style="background-color: #3a1f5c;" data-color="#3a1f5c"></div>
+            <div class="guestbook-swatch" style="background-color: #5c1f4a;" data-color="#5c1f4a"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guestbook-history-row">
+        <span class="guestbook-history-label">Recent:</span>
+        <div class="guestbook-history" id="colorHistory"></div>
       </div>
 
       <div class="guestbook-controls">
-        <div class="guestbook-sizes">
-          <button type="button" class="guestbook-size-btn" data-size="2">2px</button>
-          <button type="button" class="guestbook-size-btn active" data-size="5">5px</button>
-          <button type="button" class="guestbook-size-btn" data-size="10">10px</button>
-          <button type="button" class="guestbook-size-btn" data-size="20">20px</button>
+        <div class="guestbook-size-row">
+          <label for="sizeSlider" class="guestbook-size-label">Brush Size</label>
+          <input type="range" id="sizeSlider" class="guestbook-slider" min="1" max="30" value="5" />
+          <span id="sizeValue" class="guestbook-size-value">5px</span>
         </div>
-        <button type="button" id="eraserBtn" class="guestbook-eraser-btn">Eraser &#129504;</button>
+        <button type="button" id="eraserBtn" class="guestbook-btn guestbook-btn-eraser">Eraser 🧼</button>
+      </div>
+
+      <div class="guestbook-stamps-row">
+        <span class="guestbook-history-label">Stamps:</span>
+        <div class="guestbook-stamps">
+          <button type="button" class="guestbook-stamp-btn" data-stamp="house" title="House">&#127968;</button>
+          <button type="button" class="guestbook-stamp-btn" data-stamp="star" title="Star">&#11088;</button>
+          <button type="button" class="guestbook-stamp-btn" data-stamp="heart" title="Heart">&#10084;&#65039;</button>
+          <button type="button" class="guestbook-stamp-btn" data-stamp="circle" title="Circle">&#9679;</button>
+          <button type="button" id="stampOffBtn" class="guestbook-stamp-btn" title="Back to pen">&#9998;&#65039;</button>
+        </div>
       </div>
 
       <canvas id="artCanvas" class="guestbook-canvas" width="400" height="400"></canvas>
+
+      <div class="guestbook-tools-row">
+        <button type="button" id="undoBtn" class="guestbook-btn guestbook-btn-tool">Undo</button>
+        <button type="button" id="redoBtn" class="guestbook-btn guestbook-btn-tool">Redo</button>
+        <button type="button" id="exportBtn" class="guestbook-btn guestbook-btn-tool">Save Image</button>
+      </div>
 
       <div class="guestbook-btn-row">
         <button type="button" id="clearBtn" class="guestbook-btn guestbook-btn-clear">Clear Canvas</button>
         <button type="button" id="submitBtn" class="guestbook-btn guestbook-btn-submit">Submit</button>
       </div>
+    </div>
+
+    <div class="guestbook-gallery">
+      <h2 class="guestbook-gallery-title">Gallery</h2>
+      <div class="gallery-wall" id="guestbookWall">
+        <!-- populated by JS from Firestore; falls back to an example
+             piece (gimmick.png) if nothing's been submitted yet -->
+      </div>
+    </div>
     </div>
 
   </main>
@@ -58,8 +125,7 @@
   <script type="module">
     // 1. Import Firebase from the official Google CDN
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
@@ -74,12 +140,57 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const storage = getStorage(app);
     const auth = getAuth(app);
 
     signInAnonymously(auth)
-      .then(() => console.log("Logged in anonymously!"))
+      .then(() => {
+        console.log("Logged in anonymously!");
+        loadGallery(); // wait for auth so Firestore rules requiring a
+                        // signed-in (even anonymous) user pass on load
+      })
       .catch((error) => console.error("Anonymous login failed: ", error));
+
+    // --- GALLERY: the right-hand wall of submitted drawings ---
+    const EXAMPLE_ENTRY = { name: 'Straw', imageUrl: '../images/gimmick.png', example: true };
+    const galleryWall = document.getElementById('guestbookWall');
+
+    function renderGalleryEntries(entries) {
+      galleryWall.innerHTML = '';
+      entries.forEach(entry => {
+        const frame = document.createElement('figure');
+        frame.className = 'gallery-frame';
+
+        const img = document.createElement('img');
+        img.src = entry.imageUrl;
+        img.alt = '';
+        img.draggable = false;
+        frame.appendChild(img);
+
+        const plate = document.createElement('figcaption');
+        plate.className = 'gallery-plate';
+        plate.textContent = entry.example ? entry.name + ' (example)' : entry.name;
+        frame.appendChild(plate);
+
+        galleryWall.appendChild(frame);
+      });
+    }
+
+    async function loadGallery() {
+      try {
+        const q = query(collection(db, 'guestbook'), orderBy('submittedAt', 'desc'), limit(12));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          renderGalleryEntries([EXAMPLE_ENTRY]);
+          return;
+        }
+        const entries = [];
+        snap.forEach(doc => entries.push(doc.data()));
+        renderGalleryEntries(entries);
+      } catch (error) {
+        console.error('Could not load gallery: ', error);
+        renderGalleryEntries([EXAMPLE_ENTRY]); // don't leave the wall empty on error either
+      }
+    }
 
     // --- DRAWING CANVAS LOGIC ---
     const canvas = document.getElementById('artCanvas');
@@ -90,35 +201,96 @@
 
     ctx.lineCap = 'round';
 
-    // Color Swatch Logic
-    const swatches = document.querySelectorAll('.guestbook-swatch');
-    let strokeColor = '#000000'; // Default drawing color (black)
-    let previousColor = '#000000'; // Stores last color used
+    // --- PALETTE GROUPS: click a group's label to expand/collapse its row ---
+    const paletteToggles = document.querySelectorAll('.guestbook-palette-toggle');
+    paletteToggles.forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const key = toggle.getAttribute('data-palette');
+        const row = document.querySelector('.guestbook-palette-row[data-palette-row="' + key + '"]');
+        const alreadyOpen = toggle.classList.contains('active');
 
-    swatches.forEach(swatch => {
-      swatch.addEventListener('click', (e) => {
-        // Turn off eraser if it was on
-        isEraser = false;
-        eraserBtn.classList.remove('active');
+        paletteToggles.forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.guestbook-palette-row').forEach(r => r.hidden = true);
 
-        swatches.forEach(s => s.classList.remove('active'));
-        e.target.classList.add('active');
-
-        strokeColor = e.target.getAttribute('data-color');
-        previousColor = strokeColor;
+        if (!alreadyOpen) {
+          toggle.classList.add('active');
+          row.hidden = false;
+        }
       });
     });
 
-    // --- BRUSH SIZE LOGIC ---
-    const sizeBtns = document.querySelectorAll('.guestbook-size-btn');
-    let strokeWidth = 5; // Default drawing width (5px)
+    // --- COLOR SWATCH LOGIC (delegated, since swatches live across 3 rows) ---
+    let strokeColor = '#000000'; // Default drawing color (black)
+    let previousColor = '#000000'; // Stores last color used
 
-    sizeBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        sizeBtns.forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        strokeWidth = parseInt(e.target.getAttribute('data-size'));
+    function allSwatches() {
+      return document.querySelectorAll('.guestbook-swatch');
+    }
+
+    function selectColor(color, swatchEl) {
+      isEraser = false;
+      eraserBtn.classList.remove('active');
+      // deliberately NOT calling setStamp(null) here — picking a new
+      // color should update the stamp's fill without kicking you back
+      // to the pen tool
+
+      allSwatches().forEach(s => s.classList.remove('active'));
+      if (swatchEl) swatchEl.classList.add('active');
+
+      strokeColor = color;
+      previousColor = color;
+      addToHistory(color);
+    }
+
+    document.querySelector('.guestbook-palette-groups').addEventListener('click', (e) => {
+      const swatch = e.target.closest('.guestbook-swatch');
+      if (!swatch) return;
+      selectColor(swatch.getAttribute('data-color'), swatch);
+    });
+
+    // --- RECENT COLOR HISTORY ---
+    const historyEl = document.getElementById('colorHistory');
+    const colorHistory = [];
+    const MAX_HISTORY = 8;
+
+    function addToHistory(color) {
+      const existingIndex = colorHistory.indexOf(color);
+      if (existingIndex !== -1) colorHistory.splice(existingIndex, 1);
+      colorHistory.unshift(color);
+      if (colorHistory.length > MAX_HISTORY) colorHistory.pop();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      historyEl.innerHTML = '';
+      colorHistory.forEach(color => {
+        const sw = document.createElement('div');
+        sw.className = 'guestbook-swatch guestbook-history-swatch';
+        sw.style.backgroundColor = color;
+        sw.setAttribute('data-color', color);
+        historyEl.appendChild(sw);
       });
+    }
+
+    historyEl.addEventListener('click', (e) => {
+      const swatch = e.target.closest('.guestbook-history-swatch');
+      if (!swatch) return;
+      // find a matching live palette swatch to mark active, if the color
+      // happens to be in a currently-visible palette — otherwise just
+      // set the color with nothing else marked active
+      const color = swatch.getAttribute('data-color');
+      const match = Array.from(allSwatches()).find(s => s.getAttribute('data-color') === color && s !== swatch);
+      selectColor(color, match);
+    });
+
+    // --- BRUSH SIZE SLIDER ---
+    const sizeSlider = document.getElementById('sizeSlider');
+    const sizeValue = document.getElementById('sizeValue');
+    let strokeWidth = parseInt(sizeSlider.value, 10);
+
+    sizeSlider.addEventListener('input', () => {
+      strokeWidth = parseInt(sizeSlider.value, 10);
+      sizeValue.textContent = strokeWidth + 'px';
     });
 
     // --- ERASER TOOL LOGIC ---
@@ -128,16 +300,104 @@
     eraserBtn.addEventListener('click', () => {
       isEraser = !isEraser;
       if (isEraser) {
+        setStamp(null);
         eraserBtn.classList.add('active');
-        swatches.forEach(s => s.classList.remove('active'));
+        allSwatches().forEach(s => s.classList.remove('active'));
         strokeColor = '#ffffff'; // Painting with canvas background color (white)
       } else {
         eraserBtn.classList.remove('active');
         strokeColor = previousColor;
-        const activeSwatch = Array.from(swatches).find(s => s.getAttribute('data-color') === previousColor);
+        const activeSwatch = Array.from(allSwatches()).find(s => s.getAttribute('data-color') === previousColor);
         if (activeSwatch) activeSwatch.classList.add('active');
       }
     });
+
+    // --- STAMPS: house/star/heart/circle shapes, drawn as vector paths
+    // (no image assets needed) — clicking the canvas while a stamp is
+    // selected places one shape instead of drawing a freehand line ---
+    const stampBtns = document.querySelectorAll('.guestbook-stamp-btn[data-stamp]');
+    const stampOffBtn = document.getElementById('stampOffBtn');
+    let currentStamp = null;
+
+    function setStamp(type) {
+      currentStamp = type;
+      stampBtns.forEach(b => b.classList.toggle('active', b.getAttribute('data-stamp') === type));
+    }
+
+    stampBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        isEraser = false;
+        eraserBtn.classList.remove('active');
+        strokeColor = previousColor;
+        setStamp(btn.getAttribute('data-stamp'));
+      });
+    });
+    stampOffBtn.addEventListener('click', () => setStamp(null));
+
+    function drawStampShape(type, cx, cy, s, color) {
+      ctx.fillStyle = color;
+
+      if (type === 'house') {
+        const halfW = s / 2;
+        const roofOverhang = halfW * 1.35; // roof eaves stick out past the walls
+        const bodyTop = cy;
+        const bodyBottom = cy + s * 0.6;
+        const lw = Math.max(1, s * 0.05);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - s * 0.55);          // roof apex
+        ctx.lineTo(cx + roofOverhang, bodyTop);  // down the roof's right slope, past the wall
+        ctx.lineTo(cx + halfW, bodyTop);         // in to the right wall
+        ctx.lineTo(cx + halfW, bodyBottom);      // down the right wall
+        ctx.lineTo(cx - halfW, bodyBottom);      // across the bottom
+        ctx.lineTo(cx - halfW, bodyTop);         // up the left wall
+        ctx.lineTo(cx - roofOverhang, bodyTop);  // out to the left roof eave
+        ctx.closePath();
+        ctx.fill();
+        // doorway — overshoots past the bottom edge so it fully clips
+        // through the outline stroke instead of leaving a thin line
+        // across the opening
+        ctx.beginPath();
+        ctx.rect(cx - s * 0.11, bodyBottom - s * 0.32, s * 0.22, s * 0.32 + lw);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      } else if (type === 'circle') {
+        ctx.beginPath();
+        ctx.arc(cx, cy, s / 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (type === 'star') {
+        const spikes = 5;
+        const outerR = s / 2;
+        const innerR = outerR * 0.45;
+        let rot = -Math.PI / 2;
+        const step = Math.PI / spikes;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(rot) * outerR, cy + Math.sin(rot) * outerR);
+        for (let i = 0; i < spikes; i++) {
+          rot += step;
+          ctx.lineTo(cx + Math.cos(rot) * innerR, cy + Math.sin(rot) * innerR);
+          rot += step;
+          ctx.lineTo(cx + Math.cos(rot) * outerR, cy + Math.sin(rot) * outerR);
+        }
+        ctx.closePath();
+        ctx.fill();
+      } else if (type === 'heart') {
+        const w = s, h = s;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + h * 0.28);
+        ctx.bezierCurveTo(cx, cy, cx - w / 2, cy, cx - w / 2, cy + h * 0.28);
+        ctx.bezierCurveTo(cx - w / 2, cy + h * 0.55, cx, cy + h * 0.7, cx, cy + h * 0.95);
+        ctx.bezierCurveTo(cx, cy + h * 0.7, cx + w / 2, cy + h * 0.55, cx + w / 2, cy + h * 0.28);
+        ctx.bezierCurveTo(cx + w / 2, cy, cx, cy, cx, cy + h * 0.28);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    function stampAt(x, y) {
+      pushUndoSnapshot();
+      const s = Math.max(24, strokeWidth * 3);
+      drawStampShape(currentStamp, x, y, s, strokeColor);
+    }
 
     function getCoordinates(e) {
       const rect = canvas.getBoundingClientRect();
@@ -149,7 +409,40 @@
       };
     }
 
+    // --- UNDO / REDO (snapshot-based) ---
+    const undoBtn = document.getElementById('undoBtn');
+    const redoBtn = document.getElementById('redoBtn');
+    const undoStack = [];
+    const redoStack = [];
+    const MAX_HISTORY_STATES = 25;
+
+    function snapshot() {
+      return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+    function pushUndoSnapshot() {
+      undoStack.push(snapshot());
+      if (undoStack.length > MAX_HISTORY_STATES) undoStack.shift();
+      redoStack.length = 0; // a new stroke invalidates the redo history
+    }
+
+    undoBtn.addEventListener('click', () => {
+      if (undoStack.length === 0) return;
+      redoStack.push(snapshot());
+      ctx.putImageData(undoStack.pop(), 0, 0);
+    });
+    redoBtn.addEventListener('click', () => {
+      if (redoStack.length === 0) return;
+      undoStack.push(snapshot());
+      ctx.putImageData(redoStack.pop(), 0, 0);
+    });
+
     function startDrawing(e) {
+      if (currentStamp) {
+        const { x, y } = getCoordinates(e);
+        stampAt(x, y);
+        return; // stamps place once per click, no continuous drawing
+      }
+      pushUndoSnapshot();
       isDrawing = true;
       draw(e);
     }
@@ -182,11 +475,26 @@
     canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
 
     clearBtn.addEventListener('click', () => {
+      pushUndoSnapshot();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
 
+    // --- EXPORT (save locally before submitting) ---
+    const exportBtn = document.getElementById('exportBtn');
+    exportBtn.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'guestbook-drawing-' + Date.now() + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+
     // --- SUBMISSION LOGIC ---
-    submitBtn.addEventListener('click', () => {
+    // The drawing is saved as a Base64 data URL directly inside the
+    // Firestore document instead of a separate Cloud Storage upload — a
+    // 400x400 canvas encodes to roughly ~30KB of text, well under
+    // Firestore's 1MB-per-document limit, so this skips Storage (and
+    // its billing requirement) entirely for a guestbook this size.
+    submitBtn.addEventListener('click', async () => {
       const name = document.getElementById('visitorName').value.trim();
       const message = document.getElementById('visitorMessage').value.trim();
 
@@ -198,42 +506,32 @@
       submitBtn.disabled = true;
       submitBtn.innerText = "Submitting...";
 
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          alert("Canvas error!");
-          submitBtn.disabled = false;
-          submitBtn.innerText = "Submit";
-          return;
-        }
+      try {
+        const imageUrl = canvas.toDataURL('image/png');
 
-        try {
-          const filename = `guestbook_drawings/${Date.now()}.png`;
-          const storageRef = ref(storage, filename);
-          const snapshot = await uploadBytes(storageRef, blob);
+        await addDoc(collection(db, "guestbook"), {
+          name: name,
+          message: message,
+          imageUrl: imageUrl,
+          submittedAt: serverTimestamp()
+        });
 
-          const imageUrl = await getDownloadURL(snapshot.ref);
+        alert("Successfully sent! Thank you for your message.");
 
-          await addDoc(collection(db, "guestbook"), {
-            name: name,
-            message: message,
-            imageUrl: imageUrl,
-            submittedAt: serverTimestamp()
-          });
+        document.getElementById('visitorName').value = "";
+        document.getElementById('visitorMessage').value = "";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        undoStack.length = 0;
+        redoStack.length = 0;
+        loadGallery(); // show the new drawing on the wall right away
 
-          alert("Successfully sent! Thank you for your message.");
-
-          document.getElementById('visitorName').value = "";
-          document.getElementById('visitorMessage').value = "";
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        } catch (error) {
-          console.error("Error submitting entry:", error);
-          alert("Error saving. Make sure your database and storage rules allow anonymous writes!");
-        } finally {
-          submitBtn.disabled = false;
-          submitBtn.innerText = "Submit";
-        }
-      }, 'image/png');
+      } catch (error) {
+        console.error("Error submitting entry:", error);
+        alert("Error saving. Make sure your database rules allow anonymous writes!");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Submit";
+      }
     });
   </script>
 

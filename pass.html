@@ -106,6 +106,19 @@
     cursor: default;
   }
 
+  /* the close button is a real <button> now (so it's actually clickable/
+     keyboard-accessible), so it needs its own reset — otherwise the
+     browser's default button chrome (padding, appearance) fights with
+     the .tb-btn styling above */
+  .tb-btn-close {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+    padding: 0;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
   .window-body {
     padding: 16px 14px 14px;
   }
@@ -253,7 +266,7 @@
       <div class="titlebar-buttons">
         <div class="tb-btn">_</div>
         <div class="tb-btn">&#9633;</div>
-        <div class="tb-btn">&times;</div>
+        <button type="button" class="tb-btn tb-btn-close" id="closeBtn">&times;</button>
       </div>
     </div>
 
@@ -273,7 +286,7 @@
 
         <div class="button-row">
           <button type="submit" class="win-btn">OK</button>
-          <button type="button" class="win-btn" id="cancelBtn">Cancel</button>
+          <button type="button" class="win-btn" id="cancelBtn">Clear</button>
         </div>
       </form>
 
@@ -304,6 +317,7 @@
   const overlay = document.getElementById('placeholderOverlay');
   const status = document.getElementById('status');
   const cancelBtn = document.getElementById('cancelBtn');
+  const closeBtn = document.getElementById('closeBtn');
 
   input.addEventListener('input', () => {
     overlay.classList.toggle('hidden', input.value.length > 0);
@@ -334,6 +348,13 @@
   });
 
   cancelBtn.addEventListener('click', () => {
+    input.value = "";
+    overlay.classList.remove('hidden');
+    status.textContent = "";
+    input.focus();
+  });
+
+  closeBtn.addEventListener('click', () => {
     window.location.href = 'index.html';
   });
 </script>

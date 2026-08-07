@@ -2651,6 +2651,20 @@ main img {
 
 @media (max-width: 900px) {
   .guestbook-layout { flex-direction: column; }
+
+  /* the gallery was left-aligning as a single lopsided column on
+     narrow screens (flex-wrap just stacks 15rem-wide frames on the
+     left) — a real 2-column grid centers them and lets each frame
+     grow to fill its column instead of staying stuck at 15rem */
+  .guestbook-gallery .gallery-wall {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    justify-content: stretch;
+  }
+  .guestbook-gallery .gallery-frame {
+    width: 100%;
+  }
 }
 
 /* ============================================================

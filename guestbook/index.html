@@ -210,10 +210,14 @@
         frame.appendChild(plate);
 
         if (replies.length) {
+          // one emoji per distinct character, not one per message — a
+          // back-and-forth between the same two residents still only
+          // shows two icons up top
+          const uniqueCharacters = [...new Map(replies.map(r => [r.character, r])).values()];
           const badge = document.createElement('span');
           badge.className = 'gallery-reply-badge';
-          badge.textContent = replies.length > 1 ? replies[0].emoji + ' +' + (replies.length - 1) : replies[0].emoji;
-          badge.title = replies.map(r => r.character).join(', ') + ' replied';
+          badge.textContent = uniqueCharacters.map(r => r.emoji).join(' ');
+          badge.title = uniqueCharacters.map(r => r.character).join(', ') + ' replied';
           frame.appendChild(badge);
         }
 

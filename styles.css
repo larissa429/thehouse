@@ -2659,6 +2659,9 @@ main img {
   text-align: center;
   margin: 0;
 }
+.guestbook-lightbox-reply em {
+  font-style: italic;
+}
 .guestbook-lightbox-reply {
   font-family: var(--body);
   font-size: 0.95rem;

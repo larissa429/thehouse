@@ -98,6 +98,8 @@
       <div class="guestbook-tools-row">
         <button type="button" id="undoBtn" class="guestbook-btn guestbook-btn-tool">Undo</button>
         <button type="button" id="redoBtn" class="guestbook-btn guestbook-btn-tool">Redo</button>
+        <button type="button" id="uploadBtn" class="guestbook-btn guestbook-btn-tool">Upload Image</button>
+        <input type="file" id="uploadInput" accept="image/*" hidden />
         <button type="button" id="exportBtn" class="guestbook-btn guestbook-btn-tool">Save Image</button>
       </div>
 
@@ -608,6 +610,38 @@
       pushUndoSnapshot();
       fillWhite();
       hasDrawn = false;
+    });
+
+    // --- UPLOAD: drop a photo onto the canvas to draw over, scaled to
+    // fit inside the 400x400 bitmap without stretching (contain-fit,
+    // centered) so it always lands proportionally correct ---
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadInput = document.getElementById('uploadInput');
+
+    uploadBtn.addEventListener('click', () => uploadInput.click());
+
+    uploadInput.addEventListener('change', () => {
+      const file = uploadInput.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (readerEvent) => {
+        const img = new Image();
+        img.onload = () => {
+          pushUndoSnapshot();
+          const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+          const drawWidth = img.width * scale;
+          const drawHeight = img.height * scale;
+          const offsetX = (canvas.width - drawWidth) / 2;
+          const offsetY = (canvas.height - drawHeight) / 2;
+          ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+          hasDrawn = true;
+        };
+        img.src = readerEvent.target.result;
+      };
+      reader.readAsDataURL(file);
+
+      uploadInput.value = ''; // allow re-selecting the same file later
     });
 
     // --- EXPORT (save locally before submitting) ---

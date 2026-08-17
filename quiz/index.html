@@ -349,6 +349,44 @@
         options: ["Scrambled eggs", "Pancakes", "Toast", "Cereal"],
         correct: 0
       },
+      {
+        q: "What is Indigo?",
+        options: ["A color", "A cryptid", "An unethical billionaire", "All of the above"],
+        correct: 0,
+        trick: true
+      },
+      {
+        q: "What is Dream?",
+        options: ["Sentient memories", "Off color yinyang symbol", "-⁵⁄₂₈'s imaginary friend", "Some cool looking clouds"],
+        correct: 0
+      },
+      {
+        q: "Where is Dream from?",
+        options: ["The Dream Garden", "-⁵⁄₂₈'s world", "Earth", "Universe W-716X"],
+        correct: 0
+      },
+      {
+        q: "What is Geeky?",
+        options: ["A disposable vape", "A pair of glasses", "A floppy disc", "A calculator"],
+        correct: 0
+      },
+      {
+        q: "What is Geeky's vape flavor, according to the site's own casting notes?",
+        options: ["Strawberry mango", "Orange creme", "Totally Tropical", "Peach breeze"],
+        correct: 0
+      },
+      {
+        q: "Who is Penny?",
+        options: ["???", "???", "???", "???"],
+        correct: [0, 1, 2, 3],
+        trick: true
+      },
+      {
+        q: "How do you say -⁵⁄₂₈'s name?",
+        options: ["Negative five twenty eighths", "Negative five over twenty eight", "Neggy five", "You don't — you just point"],
+        correct: 0,
+        trick: true
+      },
     ];
 
     const LIVES_START = 3;
@@ -386,8 +424,15 @@
       return copy;
     }
 
+    // an "All of the above" option only makes sense sitting after the
+    // others, so it's pinned to the end instead of shuffling with them —
+    // detected automatically by text, no per-question flag needed
     function shuffleOptions(question) {
-      return shuffleArray(question.options.map((_, i) => i));
+      const indices = question.options.map((_, i) => i);
+      const pinnedIndex = indices.find(i => question.options[i].trim().toLowerCase() === 'all of the above');
+      const rest = indices.filter(i => i !== pinnedIndex);
+      const shuffledRest = shuffleArray(rest);
+      return pinnedIndex === undefined ? shuffledRest : [...shuffledRest, pinnedIndex];
     }
 
     const LIVES_CHECKPOINT_INTERVAL = 15;

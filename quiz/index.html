@@ -131,6 +131,13 @@
       border-radius: 3px;
       background: rgba(255, 255, 255, 0.03);
     }
+    .quiz-puzzle-solved {
+      text-align: center;
+      font-family: var(--display);
+      font-size: 1.1rem;
+      color: #2e7d32;
+      margin: 0.8rem 0 0;
+    }
     .quiz-puzzle-scatter {
       position: relative;
       width: 100%;
@@ -167,7 +174,7 @@
   <main class="wrap quiz-wrap">
 
     <h1>The House Quiz</h1>
-    <p id="quizIntro">Answer every question right to receive a prize. You get a few mistakes per attempt &mdash; run out, and it's back to question one. Good luck.</p>
+    <p id="quizIntro">Answer every question correctly to receive a prize. You get a few mistakes per attempt &mdash; run out, and it's back to question one. Good luck.</p>
 
     <div id="quizPlay">
       <div class="quiz-status-row">
@@ -184,6 +191,7 @@
         <div id="quizPuzzle" hidden>
           <div class="quiz-puzzle-stage" id="quizPuzzleStage">
             <div class="quiz-puzzle-board" id="quizPuzzleBoard"></div>
+            <p class="quiz-puzzle-solved" id="quizPuzzleSolved" hidden>Solved!</p>
             <div class="quiz-puzzle-scatter" id="quizPuzzleScatter"></div>
           </div>
           <p class="quiz-puzzle-hint">Drag each piece onto its spot on the board.</p>
@@ -195,7 +203,6 @@
 
     <div id="quizDone" class="quiz-done" hidden>
       <h2>You got them all.</h2>
-      <p>Somewhere on this site is a password prompt. You know what to type now.</p>
       <span class="quiz-password" id="quizPasswordReveal"></span>
     </div>
 
@@ -359,6 +366,7 @@
     const puzzleEl = document.getElementById('quizPuzzle');
     const puzzleStageEl = document.getElementById('quizPuzzleStage');
     const puzzleBoardEl = document.getElementById('quizPuzzleBoard');
+    const puzzleSolvedEl = document.getElementById('quizPuzzleSolved');
     const puzzleScatterEl = document.getElementById('quizPuzzleScatter');
     const feedbackEl = document.getElementById('quizFeedback');
     const playEl = document.getElementById('quizPlay');
@@ -444,6 +452,7 @@
       puzzleBoardEl.innerHTML = '';
       puzzleScatterEl.innerHTML = '';
       puzzleStageEl.querySelectorAll('.quiz-puzzle-piece').forEach(p => p.remove());
+      puzzleSolvedEl.hidden = true;
     }
 
     // Uses pixel-based background-size/position (measured off the actual
@@ -542,7 +551,7 @@
 
       function checkSolved() {
         if (slotOccupant.every((piece, slot) => piece === slot)) {
-          feedbackEl.textContent = 'Solved.';
+          puzzleSolvedEl.hidden = false;
           setTimeout(advance, 1000);
         }
       }

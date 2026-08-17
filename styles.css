@@ -2761,7 +2761,7 @@ main img {
   margin-top: 0.3rem;
   font-family: var(--body);
   font-size: 0.9rem;
-  color: var(--ink);
+  color: var(--ink-on-paper);
   background: var(--paper);
   border: var(--edge);
   border-radius: 3px;

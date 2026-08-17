@@ -124,6 +124,7 @@
       <img loading="lazy" id="guestbookOverlayImg" src="" alt="" />
       <p class="guestbook-lightbox-name" id="guestbookOverlayName"></p>
       <p class="guestbook-lightbox-message" id="guestbookOverlayMessage"></p>
+      <p class="guestbook-lightbox-reply" id="guestbookOverlayReply"></p>
     </div>
   </div>
 
@@ -181,18 +182,30 @@
           // lightbox on click, see the click listener below
           frame.dataset.name = entry.example ? entry.name + ' (example)' : entry.name;
           frame.dataset.message = entry.message || '';
+          frame.dataset.reply = entry.hostReply || '';
           frame.appendChild(img);
         } else {
           const note = document.createElement('div');
           note.className = 'guestbook-text-card';
           note.textContent = entry.message ? entry.message : '— left no message —';
           frame.appendChild(note);
+          frame.dataset.name = entry.example ? entry.name + ' (example)' : entry.name;
+          frame.dataset.message = '';
+          frame.dataset.reply = entry.hostReply || '';
         }
 
         const plate = document.createElement('figcaption');
         plate.className = 'gallery-plate';
         plate.textContent = entry.example ? entry.name + ' (example)' : entry.name;
         frame.appendChild(plate);
+
+        if (entry.hostReply) {
+          const badge = document.createElement('span');
+          badge.className = 'gallery-reply-badge';
+          badge.textContent = '🏠';
+          badge.title = 'The House replied';
+          frame.appendChild(badge);
+        }
 
         galleryWall.appendChild(frame);
       });
@@ -216,15 +229,21 @@
       if (e.key === 'Escape') closeGuestbookLightbox();
     });
 
+    const guestbookOverlayReply = document.getElementById('guestbookOverlayReply');
+
     galleryWall.addEventListener('click', (e) => {
-      const img = e.target.closest('.gallery-frame img');
-      if (!img) return;
-      const frame = img.closest('.gallery-frame');
-      guestbookOverlayImg.src = img.src;
+      const frame = e.target.closest('.gallery-frame');
+      if (!frame || !frame.dataset.name) return;
+      const img = frame.querySelector('img');
+      guestbookOverlayImg.src = img ? img.src : '';
+      guestbookOverlayImg.style.display = img ? '' : 'none';
       guestbookOverlayName.textContent = frame.dataset.name || '';
       const message = frame.dataset.message || '';
       guestbookOverlayMessage.textContent = message;
       guestbookOverlayMessage.style.display = message ? '' : 'none';
+      const reply = frame.dataset.reply || '';
+      guestbookOverlayReply.textContent = reply ? 'The House: "' + reply + '"' : '';
+      guestbookOverlayReply.style.display = reply ? '' : 'none';
       guestbookOverlay.classList.add('open');
     });
 

@@ -133,6 +133,27 @@
       msgEl.textContent = data.message || '';
       info.appendChild(nameEl);
       info.appendChild(msgEl);
+
+      const replyLabel = document.createElement('label');
+      replyLabel.className = 'review-reply-label';
+      replyLabel.textContent = 'Reply from the House (shown when clicked, optional)';
+      const replyInput = document.createElement('textarea');
+      replyInput.className = 'review-reply-input';
+      replyInput.value = data.hostReply || '';
+      replyInput.rows = 2;
+      const replySaveBtn = document.createElement('button');
+      replySaveBtn.type = 'button';
+      replySaveBtn.className = 'guestbook-btn review-btn-reply';
+      replySaveBtn.textContent = 'Save reply';
+      replySaveBtn.addEventListener('click', async () => {
+        replySaveBtn.textContent = 'Saving...';
+        await updateDoc(doc(db, 'guestbook', id), { hostReply: replyInput.value.trim() });
+        replySaveBtn.textContent = 'Saved!';
+        setTimeout(() => { replySaveBtn.textContent = 'Save reply'; }, 1500);
+      });
+      replyLabel.appendChild(replyInput);
+      info.appendChild(replyLabel);
+      info.appendChild(replySaveBtn);
       card.appendChild(info);
 
       const actions = document.createElement('div');

@@ -2598,8 +2598,19 @@ main img {
 .guestbook-gallery-title {
   margin-top: 0;
 }
+/* auto-fit instead of a fixed viewport-width breakpoint — this reacts
+   to how wide the gallery COLUMN itself actually ends up (which isn't
+   the same as overall viewport width once the two-column desktop
+   layout is in play, e.g. an iPad's wide screen still leaves this
+   column pretty narrow), so it reliably goes 2-up whenever there's
+   room, 1-up when there isn't, regardless of device */
 .guestbook-gallery .gallery-wall {
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1rem;
+}
+.guestbook-gallery .gallery-frame {
+  width: 100%;
 }
 
 /* text-only submissions (no drawing) — styled to match the picture
@@ -2651,20 +2662,6 @@ main img {
 
 @media (max-width: 900px) {
   .guestbook-layout { flex-direction: column; }
-
-  /* the gallery was left-aligning as a single lopsided column on
-     narrow screens (flex-wrap just stacks 15rem-wide frames on the
-     left) — a real 2-column grid centers them and lets each frame
-     grow to fill its column instead of staying stuck at 15rem */
-  .guestbook-gallery .gallery-wall {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    justify-content: stretch;
-  }
-  .guestbook-gallery .gallery-frame {
-    width: 100%;
-  }
 }
 
 /* ============================================================

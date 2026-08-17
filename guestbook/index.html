@@ -231,6 +231,17 @@
 
     const guestbookOverlayReply = document.getElementById('guestbookOverlayReply');
 
+    // minimal, safe markdown for the host reply only: escape everything
+    // first, then turn **bold** and *italic* into real tags — the input
+    // is admin-only (Firestore rules restrict writes to the admin email)
+    // but we escape anyway so nothing weird can slip through
+    function formatHostReply(text) {
+      const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return escaped
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>');
+    }
+
     galleryWall.addEventListener('click', (e) => {
       const frame = e.target.closest('.gallery-frame');
       if (!frame || !frame.dataset.name) return;
@@ -242,7 +253,7 @@
       guestbookOverlayMessage.textContent = message;
       guestbookOverlayMessage.style.display = message ? '' : 'none';
       const reply = frame.dataset.reply || '';
-      guestbookOverlayReply.textContent = reply ? 'The House: "' + reply + '"' : '';
+      guestbookOverlayReply.innerHTML = reply ? 'The House: "' + formatHostReply(reply) + '"' : '';
       guestbookOverlayReply.style.display = reply ? '' : 'none';
       guestbookOverlay.classList.add('open');
     });

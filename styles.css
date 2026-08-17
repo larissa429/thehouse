@@ -2661,7 +2661,6 @@ main img {
 }
 .guestbook-lightbox-reply {
   font-family: var(--body);
-  font-style: italic;
   font-size: 0.95rem;
   color: var(--lamp);
   max-width: 28rem;

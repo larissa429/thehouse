@@ -1867,7 +1867,7 @@ main img {
 .photo-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.82);
+  background: rgba(0,0,0,0.93);
   display: none;
   align-items: center;
   justify-content: center;
@@ -2767,6 +2767,17 @@ main img {
   border-radius: 3px;
   padding: 0.5rem;
   resize: vertical;
+}
+.review-reply-select {
+  display: block;
+  margin-top: 0.3rem;
+  font-family: var(--body);
+  font-size: 0.9rem;
+  color: var(--ink-on-paper);
+  background: var(--paper);
+  border: var(--edge);
+  border-radius: 3px;
+  padding: 0.4rem;
 }
 .review-btn-reply {
   background: var(--lamp);

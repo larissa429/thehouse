@@ -183,6 +183,8 @@
           frame.dataset.name = entry.example ? entry.name + ' (example)' : entry.name;
           frame.dataset.message = entry.message || '';
           frame.dataset.reply = entry.hostReply || '';
+          frame.dataset.replyWho = entry.hostReplyCharacter || 'The House';
+          frame.dataset.replyEmoji = entry.hostReplyEmoji || '🏠';
           frame.appendChild(img);
         } else {
           const note = document.createElement('div');
@@ -190,8 +192,10 @@
           note.textContent = entry.message ? entry.message : '— left no message —';
           frame.appendChild(note);
           frame.dataset.name = entry.example ? entry.name + ' (example)' : entry.name;
-          frame.dataset.message = '';
+          frame.dataset.message = entry.message || '';
           frame.dataset.reply = entry.hostReply || '';
+          frame.dataset.replyWho = entry.hostReplyCharacter || 'The House';
+          frame.dataset.replyEmoji = entry.hostReplyEmoji || '🏠';
         }
 
         const plate = document.createElement('figcaption');
@@ -202,8 +206,8 @@
         if (entry.hostReply) {
           const badge = document.createElement('span');
           badge.className = 'gallery-reply-badge';
-          badge.textContent = '🏠';
-          badge.title = 'The House replied';
+          badge.textContent = entry.hostReplyEmoji || '🏠';
+          badge.title = (entry.hostReplyCharacter || 'The House') + ' replied';
           frame.appendChild(badge);
         }
 
@@ -253,7 +257,9 @@
       guestbookOverlayMessage.textContent = message;
       guestbookOverlayMessage.style.display = message ? '' : 'none';
       const reply = frame.dataset.reply || '';
-      guestbookOverlayReply.innerHTML = reply ? 'The House: "' + formatHostReply(reply) + '"' : '';
+      const replyWho = frame.dataset.replyWho || 'The House';
+      const replyEmoji = frame.dataset.replyEmoji || '🏠';
+      guestbookOverlayReply.innerHTML = reply ? replyEmoji + ' ' + replyWho + ': "' + formatHostReply(reply) + '"' : '';
       guestbookOverlayReply.style.display = reply ? '' : 'none';
       guestbookOverlay.classList.add('open');
     });

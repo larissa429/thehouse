@@ -62,6 +62,28 @@
     // server-side. This constant just decides what the page SHOWS.
     const ADMIN_EMAIL = 'larissa.nava29@gmail.com';
 
+    // who a reply can be "signed" as — badge emoji shown on the gallery
+    // card + label used in the lightbox ("Journal: ...")
+    const REPLY_CHARACTERS = [
+      { name: 'The House', emoji: '🏠' },
+      { name: 'Journal', emoji: '📓' },
+      { name: 'Green D.A.I.S.Y.', emoji: '🖥️' },
+      { name: 'Mirror', emoji: '🪞' },
+      { name: 'Long Play', emoji: '💿' },
+      { name: 'Charlie', emoji: '🧸' },
+      { name: '-⁵⁄₂₈', emoji: '👽' },
+      { name: 'Dream', emoji: '💤' },
+      { name: 'Indigo', emoji: '🟣' },
+      { name: 'Cassette', emoji: '📼' },
+      { name: 'Blue Marble', emoji: '🔵' },
+      { name: 'Abstract Painting', emoji: '🎨' },
+      { name: 'Cool S & Clickbaity', emoji: '🆒' },
+      { name: 'Geeky', emoji: '💨' },
+      { name: 'PBC', emoji: '🥜' },
+      { name: 'Dumptruck', emoji: '🚛' },
+      { name: 'Liz', emoji: '🧍' },
+    ];
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
@@ -136,23 +158,44 @@
 
       const replyLabel = document.createElement('label');
       replyLabel.className = 'review-reply-label';
-      replyLabel.textContent = 'Reply from the House (shown when clicked, optional — **bold** and *italic* supported)';
+      replyLabel.textContent = 'Reply (shown when clicked, optional — **bold** and *italic* supported)';
       const replyInput = document.createElement('textarea');
       replyInput.className = 'review-reply-input';
       replyInput.value = data.hostReply || '';
       replyInput.rows = 2;
+      replyLabel.appendChild(replyInput);
+
+      const replyWhoLabel = document.createElement('label');
+      replyWhoLabel.className = 'review-reply-label';
+      replyWhoLabel.textContent = 'Reply as';
+      const replySelect = document.createElement('select');
+      replySelect.className = 'review-reply-select';
+      REPLY_CHARACTERS.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.name;
+        opt.textContent = c.emoji + ' ' + c.name;
+        if (c.name === (data.hostReplyCharacter || 'The House')) opt.selected = true;
+        replySelect.appendChild(opt);
+      });
+      replyWhoLabel.appendChild(replySelect);
+
       const replySaveBtn = document.createElement('button');
       replySaveBtn.type = 'button';
       replySaveBtn.className = 'guestbook-btn review-btn-reply';
       replySaveBtn.textContent = 'Save reply';
       replySaveBtn.addEventListener('click', async () => {
         replySaveBtn.textContent = 'Saving...';
-        await updateDoc(doc(db, 'guestbook', id), { hostReply: replyInput.value.trim() });
+        const chosen = REPLY_CHARACTERS.find(c => c.name === replySelect.value) || REPLY_CHARACTERS[0];
+        await updateDoc(doc(db, 'guestbook', id), {
+          hostReply: replyInput.value.trim(),
+          hostReplyCharacter: chosen.name,
+          hostReplyEmoji: chosen.emoji,
+        });
         replySaveBtn.textContent = 'Saved!';
         setTimeout(() => { replySaveBtn.textContent = 'Save reply'; }, 1500);
       });
-      replyLabel.appendChild(replyInput);
       info.appendChild(replyLabel);
+      info.appendChild(replyWhoLabel);
       info.appendChild(replySaveBtn);
       card.appendChild(info);
 

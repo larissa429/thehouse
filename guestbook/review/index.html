@@ -85,6 +85,32 @@
       { name: 'Liz', emoji: '🧍' },
     ];
 
+    // shrinks an uploaded photo down to fit comfortably inside a
+    // Firestore document (1MB per doc) as a base64 string — same
+    // approach the guestbook drawings already use, just resized down
+    // further since photos can start much larger than a 400x400 canvas
+    function resizeImageFile(file, maxDimension) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (readerEvent) => {
+          const img = new Image();
+          img.onload = () => {
+            const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.82));
+          };
+          img.onerror = reject;
+          img.src = readerEvent.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
@@ -168,6 +194,8 @@
             emoji: data.hostReplyEmoji || '🏠',
             text: data.hostReply,
           }] : []);
+      // replies can now carry text, a photo, or both — a photo with no
+      // text is a valid reply, so only rows with neither get dropped
 
       const repliesWrap = document.createElement('div');
       repliesWrap.className = 'review-replies';
@@ -175,6 +203,7 @@
       function addReplyRow(reply) {
         const row = document.createElement('div');
         row.className = 'review-reply-row';
+        row.dataset.imageUrl = reply.imageUrl || '';
 
         const select = document.createElement('select');
         select.className = 'review-reply-select';
@@ -186,10 +215,66 @@
           select.appendChild(opt);
         });
 
+        const textInputs = document.createElement('div');
+        textInputs.className = 'review-reply-textcol';
+
         const textarea = document.createElement('textarea');
         textarea.className = 'review-reply-input';
         textarea.rows = 2;
         textarea.value = reply.text || '';
+
+        const photoRow = document.createElement('div');
+        photoRow.className = 'review-reply-photo-row';
+
+        const thumb = document.createElement('img');
+        thumb.className = 'review-reply-thumb';
+        thumb.src = reply.imageUrl || '';
+        thumb.hidden = !reply.imageUrl;
+
+        const photoInput = document.createElement('input');
+        photoInput.type = 'file';
+        photoInput.accept = 'image/*';
+        photoInput.hidden = true;
+
+        const photoBtn = document.createElement('button');
+        photoBtn.type = 'button';
+        photoBtn.className = 'guestbook-btn review-btn-tool';
+        photoBtn.textContent = reply.imageUrl ? 'Change photo' : 'Attach photo';
+        photoBtn.addEventListener('click', () => photoInput.click());
+
+        const removePhotoBtn = document.createElement('button');
+        removePhotoBtn.type = 'button';
+        removePhotoBtn.className = 'guestbook-btn review-btn-remove-reply';
+        removePhotoBtn.textContent = 'Remove photo';
+        removePhotoBtn.hidden = !reply.imageUrl;
+        removePhotoBtn.addEventListener('click', () => {
+          row.dataset.imageUrl = '';
+          thumb.src = '';
+          thumb.hidden = true;
+          removePhotoBtn.hidden = true;
+          photoBtn.textContent = 'Attach photo';
+        });
+
+        photoInput.addEventListener('change', async () => {
+          const file = photoInput.files[0];
+          if (!file) return;
+          photoBtn.textContent = 'Loading...';
+          const dataUrl = await resizeImageFile(file, 700);
+          row.dataset.imageUrl = dataUrl;
+          thumb.src = dataUrl;
+          thumb.hidden = false;
+          removePhotoBtn.hidden = false;
+          photoBtn.textContent = 'Change photo';
+          photoInput.value = '';
+        });
+
+        photoRow.appendChild(thumb);
+        photoRow.appendChild(photoBtn);
+        photoRow.appendChild(removePhotoBtn);
+        photoRow.appendChild(photoInput);
+
+        textInputs.appendChild(textarea);
+        textInputs.appendChild(photoRow);
 
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
@@ -198,7 +283,7 @@
         removeBtn.addEventListener('click', () => row.remove());
 
         row.appendChild(select);
-        row.appendChild(textarea);
+        row.appendChild(textInputs);
         row.appendChild(removeBtn);
         repliesWrap.appendChild(row);
       }
@@ -227,9 +312,11 @@
             const select = row.querySelector('select');
             const textarea = row.querySelector('textarea');
             const chosen = REPLY_CHARACTERS.find(c => c.name === select.value) || REPLY_CHARACTERS[0];
-            return { character: chosen.name, emoji: chosen.emoji, text: textarea.value.trim() };
+            const reply = { character: chosen.name, emoji: chosen.emoji, text: textarea.value.trim() };
+            if (row.dataset.imageUrl) reply.imageUrl = row.dataset.imageUrl;
+            return reply;
           })
-          .filter(r => r.text);
+          .filter(r => r.text || r.imageUrl);
         await updateDoc(doc(db, 'guestbook', id), { hostReplies: replies });
         replySaveBtn.textContent = 'Saved!';
         setTimeout(() => { replySaveBtn.textContent = 'Save replies'; }, 1500);

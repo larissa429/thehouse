@@ -208,7 +208,11 @@
 
         const plate = document.createElement('figcaption');
         plate.className = 'gallery-plate';
-        plate.textContent = entry.example ? entry.name + ' (example)' : entry.name;
+        const plateText = entry.example ? entry.name + ' (example)' : entry.name;
+        plate.textContent = plateText;
+        // long names would otherwise wrap to two left-leaning lines —
+        // shrink the font a bit instead so most names still fit on one
+        if (plateText.length > 10) plate.style.fontSize = '0.7rem';
         frame.appendChild(plate);
 
         if (replies.length) {
@@ -272,7 +276,11 @@
       let replies = [];
       try { replies = JSON.parse(frame.dataset.replies || '[]'); } catch (e) { replies = []; }
       guestbookOverlayReply.innerHTML = replies
-        .map(r => r.emoji + ' ' + r.character + ': "' + formatHostReply(r.text) + '"')
+        .map(r => {
+          const photo = r.imageUrl ? '<img class="guestbook-reply-photo" src="' + r.imageUrl + '" alt="" />' : '';
+          const line = r.text ? r.emoji + ' ' + r.character + ': "' + formatHostReply(r.text) + '"' : r.emoji + ' ' + r.character + ':';
+          return photo + line;
+        })
         .join('<br><br>');
       guestbookOverlayReply.style.display = replies.length ? '' : 'none';
       guestbookOverlay.classList.add('open');

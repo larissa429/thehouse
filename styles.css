@@ -2130,10 +2130,12 @@ main img {
   display: inline-block;
   margin-top: 0.7rem;
   padding: 0.3rem 1.1rem;
+  max-width: 100%;
   font-family: var(--display);
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  text-align: center;
   color: #4a3410;
   background: linear-gradient(180deg, #f3d98a, #c8a24a 55%, #a9822f);
   border: 1px solid #8a6a2a;
@@ -2669,6 +2671,13 @@ main img {
   padding-top: 0.6rem;
   border-top: var(--edge);
 }
+.guestbook-reply-photo {
+  display: block;
+  max-width: 100%;
+  max-height: 16rem;
+  border-radius: 3px;
+  margin: 0.4rem auto;
+}
 .gallery-reply-badge {
   position: absolute;
   top: 0.4rem;
@@ -2789,10 +2798,29 @@ main img {
   align-items: flex-start;
   flex-wrap: wrap;
 }
-.review-reply-row .review-reply-input {
+.review-reply-textcol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
   flex: 1 1 12rem;
+}
+.review-reply-row .review-reply-input {
   margin-top: 0;
 }
+.review-reply-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.review-reply-thumb {
+  width: 3rem;
+  height: 3rem;
+  object-fit: cover;
+  border-radius: 3px;
+  background: var(--wall-lit);
+}
+.review-reply-thumb[hidden] { display: none; }
 .review-btn-remove-reply {
   background: transparent;
   color: var(--ink-soft);

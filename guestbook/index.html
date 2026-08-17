@@ -164,11 +164,30 @@
     const EXAMPLE_ENTRY = { name: 'Straw', imageUrl: '../images/gimmick.png', example: true };
     const galleryWall = document.getElementById('guestbookWall');
 
+    // entries only ever had one flat reply before hostReplies existed —
+    // treat that as a one-item list so nothing already saved disappears
+    function getReplies(entry) {
+      if (Array.isArray(entry.hostReplies) && entry.hostReplies.length) return entry.hostReplies;
+      if (entry.hostReply) {
+        return [{
+          character: entry.hostReplyCharacter || 'The House',
+          emoji: entry.hostReplyEmoji || '🏠',
+          text: entry.hostReply,
+        }];
+      }
+      return [];
+    }
+
     function renderGalleryEntries(entries) {
       galleryWall.innerHTML = '';
       entries.forEach(entry => {
         const frame = document.createElement('figure');
         frame.className = 'gallery-frame';
+        const replies = getReplies(entry);
+
+        frame.dataset.name = entry.example ? entry.name + ' (example)' : entry.name;
+        frame.dataset.message = entry.message || '';
+        frame.dataset.replies = JSON.stringify(replies);
 
         // text-only submissions (no drawing) get a note card instead of
         // an <img> — there's nothing to show a picture of
@@ -177,25 +196,12 @@
           img.src = entry.imageUrl;
           img.alt = '';
           img.draggable = false;
-          // the frame only has room for the drawing + name plate — the
-          // message (if any) is stashed here and revealed via the
-          // lightbox on click, see the click listener below
-          frame.dataset.name = entry.example ? entry.name + ' (example)' : entry.name;
-          frame.dataset.message = entry.message || '';
-          frame.dataset.reply = entry.hostReply || '';
-          frame.dataset.replyWho = entry.hostReplyCharacter || 'The House';
-          frame.dataset.replyEmoji = entry.hostReplyEmoji || '🏠';
           frame.appendChild(img);
         } else {
           const note = document.createElement('div');
           note.className = 'guestbook-text-card';
           note.textContent = entry.message ? entry.message : '— left no message —';
           frame.appendChild(note);
-          frame.dataset.name = entry.example ? entry.name + ' (example)' : entry.name;
-          frame.dataset.message = entry.message || '';
-          frame.dataset.reply = entry.hostReply || '';
-          frame.dataset.replyWho = entry.hostReplyCharacter || 'The House';
-          frame.dataset.replyEmoji = entry.hostReplyEmoji || '🏠';
         }
 
         const plate = document.createElement('figcaption');
@@ -203,11 +209,11 @@
         plate.textContent = entry.example ? entry.name + ' (example)' : entry.name;
         frame.appendChild(plate);
 
-        if (entry.hostReply) {
+        if (replies.length) {
           const badge = document.createElement('span');
           badge.className = 'gallery-reply-badge';
-          badge.textContent = entry.hostReplyEmoji || '🏠';
-          badge.title = (entry.hostReplyCharacter || 'The House') + ' replied';
+          badge.textContent = replies.length > 1 ? replies[0].emoji + ' +' + (replies.length - 1) : replies[0].emoji;
+          badge.title = replies.map(r => r.character).join(', ') + ' replied';
           frame.appendChild(badge);
         }
 
@@ -256,11 +262,12 @@
       const message = frame.dataset.message || '';
       guestbookOverlayMessage.textContent = message;
       guestbookOverlayMessage.style.display = message ? '' : 'none';
-      const reply = frame.dataset.reply || '';
-      const replyWho = frame.dataset.replyWho || 'The House';
-      const replyEmoji = frame.dataset.replyEmoji || '🏠';
-      guestbookOverlayReply.innerHTML = reply ? replyEmoji + ' ' + replyWho + ': "' + formatHostReply(reply) + '"' : '';
-      guestbookOverlayReply.style.display = reply ? '' : 'none';
+      let replies = [];
+      try { replies = JSON.parse(frame.dataset.replies || '[]'); } catch (e) { replies = []; }
+      guestbookOverlayReply.innerHTML = replies
+        .map(r => r.emoji + ' ' + r.character + ': "' + formatHostReply(r.text) + '"')
+        .join('<br><br>');
+      guestbookOverlayReply.style.display = replies.length ? '' : 'none';
       guestbookOverlay.classList.add('open');
     });
 

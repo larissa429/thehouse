@@ -156,46 +156,91 @@
       info.appendChild(nameEl);
       info.appendChild(msgEl);
 
-      const replyLabel = document.createElement('label');
-      replyLabel.className = 'review-reply-label';
-      replyLabel.textContent = 'Reply (shown when clicked, optional — **bold** and *italic* supported)';
-      const replyInput = document.createElement('textarea');
-      replyInput.className = 'review-reply-input';
-      replyInput.value = data.hostReply || '';
-      replyInput.rows = 2;
-      replyLabel.appendChild(replyInput);
+      // replies: an array of { character, emoji, text }. Old entries only
+      // ever had a single flat reply, so treat that as a one-item starting
+      // list — this is the only "migration" that happens, and only once
+      // you edit and re-save that entry.
+      const existingReplies = Array.isArray(data.hostReplies) && data.hostReplies.length
+        ? data.hostReplies
+        : (data.hostReply ? [{
+            character: data.hostReplyCharacter || 'The House',
+            emoji: data.hostReplyEmoji || '🏠',
+            text: data.hostReply,
+          }] : []);
 
-      const replyWhoLabel = document.createElement('label');
-      replyWhoLabel.className = 'review-reply-label';
-      replyWhoLabel.textContent = 'Reply as';
-      const replySelect = document.createElement('select');
-      replySelect.className = 'review-reply-select';
-      REPLY_CHARACTERS.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.name;
-        opt.textContent = c.emoji + ' ' + c.name;
-        if (c.name === (data.hostReplyCharacter || 'The House')) opt.selected = true;
-        replySelect.appendChild(opt);
-      });
-      replyWhoLabel.appendChild(replySelect);
+      const repliesWrap = document.createElement('div');
+      repliesWrap.className = 'review-replies';
+
+      function addReplyRow(reply) {
+        const row = document.createElement('div');
+        row.className = 'review-reply-row';
+
+        const select = document.createElement('select');
+        select.className = 'review-reply-select';
+        REPLY_CHARACTERS.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.name;
+          opt.textContent = c.emoji + ' ' + c.name;
+          if (c.name === (reply.character || 'The House')) opt.selected = true;
+          select.appendChild(opt);
+        });
+
+        const textarea = document.createElement('textarea');
+        textarea.className = 'review-reply-input';
+        textarea.rows = 2;
+        textarea.value = reply.text || '';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'guestbook-btn review-btn-remove-reply';
+        removeBtn.textContent = 'Remove';
+        removeBtn.addEventListener('click', () => row.remove());
+
+        row.appendChild(select);
+        row.appendChild(textarea);
+        row.appendChild(removeBtn);
+        repliesWrap.appendChild(row);
+      }
+
+      if (existingReplies.length) {
+        existingReplies.forEach(addReplyRow);
+      } else {
+        addReplyRow({ character: 'The House', emoji: '🏠', text: '' });
+      }
+
+      const addReplyBtn = document.createElement('button');
+      addReplyBtn.type = 'button';
+      addReplyBtn.className = 'guestbook-btn review-btn-tool';
+      addReplyBtn.textContent = '+ Add another reply';
+      addReplyBtn.addEventListener('click', () => addReplyRow({ character: 'The House', emoji: '🏠', text: '' }));
 
       const replySaveBtn = document.createElement('button');
       replySaveBtn.type = 'button';
       replySaveBtn.className = 'guestbook-btn review-btn-reply';
-      replySaveBtn.textContent = 'Save reply';
+      replySaveBtn.textContent = 'Save replies';
       replySaveBtn.addEventListener('click', async () => {
         replySaveBtn.textContent = 'Saving...';
-        const chosen = REPLY_CHARACTERS.find(c => c.name === replySelect.value) || REPLY_CHARACTERS[0];
-        await updateDoc(doc(db, 'guestbook', id), {
-          hostReply: replyInput.value.trim(),
-          hostReplyCharacter: chosen.name,
-          hostReplyEmoji: chosen.emoji,
-        });
+        const rows = Array.from(repliesWrap.querySelectorAll('.review-reply-row'));
+        const replies = rows
+          .map(row => {
+            const select = row.querySelector('select');
+            const textarea = row.querySelector('textarea');
+            const chosen = REPLY_CHARACTERS.find(c => c.name === select.value) || REPLY_CHARACTERS[0];
+            return { character: chosen.name, emoji: chosen.emoji, text: textarea.value.trim() };
+          })
+          .filter(r => r.text);
+        await updateDoc(doc(db, 'guestbook', id), { hostReplies: replies });
         replySaveBtn.textContent = 'Saved!';
-        setTimeout(() => { replySaveBtn.textContent = 'Save reply'; }, 1500);
+        setTimeout(() => { replySaveBtn.textContent = 'Save replies'; }, 1500);
       });
+
+      const replyLabel = document.createElement('label');
+      replyLabel.className = 'review-reply-label';
+      replyLabel.textContent = 'Replies (shown when clicked, optional — **bold** and *italic* supported)';
+
       info.appendChild(replyLabel);
-      info.appendChild(replyWhoLabel);
+      info.appendChild(repliesWrap);
+      info.appendChild(addReplyBtn);
       info.appendChild(replySaveBtn);
       card.appendChild(info);
 

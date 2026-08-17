@@ -2769,8 +2769,6 @@ main img {
   resize: vertical;
 }
 .review-reply-select {
-  display: block;
-  margin-top: 0.3rem;
   font-family: var(--body);
   font-size: 0.9rem;
   color: var(--ink-on-paper);
@@ -2778,11 +2776,37 @@ main img {
   border: var(--edge);
   border-radius: 3px;
   padding: 0.4rem;
+  flex: 0 0 auto;
 }
+.review-replies {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.3rem;
+}
+.review-reply-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.review-reply-row .review-reply-input {
+  flex: 1 1 12rem;
+  margin-top: 0;
+}
+.review-btn-remove-reply {
+  background: transparent;
+  color: var(--ink-soft);
+  border: var(--edge);
+  padding: 0.4rem 0.7rem;
+  flex: 0 0 auto;
+}
+.review-btn-remove-reply:hover { color: var(--urgent); }
 .review-btn-reply {
   background: var(--lamp);
   color: var(--ink-on-paper);
   border-color: var(--lamp);
   padding: 0.4rem 0.9rem;
   margin-top: 0.5rem;
+  margin-right: 0.5rem;
 }

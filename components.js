@@ -13,9 +13,7 @@
    folder deep (e.g. journal/index.html), so URLs read as .../journal/
    instead of .../journal.html. This file detects which depth the
    current page is at and builds the right relative links either way
-   — so it keeps working whether you're testing at
-   larissa429.github.io/thehouse/journal/ or on the custom domain
-   thehouseosc.com/journal/.
+   — so it keeps working on any hosting URL, custom domain included.
    ============================================================ */
 
 /* the small, fixed set of non-character utility pages. Anything else

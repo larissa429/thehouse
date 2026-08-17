@@ -306,9 +306,11 @@
 
   let SUMMER_HASH = null;
   let PENNY_HASH = null;
+  let QUIZ_HASH = null;
   (async () => {
     SUMMER_HASH = await sha256("summer28");
     PENNY_HASH = await sha256("penny");
+    QUIZ_HASH = await sha256("allpages");
   })();
 
   const win = document.getElementById('win');
@@ -346,6 +348,8 @@
       window.location.href = 'penny/';
     } else if (guessHash === SUMMER_HASH) {
       window.location.href = 'archive/';
+    } else if (guessHash === QUIZ_HASH) {
+      window.location.href = 'quizsecret/';
     } else {
       status.textContent = "Incorrect password.";
       win.classList.remove('shake');

@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The House Quiz</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    .quiz-wrap {
+      max-width: 34rem;
+      margin: 2rem auto 4rem;
+    }
+    .quiz-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--label);
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+      margin-bottom: 1rem;
+    }
+    .quiz-lives { letter-spacing: 0.15em; }
+    .quiz-lives-wrap { position: relative; display: inline-block; }
+    .quiz-life-popup {
+      position: absolute;
+      top: -0.2rem;
+      right: 0;
+      font-family: var(--label);
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #2e7d32;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .quiz-life-popup.show {
+      animation: quiz-life-pop 1.2s ease forwards;
+    }
+    @keyframes quiz-life-pop {
+      0% { opacity: 0; transform: translateY(4px) scale(0.9); }
+      15% { opacity: 1; transform: translateY(-8px) scale(1.1); }
+      30% { transform: translateY(-10px) scale(1); }
+      70% { opacity: 1; transform: translateY(-16px) scale(1); }
+      100% { opacity: 0; transform: translateY(-24px) scale(1); }
+    }
+    .quiz-card {
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 4px;
+      padding: 1.6rem 1.4rem;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.35);
+    }
+    .quiz-card.shake { animation: quiz-shake 0.35s ease; }
+    @keyframes quiz-shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(7px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(3px); }
+    }
+    .quiz-question {
+      font-family: var(--display);
+      font-size: 1.25rem;
+      color: var(--paper);
+      margin: 0 0 1.2rem;
+      line-height: 1.4;
+    }
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .quiz-option {
+      font-family: var(--body);
+      font-size: 1rem;
+      color: var(--ink);
+      background: var(--wall-lit);
+      border: var(--edge);
+      border-radius: 3px;
+      padding: 0.7rem 0.9rem;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .quiz-option:hover { background: var(--shadow); transform: translateX(2px); }
+    .quiz-option.wrong-flash { background: var(--urgent); color: #fff; }
+    .quiz-option.right-flash { background: #2e7d32; color: #fff; }
+    .quiz-feedback {
+      font-family: var(--label);
+      font-size: 0.8rem;
+      color: var(--urgent);
+      min-height: 1.2rem;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    .quiz-done {
+      text-align: center;
+    }
+    .quiz-password {
+      display: inline-block;
+      margin: 1rem 0;
+      font-family: var(--label);
+      font-size: 1.4rem;
+      letter-spacing: 0.15em;
+      color: var(--lamp);
+      background: var(--shadow);
+      border: var(--edge);
+      padding: 0.6rem 1.2rem;
+      border-radius: 3px;
+    }
+    .quiz-puzzle-stage {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .quiz-puzzle-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 3px;
+      width: 100%;
+      aspect-ratio: 1245 / 748;
+    }
+    .quiz-puzzle-slot {
+      border: 1px dashed var(--ink-soft);
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .quiz-puzzle-scatter {
+      position: relative;
+      width: 100%;
+      margin-top: 1rem;
+    }
+    .quiz-puzzle-piece {
+      position: absolute;
+      background-repeat: no-repeat;
+      border-radius: 3px;
+      border: var(--edge);
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    }
+    .quiz-puzzle-piece.dragging {
+      cursor: grabbing;
+      z-index: 50;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+    }
+    .quiz-puzzle-hint {
+      text-align: center;
+      font-family: var(--label);
+      font-size: 0.75rem;
+      color: var(--ink-soft);
+      margin: 0.9rem 0 0;
+    }
+  </style>
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap quiz-wrap">
+
+    <h1>The House Quiz</h1>
+    <p id="quizIntro">Answer every question right to receive a prize. You get a few mistakes per attempt &mdash; run out, and it's back to question one. Good luck.</p>
+
+    <div id="quizPlay">
+      <div class="quiz-status-row">
+        <span id="quizProgress">Question 1 of 1</span>
+        <span class="quiz-lives-wrap">
+          <span class="quiz-lives" id="quizLives"></span>
+          <span class="quiz-life-popup" id="quizLifePopup">+1</span>
+        </span>
+      </div>
+
+      <div class="quiz-card" id="quizCard">
+        <p class="quiz-question" id="quizQuestion"></p>
+        <div class="quiz-options" id="quizOptions"></div>
+        <div id="quizPuzzle" hidden>
+          <div class="quiz-puzzle-stage" id="quizPuzzleStage">
+            <div class="quiz-puzzle-board" id="quizPuzzleBoard"></div>
+            <div class="quiz-puzzle-scatter" id="quizPuzzleScatter"></div>
+          </div>
+          <p class="quiz-puzzle-hint">Drag each piece onto its spot on the board.</p>
+        </div>
+      </div>
+
+      <p class="quiz-feedback" id="quizFeedback"></p>
+    </div>
+
+    <div id="quizDone" class="quiz-done" hidden>
+      <h2>You got them all.</h2>
+      <p>Somewhere on this site is a password prompt. You know what to type now.</p>
+      <span class="quiz-password" id="quizPasswordReveal"></span>
+    </div>
+
+  </main>
+
+  <site-footer></site-footer>
+
+  <script src="../components.js" defer></script>
+
+  <script>
+    // Wrong answers cost a life instead of just retrying in place — run
+    // out of lives and it's back to question 1, Impossible-Quiz style.
+    // Mostly genuine House lore, with a few trick questions mixed in
+    // (the "obviously right" answer isn't always the right one).
+    //
+    // This is a starter set, not the full 50 yet — add more objects to
+    // this array over time; nothing else needs to change to grow it.
+    const QUESTIONS = [
+      {
+        type: "puzzle",
+        q: "Put the picture back together.",
+        image: "../images/promo.webp"
+      },
+      {
+        q: "What does D.A.I.S.Y. actually stand for?",
+        options: [
+          "Directory And Index System... Yes!",
+          "Data Archive & Indexing Subsystem Library",
+          "It doesn't stand for anything, she just likes the capital letters",
+          "Digital Access & Information Storage Yield"
+        ],
+        correct: 0
+      },
+      {
+        q: "How many D.A.I.S.Y.s make up the hivemind that runs the Library of All Pages?",
+        options: ["Five", "Six", "Seven", "As many as it takes"],
+        correct: 2
+      },
+      {
+        q: "What object is Journal?",
+        options: ["A diary with a broken lock", "A leather bound journal", "A notebook, technically", "A ledger book"],
+        correct: 1
+      },
+      {
+        q: "Who does Journal say is his favorite resident?",
+        options: ["Mirror", "The House", "Abstract Painting", "Himself, obviously"],
+        correct: 1
+      },
+      {
+        q: "What does Mirror look like?",
+        options: [
+          "A hand mirror with a floral golden frame and handle",
+          "Cracked down the middle",
+          "A vanity mirror with a wooden frame",
+          "Whatever's standing in front of her"
+        ],
+        correct: 3,
+        trick: true
+      },
+      {
+        q: "Why doesn't Journal ever leave The House for the holidays?",
+        options: [
+          "He loves The House too much",
+          "He doesn't like holidays",
+          "He gets overwhelmed in crowds",
+          "summer28"
+        ],
+        correct: 3
+      },
+      {
+        q: "Who was last seen pulling residents clear of the crowd during Summer 28th?",
+        options: ["Snaps", "Journal", "Parker", "-⁵⁄₂₈"],
+        correct: 2
+      },
+      {
+        q: "What object is Parker?",
+        options: ["A parking meter", "A lantern", "A life preserver", "A streetlamp"],
+        correct: 0
+      },
+      {
+        q: "What object is Snaps?",
+        options: ["A photo album", "A polaroid", "A camera", "A pair of scissors"],
+        correct: 2
+      },
+      {
+        q: "How many residents does The House have?",
+        options: ["42", "1,875", "2.7 million", "The correct number of residents"],
+        correct: 3,
+        trick: true
+      },
+      {
+        q: "What is Charlie?",
+        options: ["A stuffed dog", "A real dog", "A dog toy", "A freak"],
+        correct: 0
+      },
+      {
+        q: "Who is Charlie's owner?",
+        options: ["Liz", "Journal", "Mirror", "The House"],
+        correct: [0, 3]
+      },
+      {
+        q: "What object is Long Play?",
+        options: ["A vinyl record", "A cassette tape", "A record player", "A CD"],
+        correct: 0
+      },
+      {
+        q: "Which D.A.I.S.Y. serves as head librarian of the Library of All Pages?",
+        options: ["Green D.A.I.S.Y.", "Blue D.A.I.S.Y.", "Red D.A.I.S.Y.", "White D.A.I.S.Y."],
+        correct: 0
+      },
+      {
+        q: "Who is -⁵⁄₂₈'s favorite resident?",
+        options: ["Journal", "Mirror", "Dream", "Indigo"],
+        correct: 2
+      },
+      {
+        q: "Who is Long Play's girlfriend?",
+        options: ["Mirror", "Blue Marble", "Cassette", "Dumptruck"],
+        correct: 2
+      },
+      {
+        q: "Who does Abstract Painting think she is?",
+        options: ["A supporting character", "The main character", "A background character", "An extra"],
+        correct: 1
+      },
+      {
+        q: "Who is Abstract Painting?",
+        options: [
+          "An oil painting hanging in the hallway",
+          "A background character, mostly",
+          "The main character",
+          "Just another resident"
+        ],
+        correct: 2,
+        trick: true
+      },
+      {
+        q: "How do the other residents generally feel about PBC?",
+        options: ["They adore him", "They mostly dislike him", "They're neutral", "They fear him"],
+        correct: 1
+      },
+      {
+        q: "What is -⁵⁄₂₈'s favorite food?",
+        options: ["Scrambled eggs", "Pancakes", "Toast", "Cereal"],
+        correct: 0
+      },
+    ];
+
+    const LIVES_START = 3;
+    const PASSWORD_ANSWER = "allpages"; // matches the hash in pass.html
+
+    let current = 0;
+    let lives = LIVES_START;
+
+    const progressEl = document.getElementById('quizProgress');
+    const livesEl = document.getElementById('quizLives');
+    const lifePopupEl = document.getElementById('quizLifePopup');
+    const cardEl = document.getElementById('quizCard');
+    const questionEl = document.getElementById('quizQuestion');
+    const optionsEl = document.getElementById('quizOptions');
+    const puzzleEl = document.getElementById('quizPuzzle');
+    const puzzleStageEl = document.getElementById('quizPuzzleStage');
+    const puzzleBoardEl = document.getElementById('quizPuzzleBoard');
+    const puzzleScatterEl = document.getElementById('quizPuzzleScatter');
+    const feedbackEl = document.getElementById('quizFeedback');
+    const playEl = document.getElementById('quizPlay');
+    const doneEl = document.getElementById('quizDone');
+    const passwordRevealEl = document.getElementById('quizPasswordReveal');
+
+    function renderLives() {
+      livesEl.textContent = '♥️'.repeat(lives) + '🤍'.repeat(Math.max(0, LIVES_START - lives));
+    }
+
+    function shuffleArray(arr) {
+      const copy = arr.slice();
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function shuffleOptions(question) {
+      return shuffleArray(question.options.map((_, i) => i));
+    }
+
+    const LIVES_CHECKPOINT_INTERVAL = 15;
+
+    function advance() {
+      current++;
+
+      if (current % LIVES_CHECKPOINT_INTERVAL === 0) {
+        lives++;
+        renderLives();
+        lifePopupEl.classList.remove('show');
+        void lifePopupEl.offsetWidth; // restart animation if it's already mid-run
+        lifePopupEl.classList.add('show');
+      }
+
+      if (current >= QUESTIONS.length) {
+        finishQuiz();
+      } else {
+        renderQuestion();
+      }
+    }
+
+    function renderQuestion() {
+      const q = QUESTIONS[current];
+      progressEl.textContent = 'Question ' + (current + 1) + ' of ' + QUESTIONS.length;
+      questionEl.textContent = q.q;
+      feedbackEl.textContent = '';
+
+      if (q.type === 'puzzle') {
+        optionsEl.hidden = true;
+        optionsEl.innerHTML = '';
+        puzzleEl.hidden = false;
+        renderPuzzle(q);
+        return;
+      }
+
+      puzzleEl.hidden = true;
+      clearPuzzleStage();
+      optionsEl.hidden = false;
+      optionsEl.innerHTML = '';
+
+      const order = shuffleOptions(q);
+      order.forEach(optionIndex => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'quiz-option';
+        btn.textContent = q.options[optionIndex];
+        const isCorrect = Array.isArray(q.correct) ? q.correct.includes(optionIndex) : optionIndex === q.correct;
+        btn.addEventListener('click', () => handleAnswer(isCorrect, btn));
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    // Splits q.image into pieces scattered (and rotated) below an empty
+    // board; drag each piece onto its spot to place it, straightening it out.
+    // Solving costs no lives — it's a breather puzzle, not a quiz question
+    // with a wrong answer.
+    const PUZZLE_COLS = 4;
+    const PUZZLE_ROWS = 3;
+
+    function clearPuzzleStage() {
+      puzzleBoardEl.innerHTML = '';
+      puzzleScatterEl.innerHTML = '';
+      puzzleStageEl.querySelectorAll('.quiz-puzzle-piece').forEach(p => p.remove());
+    }
+
+    // Uses pixel-based background-size/position (measured off the actual
+    // rendered board) rather than percentage tricks, so crops line up
+    // exactly regardless of borders/gaps.
+    function applyPieceBackground(piece, pieceIndex, image, gridSize) {
+      const col = pieceIndex % PUZZLE_COLS;
+      const row = Math.floor(pieceIndex / PUZZLE_COLS);
+      const tileW = gridSize.width / PUZZLE_COLS;
+      const tileH = gridSize.height / PUZZLE_ROWS;
+      piece.style.backgroundImage = "url('" + image + "')";
+      piece.style.backgroundSize = gridSize.width + 'px ' + gridSize.height + 'px';
+      piece.style.backgroundPosition = (-col * tileW) + 'px ' + (-row * tileH) + 'px';
+      piece.dataset.piece = pieceIndex;
+    }
+
+    function randomRotation() {
+      return Math.random() * 40 - 20; // -20..20 deg
+    }
+
+    function renderPuzzle(q) {
+      clearPuzzleStage();
+
+      const pieceCount = PUZZLE_COLS * PUZZLE_ROWS;
+
+      // Empty board slots — piece with index N belongs in slot N.
+      const slots = [];
+      for (let i = 0; i < pieceCount; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'quiz-puzzle-slot';
+        slot.dataset.slot = i;
+        puzzleBoardEl.appendChild(slot);
+        slots.push(slot);
+      }
+
+      const boardRect = puzzleBoardEl.getBoundingClientRect();
+      const gridSize = { width: boardRect.width, height: boardRect.height };
+      const tileW = gridSize.width / PUZZLE_COLS;
+      const tileH = gridSize.height / PUZZLE_ROWS;
+
+      // Give the scatter zone enough room for a rough grid of the pieces
+      // beneath the board, then measure everything relative to the stage
+      // (pieces are positioned absolutely against the stage so they can
+      // move freely between the scatter zone and the board).
+      const scatterRows = Math.ceil(pieceCount / PUZZLE_COLS);
+      puzzleScatterEl.style.height = (scatterRows * tileH * 1.4) + 'px';
+
+      const stageRect = puzzleStageEl.getBoundingClientRect();
+      const scatterRect = puzzleScatterEl.getBoundingClientRect();
+      const scatterOffsetX = scatterRect.left - stageRect.left;
+      const scatterOffsetY = scatterRect.top - stageRect.top;
+      const cellW = scatterRect.width / PUZZLE_COLS;
+      const cellH = scatterRect.height / scatterRows;
+
+      const slotPositions = slots.map(slot => {
+        const r = slot.getBoundingClientRect();
+        return { x: r.left - stageRect.left, y: r.top - stageRect.top };
+      });
+
+      const slotOccupant = new Array(pieceCount).fill(null); // slot -> piece
+      const piecePlacement = new Array(pieceCount).fill(null); // piece -> slot
+      const pieceEls = new Array(pieceCount);
+
+      const spawnOrder = shuffleArray(Array.from({ length: pieceCount }, (_, i) => i));
+      spawnOrder.forEach((pieceIndex, i) => {
+        const piece = document.createElement('div');
+        piece.className = 'quiz-puzzle-piece';
+        piece.style.width = tileW + 'px';
+        piece.style.height = tileH + 'px';
+        applyPieceBackground(piece, pieceIndex, q.image, gridSize);
+
+        const col = i % PUZZLE_COLS;
+        const row = Math.floor(i / PUZZLE_COLS);
+        const jitterX = (Math.random() - 0.5) * Math.max(0, cellW - tileW) * 0.8;
+        const jitterY = (Math.random() - 0.5) * Math.max(0, cellH - tileH) * 0.8;
+        const x = scatterOffsetX + col * cellW + (cellW - tileW) / 2 + jitterX;
+        const y = scatterOffsetY + row * cellH + (cellH - tileH) / 2 + jitterY;
+
+        piece.style.left = x + 'px';
+        piece.style.top = y + 'px';
+        piece.style.transform = 'rotate(' + randomRotation() + 'deg)';
+
+        puzzleStageEl.appendChild(piece);
+        pieceEls[pieceIndex] = piece;
+      });
+
+      attachPuzzlePieceDrag({ pieceEls, slotPositions, slotOccupant, piecePlacement, tileW, tileH });
+    }
+
+    function attachPuzzlePieceDrag(ctx) {
+      const { pieceEls, slotPositions, slotOccupant, piecePlacement, tileW, tileH } = ctx;
+      let dragPiece = null;
+      let dragOrigin = null;
+      let stageRect = null;
+      let offsetX = 0, offsetY = 0;
+
+      function checkSolved() {
+        if (slotOccupant.every((piece, slot) => piece === slot)) {
+          feedbackEl.textContent = 'Solved.';
+          setTimeout(advance, 1000);
+        }
+      }
+
+      // Moves a bumped-out piece to a specific spot (and rotation) rather
+      // than a random one — used so a displaced piece lands exactly where
+      // the piece that took its place came from.
+      function returnToSpot(piece, pieceIndex, spot) {
+        piecePlacement[pieceIndex] = null;
+        piece.style.left = spot.left + 'px';
+        piece.style.top = spot.top + 'px';
+        piece.style.transform = spot.transform;
+      }
+
+      // Finds which slot a stage-relative point falls inside, by coordinates
+      // rather than document.elementFromPoint — a slot that already has a
+      // piece in it is visually covered by that piece, so hit-testing the
+      // DOM would find the occupying piece instead of the slot underneath.
+      function slotAt(stageX, stageY) {
+        for (let i = 0; i < slotPositions.length; i++) {
+          const pos = slotPositions[i];
+          if (stageX >= pos.x && stageX <= pos.x + tileW && stageY >= pos.y && stageY <= pos.y + tileH) {
+            return i;
+          }
+        }
+        return null;
+      }
+
+      // origin is where the incoming piece was dragged from (its spot in the
+      // scatter zone, or null if it was already on the board) — a bumped
+      // occupant gets sent there instead of to a random scatter position.
+      function placeAt(piece, pieceIndex, slotIndex, origin) {
+        const prevSlot = piecePlacement[pieceIndex];
+        if (prevSlot !== null) slotOccupant[prevSlot] = null;
+
+        const occupant = slotOccupant[slotIndex];
+        if (occupant !== null && occupant !== pieceIndex) {
+          if (prevSlot !== null) {
+            // Both pieces were already on the board — swap them properly.
+            placeAt(pieceEls[occupant], occupant, prevSlot, null);
+          } else {
+            returnToSpot(pieceEls[occupant], occupant, origin);
+          }
+        }
+
+        slotOccupant[slotIndex] = pieceIndex;
+        piecePlacement[pieceIndex] = slotIndex;
+
+        const pos = slotPositions[slotIndex];
+        piece.style.left = pos.x + 'px';
+        piece.style.top = pos.y + 'px';
+        piece.style.transform = 'rotate(0deg)';
+      }
+
+      pieceEls.forEach((piece, pieceIndex) => {
+        piece.addEventListener('pointerdown', e => {
+          if (dragPiece) return;
+          dragPiece = piece;
+          piece.setPointerCapture(e.pointerId);
+          piece.classList.add('dragging');
+
+          stageRect = puzzleStageEl.getBoundingClientRect();
+          const curLeft = parseFloat(piece.style.left) || 0;
+          const curTop = parseFloat(piece.style.top) || 0;
+          offsetX = (e.clientX - stageRect.left) - curLeft;
+          offsetY = (e.clientY - stageRect.top) - curTop;
+          dragOrigin = { left: curLeft, top: curTop, transform: piece.style.transform };
+        });
+
+        piece.addEventListener('pointermove', e => {
+          if (piece !== dragPiece) return;
+          piece.style.left = ((e.clientX - stageRect.left) - offsetX) + 'px';
+          piece.style.top = ((e.clientY - stageRect.top) - offsetY) + 'px';
+        });
+
+        piece.addEventListener('pointerup', e => {
+          if (piece !== dragPiece) return;
+
+          const targetSlot = slotAt(e.clientX - stageRect.left, e.clientY - stageRect.top);
+
+          piece.classList.remove('dragging');
+          dragPiece = null;
+
+          if (targetSlot !== null) {
+            placeAt(piece, pieceIndex, targetSlot, dragOrigin);
+            checkSolved();
+          } else {
+            const prevSlot = piecePlacement[pieceIndex];
+            if (prevSlot !== null) {
+              slotOccupant[prevSlot] = null;
+              piecePlacement[pieceIndex] = null;
+            }
+          }
+        });
+
+        piece.addEventListener('pointercancel', () => {
+          if (piece === dragPiece) {
+            piece.classList.remove('dragging');
+            dragPiece = null;
+          }
+        });
+      });
+    }
+
+    function handleAnswer(isCorrect, btn) {
+      Array.from(optionsEl.children).forEach(b => b.disabled = true);
+
+      if (isCorrect) {
+        btn.classList.add('right-flash');
+        setTimeout(advance, 450);
+      } else {
+        btn.classList.add('wrong-flash');
+        lives--;
+        renderLives();
+        cardEl.classList.remove('shake');
+        void cardEl.offsetWidth;
+        cardEl.classList.add('shake');
+
+        if (lives <= 0) {
+          feedbackEl.textContent = "Out of lives. Back to the start.";
+          setTimeout(() => {
+            current = 0;
+            lives = LIVES_START;
+            renderLives();
+            renderQuestion();
+          }, 900);
+        } else {
+          feedbackEl.textContent = "Wrong. " + lives + " " + (lives === 1 ? "life" : "lives") + " left. Try this one again.";
+          setTimeout(() => {
+            renderQuestion();
+          }, 900);
+        }
+      }
+    }
+
+    function finishQuiz() {
+      playEl.hidden = true;
+      doneEl.hidden = false;
+      passwordRevealEl.textContent = PASSWORD_ANSWER;
+    }
+
+    renderLives();
+    renderQuestion();
+  </script>
+
+</body>
+</html>

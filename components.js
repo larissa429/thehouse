@@ -19,7 +19,7 @@
 /* the small, fixed set of non-character utility pages. Anything else
    one level deep is assumed to be a character page — so new
    character folders NEVER need to be added here manually again. */
-var UTILITY_FOLDERS = ["about", "residents", "audition", "calendar", "resources", "art", "guestbook", "credits"];
+var UTILITY_FOLDERS = ["about", "residents", "audition", "calendar", "resources", "art", "guestbook", "credits", "quiz", "quizsecret", "penny"];
 
 var pathParts = location.pathname.split("/").filter(Boolean);
 var here = pathParts[pathParts.length - 1] || "";

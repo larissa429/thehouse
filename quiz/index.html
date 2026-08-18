@@ -89,6 +89,41 @@
     .quiz-option:hover { background: var(--shadow); transform: translateX(2px); }
     .quiz-option.wrong-flash { background: var(--urgent); color: #fff; }
     .quiz-option.right-flash { background: #2e7d32; color: #fff; }
+    .quiz-anagram-scramble {
+      font-family: var(--display);
+      font-size: 1.4rem;
+      letter-spacing: 0.08em;
+      color: var(--lamp);
+      text-align: center;
+      margin: 0 0 1.2rem;
+    }
+    .quiz-anagram-row {
+      display: flex;
+      gap: 0.6rem;
+    }
+    .quiz-anagram-input {
+      flex: 1;
+      font-family: var(--body);
+      font-size: 1rem;
+      color: var(--ink);
+      background: var(--wall-lit);
+      border: var(--edge);
+      border-radius: 3px;
+      padding: 0.7rem 0.9rem;
+    }
+    .quiz-anagram-input.wrong-flash { background: var(--urgent); color: #fff; }
+    .quiz-anagram-input.right-flash { background: #2e7d32; color: #fff; }
+    .quiz-anagram-submit {
+      font-family: var(--label);
+      font-size: 0.9rem;
+      color: var(--ink);
+      background: var(--wall-lit);
+      border: var(--edge);
+      border-radius: 3px;
+      padding: 0.7rem 1.1rem;
+      cursor: pointer;
+    }
+    .quiz-anagram-submit:hover { background: var(--shadow); }
     .quiz-feedback {
       font-family: var(--label);
       font-size: 0.8rem;
@@ -195,6 +230,13 @@
             <div class="quiz-puzzle-scatter" id="quizPuzzleScatter"></div>
           </div>
           <p class="quiz-puzzle-hint">Drag each piece onto its spot on the board.</p>
+        </div>
+        <div id="quizAnagram" hidden>
+          <p class="quiz-anagram-scramble" id="quizAnagramScramble"></p>
+          <div class="quiz-anagram-row">
+            <input type="text" class="quiz-anagram-input" id="quizAnagramInput" autocomplete="off" autocapitalize="off" spellcheck="false" />
+            <button type="button" class="quiz-anagram-submit" id="quizAnagramSubmit">Submit</button>
+          </div>
         </div>
       </div>
 
@@ -387,6 +429,11 @@
         correct: 0,
         trick: true
       },
+      {
+        type: "anagram",
+        q: "Unscramble it. The answer is hiding somewhere on this very site.",
+        answer: "The House is listening."
+      },
     ];
 
     const LIVES_START = 3;
@@ -406,6 +453,10 @@
     const puzzleBoardEl = document.getElementById('quizPuzzleBoard');
     const puzzleSolvedEl = document.getElementById('quizPuzzleSolved');
     const puzzleScatterEl = document.getElementById('quizPuzzleScatter');
+    const anagramEl = document.getElementById('quizAnagram');
+    const anagramScrambleEl = document.getElementById('quizAnagramScramble');
+    const anagramInputEl = document.getElementById('quizAnagramInput');
+    const anagramSubmitEl = document.getElementById('quizAnagramSubmit');
     const feedbackEl = document.getElementById('quizFeedback');
     const playEl = document.getElementById('quizPlay');
     const doneEl = document.getElementById('quizDone');
@@ -461,18 +512,25 @@
       questionEl.textContent = q.q;
       feedbackEl.textContent = '';
 
+      puzzleEl.hidden = true;
+      clearPuzzleStage();
+      anagramEl.hidden = true;
+      optionsEl.hidden = true;
+      optionsEl.innerHTML = '';
+
       if (q.type === 'puzzle') {
-        optionsEl.hidden = true;
-        optionsEl.innerHTML = '';
         puzzleEl.hidden = false;
         renderPuzzle(q);
         return;
       }
 
-      puzzleEl.hidden = true;
-      clearPuzzleStage();
+      if (q.type === 'anagram') {
+        anagramEl.hidden = false;
+        renderAnagram(q);
+        return;
+      }
+
       optionsEl.hidden = false;
-      optionsEl.innerHTML = '';
 
       const order = shuffleOptions(q);
       order.forEach(optionIndex => {
@@ -481,10 +539,69 @@
         btn.className = 'quiz-option';
         btn.textContent = q.options[optionIndex];
         const isCorrect = Array.isArray(q.correct) ? q.correct.includes(optionIndex) : optionIndex === q.correct;
-        btn.addEventListener('click', () => handleAnswer(isCorrect, btn));
+        btn.addEventListener('click', () => {
+          handleAnswer(isCorrect, btn, () => Array.from(optionsEl.children).forEach(b => b.disabled = true));
+        });
         optionsEl.appendChild(btn);
       });
     }
+
+    // Answer is compared letters-only (spaces/punctuation/case ignored) so
+    // formatting quirks in what someone types don't matter. A fresh scramble
+    // is generated every render (not a fixed list) — regenerated letter-by-
+    // letter each time, so it's effectively unlimited variety rather than a
+    // canned batch.
+    let currentAnagramAnswer = '';
+
+    function normalizeAnagramText(str) {
+      return str.replace(/[^a-zA-Z]/g, '').toLowerCase();
+    }
+
+    function generateScramble(answer) {
+      const wordGroups = answer.split(/\s+/).map(w => normalizeAnagramText(w));
+      const wordLengths = wordGroups.map(w => w.length);
+      const letters = wordGroups.join('').split('');
+
+      let shuffled = shuffleArray(letters);
+      while (shuffled.join('') === letters.join('')) {
+        shuffled = shuffleArray(letters);
+      }
+
+      let cursor = 0;
+      return wordLengths.map(len => {
+        const chunk = shuffled.slice(cursor, cursor + len).join('');
+        cursor += len;
+        return chunk;
+      }).join(' ');
+    }
+
+    function renderAnagram(q) {
+      currentAnagramAnswer = normalizeAnagramText(q.answer);
+      anagramScrambleEl.textContent = generateScramble(q.answer);
+      anagramInputEl.value = '';
+      anagramInputEl.disabled = false;
+      anagramSubmitEl.disabled = false;
+      anagramInputEl.classList.remove('wrong-flash', 'right-flash');
+    }
+
+    function checkAnagram() {
+      if (anagramInputEl.disabled) return;
+      const guess = normalizeAnagramText(anagramInputEl.value);
+      if (!guess) return;
+
+      handleAnswer(guess === currentAnagramAnswer, anagramInputEl, () => {
+        anagramInputEl.disabled = true;
+        anagramSubmitEl.disabled = true;
+      });
+    }
+
+    anagramSubmitEl.addEventListener('click', checkAnagram);
+    anagramInputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        checkAnagram();
+      }
+    });
 
     // Splits q.image into pieces scattered (and rotated) below an empty
     // board; drag each piece onto its spot to place it, straightening it out.
@@ -701,8 +818,8 @@
       });
     }
 
-    function handleAnswer(isCorrect, btn) {
-      Array.from(optionsEl.children).forEach(b => b.disabled = true);
+    function handleAnswer(isCorrect, btn, disableFn) {
+      disableFn();
 
       if (isCorrect) {
         btn.classList.add('right-flash');

@@ -350,7 +350,7 @@
           "A vanity mirror with a wooden frame",
           "Whatever's standing in front of her"
         ],
-        correct: 3,
+        correct: [0, 3],
         trick: true
       },
       {
@@ -431,12 +431,12 @@
       {
         q: "Who is Abstract Painting?",
         options: [
-          "An oil painting hanging in the hallway",
+          "An oil painting on canvas",
           "A background character, mostly",
           "The main character",
           "Just another resident"
         ],
-        correct: 2,
+        correct: [0, 2],
         trick: true
       },
       {
@@ -519,7 +519,7 @@
       {
         type: "sort",
         q: "Drag these residents into order, oldest to youngest in the inbetween.",
-        items: ["Journal", "Mirror", "Abstract Painting", "Blue Marble", "Long Play", "Cassette", "-⁵⁄₂₈", "Dream", "Dumptruck", "Charlie"]
+        items: ["Journal", "Mirror", "Abstract Painting", "Blue Marble", "Cassette", "Long Play", "-⁵⁄₂₈", "Dream", "Dumptruck", "Charlie"]
       },
       {
         q: "Why does Cassette specifically dislike PBC?",
@@ -542,20 +542,29 @@
         correct: 0
       },
       {
-        q: "Which authority figure do Cool S and Clickbaity know better than to cross twice in one visit?",
-        options: ["Green D.A.I.S.Y.", "Journal", "Abstract Painting", "PBC"],
+        q: "Why does Indigo vehemently avoid Dumptruck?",
+        options: [
+          "She likes to scoop him into her truck bed and forgets she put him there",
+          "She's afraid of Dumptruck's temper",
+          "They got into a fight during Block Party",
+          "She thinks Dumptruck is annoying"
+        ],
+        correct: 0
+      },
+      {
+        q: "What do Cassette and Long Play have in common that makes their bond so unique?",
+        options: [
+          "Cas can't see and LP can't speak — but they understand each other completely",
+          "They're both afraid of Green D.A.I.S.Y.",
+          "They both love mixtapes",
+          "They were roommates before dating"
+        ],
         correct: 0
       },
       {
         q: "Which of these has NOT been credited for character art on this site?",
         options: ["KrunchKo_", "timbrainpopkinnie", "bluelight.lobster", "moonlit.static"],
         correct: 3,
-        trick: true
-      },
-      {
-        q: "One more — which of these artists is made up?",
-        options: ["ladyworld", "hydro.xyzine", "papercut.moth", "KrunchKo_"],
-        correct: 2,
         trick: true
       },
       {
@@ -644,7 +653,7 @@
       {
         q: "Where can you find The House's own page?",
         options: [
-          "Tucked into Journal's \"favorite resident\" link",
+          "On Journal's page",
           "Listed on the Residents page",
           "Linked in the site footer",
           "Under the Resources page"
@@ -739,12 +748,21 @@
       return pinnedIndex === undefined ? shuffledRest : [...shuffledRest, pinnedIndex];
     }
 
-    const LIVES_CHECKPOINT_INTERVAL = 15;
+    // Bonus lives are tied to the 3 interactive question types themselves
+    // (not a fixed "every 15th question" count) so removing or adding
+    // regular questions elsewhere in the set never knocks these out of
+    // alignment with the puzzle/sort/anagram questions they're meant to reward.
+    const LIVES_CHECKPOINT_POSITIONS = new Set(
+      QUESTIONS.reduce((positions, q, i) => {
+        if (q.type === 'puzzle' || q.type === 'sort' || q.type === 'anagram') positions.push(i + 1);
+        return positions;
+      }, [])
+    );
 
     function advance() {
       current++;
 
-      if (current % LIVES_CHECKPOINT_INTERVAL === 0) {
+      if (LIVES_CHECKPOINT_POSITIONS.has(current)) {
         lives++;
         renderLives();
         lifePopupEl.classList.remove('show');
@@ -805,7 +823,12 @@
         }
         const isCorrect = Array.isArray(q.correct) ? q.correct.includes(optionIndex) : optionIndex === q.correct;
         btn.addEventListener('click', () => {
-          handleAnswer(isCorrect, btn, () => Array.from(optionsEl.children).forEach(b => b.disabled = true));
+          handleAnswer(
+            isCorrect,
+            btn,
+            () => Array.from(optionsEl.children).forEach(b => b.disabled = true),
+            () => Array.from(optionsEl.children).forEach(b => b.disabled = false)
+          );
         });
         optionsEl.appendChild(btn);
       });
@@ -857,6 +880,11 @@
       handleAnswer(guess === currentAnagramAnswer, anagramInputEl, () => {
         anagramInputEl.disabled = true;
         anagramSubmitEl.disabled = true;
+      }, () => {
+        anagramInputEl.disabled = false;
+        anagramSubmitEl.disabled = false;
+        anagramInputEl.value = '';
+        anagramInputEl.focus();
       });
     }
 
@@ -1220,7 +1248,7 @@
       };
     }
 
-    function handleAnswer(isCorrect, btn, disableFn) {
+    function handleAnswer(isCorrect, btn, disableFn, resetFn) {
       disableFn();
 
       if (isCorrect) {
@@ -1244,8 +1272,12 @@
           }, 900);
         } else {
           feedbackEl.textContent = "Wrong. " + lives + " " + (lives === 1 ? "life" : "lives") + " left. Try this one again.";
+          // Reset in place rather than a full renderQuestion() — a fresh
+          // render would reshuffle multiple-choice order, which made it
+          // easy to misclick right after a wrong answer.
           setTimeout(() => {
-            renderQuestion();
+            btn.classList.remove('wrong-flash');
+            resetFn();
           }, 900);
         }
       }

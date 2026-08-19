@@ -1337,11 +1337,11 @@ a.tag { text-decoration: none; }
   left: var(--x, 50%);
   top: var(--y, 50%);
   transform: translate(-50%, -50%) rotate(var(--tilt, -2deg));
-  width: 92px;
+  width: 132px;
   background: #f2f1ee;
   border: none;
   border-radius: 2px;
-  padding: 0.4rem 0.4rem 1.5rem;
+  padding: 0.5rem 0.5rem 3rem;
   box-shadow: 0 8px 18px rgba(0,0,0,0.5);
   cursor: grab;
   touch-action: none;
@@ -1365,17 +1365,17 @@ a.tag { text-decoration: none; }
   position: absolute;
   left: 0.4rem;
   right: 0.4rem;
-  bottom: 0.35rem;
+  bottom: 0.4rem;
   font-family: var(--hand);
-  font-size: 0.82rem;
-  line-height: 1.05;
+  font-size: 0.9rem;
+  line-height: 1.15;
   color: #2e2118;
   text-align: center;
 }
 @media (max-width: 700px) {
   .location-map { aspect-ratio: 3 / 4; }
-  .location-pin { width: 74px; padding: 0.3rem 0.3rem 1.2rem; }
-  .location-pin-caption { font-size: 0.72rem; }
+  .location-pin { width: 104px; padding: 0.4rem 0.4rem 2.5rem; }
+  .location-pin-caption { font-size: 0.76rem; bottom: 0.35rem; }
 }
 
 /* ---- LOCATION BROCHURE POPUP --------------------------------
@@ -1474,6 +1474,12 @@ a.tag { text-decoration: none; }
   border: 3px solid var(--b-accent);
   box-shadow: 0 6px 14px rgba(0,0,0,0.4);
   background: rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.brochure-gallery img:hover,
+.brochure-gallery img:focus-visible {
+  transform: scale(1.1);
 }
 /* a themed SVG icon slot, sized to match the photo circles — fills the
    row out to four items so the gallery never ends on an empty gap */
@@ -1506,6 +1512,45 @@ a.tag { text-decoration: none; }
   .brochure-gallery img,
   .brochure-icon { width: 4.4rem; height: 4.4rem; }
   .brochure-icon svg { width: 1.8rem; height: 1.8rem; }
+}
+
+/* full-size preview for a tapped gallery circle — sits above the
+   brochure popup (higher z-index than .note-overlay's 50) so it can
+   be open at the same time without closing the brochure underneath */
+.img-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 2.5rem 1.2rem;
+}
+.img-lightbox.open { display: flex; }
+.img-lightbox img {
+  max-width: min(90vw, 40rem);
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+.img-lightbox-close {
+  position: fixed;
+  top: 1rem;
+  right: 1.2rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(10, 8, 6, 0.6);
+  color: #fff;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .char-pagination {

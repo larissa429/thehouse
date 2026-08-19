@@ -16,11 +16,47 @@
   var noteBody = document.getElementById('note-body');
   var closeBtn = document.getElementById('note-close');
 
+  var lightbox = document.getElementById('imgLightbox');
+  var lightboxImg = document.getElementById('imgLightboxImg');
+  var lightboxClose = document.getElementById('imgLightboxClose');
+
   function closeNote() { if (overlay) overlay.classList.remove('open'); }
   if (overlay) {
     closeBtn.addEventListener('click', closeNote);
     overlay.addEventListener('click', function (e) { if (e.target === overlay) closeNote(); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNote(); });
+  }
+
+  function openLightbox(src, alt) {
+    if (!lightbox) return;
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || '';
+    lightbox.classList.add('open');
+  }
+  function closeLightbox() {
+    if (!lightbox) return;
+    lightbox.classList.remove('open');
+    lightboxImg.src = '';
+  }
+  if (lightbox) {
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', function (e) { if (e.target === lightbox) closeLightbox(); });
+  }
+
+  // Escape closes whichever layer is on top first, so dismissing an
+  // enlarged photo doesn't also dump you out of the brochure behind it.
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (lightbox && lightbox.classList.contains('open')) closeLightbox();
+    else closeNote();
+  });
+
+  // tapping a gallery circle inside the (cloned) brochure opens it full-size
+  if (noteBody) {
+    noteBody.addEventListener('click', function (e) {
+      var img = e.target.closest('.brochure-gallery img');
+      if (!img) return;
+      openLightbox(img.src, img.alt);
+    });
   }
 
   map.querySelectorAll('.location-pin').forEach(function (pin) {

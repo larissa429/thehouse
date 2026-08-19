@@ -328,6 +328,13 @@
         items: ["Journal", "Mirror", "Abstract Painting", "Blue Marble", "Long Play", "Cassette", "-⁵⁄₂₈", "Dream", "Dumptruck", "Charlie"]
       },
       {
+        q: "Who's in the basement?",
+        glitch: true,
+        glitchAria: "Redacted",
+        options: ["#####", "###", "######", "####"],
+        correct: [0, 1, 2, 3]
+      },
+      {
         type: "puzzle",
         q: "Put the picture back together.",
         image: "../images/promo.webp"
@@ -501,6 +508,39 @@
     let current = 0;
     let lives = LIVES_START;
 
+    // Telly-style glitch text for the "who's in the basement" options — same
+    // weighted-scramble technique as the name glitch on telly/index.html
+    // (mostly noise, with the real character showing through occasionally),
+    // rather than glitch.js's fully-redacted version. Tracked per-render so
+    // old intervals get cleared instead of piling up as questions advance.
+    const GLITCH_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789!@#$%&*<>?/\\|=+~';
+    const GLITCH_REAL_WEIGHT = 8;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let activeGlitchIntervals = [];
+
+    function clearGlitchIntervals() {
+      activeGlitchIntervals.forEach(id => clearInterval(id));
+      activeGlitchIntervals = [];
+    }
+
+    function startGlitchText(el, realText, ariaText) {
+      el.textContent = realText;
+      el.setAttribute('aria-label', ariaText || realText); // real text for screen readers
+      if (reduceMotion) return; // static and legible — every option is correct anyway
+
+      const id = setInterval(() => {
+        let out = '';
+        for (let i = 0; i < realText.length; i++) {
+          const ch = realText[i];
+          if (ch === ' ') { out += ' '; continue; }
+          const pool = GLITCH_CHARS + ch.repeat(GLITCH_REAL_WEIGHT);
+          out += pool[Math.floor(Math.random() * pool.length)];
+        }
+        el.textContent = out;
+      }, 90);
+      activeGlitchIntervals.push(id);
+    }
+
     const progressEl = document.getElementById('quizProgress');
     const livesEl = document.getElementById('quizLives');
     const lifePopupEl = document.getElementById('quizLifePopup');
@@ -580,6 +620,7 @@
       sortEl.hidden = true;
       optionsEl.hidden = true;
       optionsEl.innerHTML = '';
+      clearGlitchIntervals();
 
       if (q.type === 'puzzle') {
         puzzleEl.hidden = false;
@@ -606,7 +647,11 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'quiz-option';
-        btn.textContent = q.options[optionIndex];
+        if (q.glitch) {
+          startGlitchText(btn, q.options[optionIndex], q.glitchAria);
+        } else {
+          btn.textContent = q.options[optionIndex];
+        }
         const isCorrect = Array.isArray(q.correct) ? q.correct.includes(optionIndex) : optionIndex === q.correct;
         btn.addEventListener('click', () => {
           handleAnswer(isCorrect, btn, () => Array.from(optionsEl.children).forEach(b => b.disabled = true));
@@ -1056,6 +1101,7 @@
     }
 
     function finishQuiz() {
+      clearGlitchIntervals();
       playEl.hidden = true;
       doneEl.hidden = false;
       passwordRevealEl.textContent = PASSWORD_ANSWER;

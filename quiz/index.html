@@ -124,6 +124,54 @@
       cursor: pointer;
     }
     .quiz-anagram-submit:hover { background: var(--shadow); }
+    .quiz-sort-caption {
+      font-family: var(--label);
+      font-size: 0.75rem;
+      color: var(--ink-soft);
+      text-align: center;
+      margin: 0 0 0.4rem;
+    }
+    .quiz-sort-caption-bottom { margin: 0.6rem 0 1rem; }
+    .quiz-sort-list {
+      position: relative;
+    }
+    .quiz-sort-item {
+      position: absolute;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      height: 2.8rem;
+      padding: 0 0.9rem;
+      font-family: var(--body);
+      font-size: 1rem;
+      color: var(--ink);
+      background: var(--wall-lit);
+      border: var(--edge);
+      border-radius: 3px;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    }
+    .quiz-sort-item.dragging {
+      cursor: grabbing;
+      z-index: 50;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+    }
+    .quiz-sort-list.wrong-flash .quiz-sort-item { background: var(--urgent); color: #fff; }
+    .quiz-sort-list.right-flash .quiz-sort-item { background: #2e7d32; color: #fff; }
+    .quiz-sort-rank {
+      font-family: var(--label);
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+      min-width: 1.4rem;
+    }
+    .quiz-sort-submit {
+      display: block;
+      margin: 1.2rem auto 0;
+    }
     .quiz-feedback {
       font-family: var(--label);
       font-size: 0.8rem;
@@ -238,6 +286,12 @@
             <button type="button" class="quiz-anagram-submit" id="quizAnagramSubmit">Submit</button>
           </div>
         </div>
+        <div id="quizSort" hidden>
+          <p class="quiz-sort-caption">Oldest</p>
+          <div class="quiz-sort-list" id="quizSortList"></div>
+          <p class="quiz-sort-caption quiz-sort-caption-bottom">Youngest</p>
+          <button type="button" class="quiz-anagram-submit quiz-sort-submit" id="quizSortSubmit">Submit Order</button>
+        </div>
       </div>
 
       <p class="quiz-feedback" id="quizFeedback"></p>
@@ -263,6 +317,16 @@
     // This is a starter set, not the full 50 yet — add more objects to
     // this array over time; nothing else needs to change to grow it.
     const QUESTIONS = [
+      {
+        type: "anagram",
+        q: "Unscramble it. The answer is hiding somewhere on this very site.",
+        answer: "The House is listening."
+      },
+      {
+        type: "sort",
+        q: "Drag these residents into order, oldest to youngest in the inbetween.",
+        items: ["Journal", "Mirror", "Abstract Painting", "Blue Marble", "Long Play", "Cassette", "-⁵⁄₂₈", "Dream", "Dumptruck", "Charlie"]
+      },
       {
         type: "puzzle",
         q: "Put the picture back together.",
@@ -429,11 +493,6 @@
         correct: 0,
         trick: true
       },
-      {
-        type: "anagram",
-        q: "Unscramble it. The answer is hiding somewhere on this very site.",
-        answer: "The House is listening."
-      },
     ];
 
     const LIVES_START = 3;
@@ -457,6 +516,9 @@
     const anagramScrambleEl = document.getElementById('quizAnagramScramble');
     const anagramInputEl = document.getElementById('quizAnagramInput');
     const anagramSubmitEl = document.getElementById('quizAnagramSubmit');
+    const sortEl = document.getElementById('quizSort');
+    const sortListEl = document.getElementById('quizSortList');
+    const sortSubmitEl = document.getElementById('quizSortSubmit');
     const feedbackEl = document.getElementById('quizFeedback');
     const playEl = document.getElementById('quizPlay');
     const doneEl = document.getElementById('quizDone');
@@ -515,6 +577,7 @@
       puzzleEl.hidden = true;
       clearPuzzleStage();
       anagramEl.hidden = true;
+      sortEl.hidden = true;
       optionsEl.hidden = true;
       optionsEl.innerHTML = '';
 
@@ -527,6 +590,12 @@
       if (q.type === 'anagram') {
         anagramEl.hidden = false;
         renderAnagram(q);
+        return;
+      }
+
+      if (q.type === 'sort') {
+        sortEl.hidden = false;
+        renderSort(q);
         return;
       }
 
@@ -816,6 +885,110 @@
           }
         });
       });
+    }
+
+    // Drag-to-sort question: a vertical list of items the player reorders
+    // by dragging, checked against q.items (already given oldest-first)
+    // when they hit submit — wrong answers behave like any other question
+    // (lose a life, retry) rather than flashing per-drag.
+    const SORT_ITEM_GAP = 10; // px between stacked rows
+
+    function renderSort(q) {
+      sortListEl.innerHTML = '';
+      sortListEl.classList.remove('wrong-flash', 'right-flash');
+      sortSubmitEl.disabled = false;
+
+      let displayOrder;
+      do {
+        displayOrder = shuffleArray(q.items.map((_, i) => i));
+      } while (displayOrder.every((v, i) => v === i));
+
+      const itemEls = displayOrder.map(correctIndex => {
+        const el = document.createElement('div');
+        el.className = 'quiz-sort-item';
+        el.dataset.correctIndex = correctIndex;
+        el.innerHTML = '<span class="quiz-sort-rank"></span><span class="quiz-sort-label">' + q.items[correctIndex] + '</span>';
+        sortListEl.appendChild(el);
+        return el;
+      });
+
+      attachSortDrag(itemEls);
+    }
+
+    function attachSortDrag(itemEls) {
+      // `order` is the source of truth for display position (index 0 = top
+      // "oldest" slot) — every item's top offset is derived from its index
+      // here, not from DOM order, so a mid-drag reorder is just an array
+      // move followed by a re-layout pass.
+      let order = itemEls.slice();
+      let itemH = 0;
+      let dragEl = null;
+      let dragStartTop = 0;
+      let pointerStartY = 0;
+
+      function layout(animate) {
+        itemH = order[0].getBoundingClientRect().height;
+        sortListEl.style.height = (order.length * itemH + (order.length - 1) * SORT_ITEM_GAP) + 'px';
+        order.forEach((el, i) => {
+          el.style.transition = (animate && el !== dragEl) ? 'top 0.15s ease' : 'none';
+          el.querySelector('.quiz-sort-rank').textContent = (i + 1) + '.';
+          if (el !== dragEl) {
+            el.style.top = (i * (itemH + SORT_ITEM_GAP)) + 'px';
+          }
+        });
+      }
+
+      order.forEach(el => {
+        el.addEventListener('pointerdown', e => {
+          if (dragEl) return;
+          dragEl = el;
+          el.setPointerCapture(e.pointerId);
+          el.classList.add('dragging');
+          pointerStartY = e.clientY;
+          dragStartTop = parseFloat(el.style.top) || 0;
+        });
+
+        el.addEventListener('pointermove', e => {
+          if (el !== dragEl) return;
+          const newTop = dragStartTop + (e.clientY - pointerStartY);
+          el.style.top = newTop + 'px';
+
+          const targetRank = Math.max(0, Math.min(order.length - 1, Math.round(newTop / (itemH + SORT_ITEM_GAP))));
+          const currentRank = order.indexOf(el);
+          if (targetRank !== currentRank) {
+            order.splice(currentRank, 1);
+            order.splice(targetRank, 0, el);
+            layout(true);
+          }
+        });
+
+        el.addEventListener('pointerup', () => {
+          if (el !== dragEl) return;
+          dragEl = null;
+          el.classList.remove('dragging');
+          layout(true);
+        });
+
+        el.addEventListener('pointercancel', () => {
+          if (el === dragEl) {
+            dragEl = null;
+            el.classList.remove('dragging');
+            layout(true);
+          }
+        });
+      });
+
+      layout(false);
+
+      sortSubmitEl.onclick = () => {
+        if (sortSubmitEl.disabled) return;
+        const guessOrder = order.map(el => Number(el.dataset.correctIndex));
+        const isCorrect = guessOrder.every((v, i) => v === i);
+        handleAnswer(isCorrect, sortListEl, () => {
+          order.forEach(el => { el.style.pointerEvents = 'none'; });
+          sortSubmitEl.disabled = true;
+        });
+      };
     }
 
     function handleAnswer(isCorrect, btn, disableFn) {

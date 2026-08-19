@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Locations &middot; The House</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+    <span class="eyebrow breadcrumb"><a href="../resources/">&larr; Resources</a></span>
+
+    <h1>Locations</h1>
+    <p>A rough map of the Inbetween. Drag a photo to move it, or tap one to see more of what's there.</p>
+
+    <div class="location-map" id="locationMap">
+
+      <!-- Each location uses 4 distinct photos: <slug>-1.jpg is the pin
+           polaroid AND the popup's big hero image, <slug>-2/3/4.jpg are
+           the three circle photos in the gallery row. Drop files into
+           images/locations/ under those exact names and they'll show up
+           automatically — nothing else needs to change. Until a file
+           exists at a given path, that spot just shows an empty frame. -->
+
+      <button type="button" class="location-pin" style="--x:48%; --y:38%; --tilt:-3deg;">
+        <img class="location-pin-photo" src="../images/locations/house-1.jpg" alt="" loading="lazy" />
+        <span class="location-pin-caption">The House</span>
+        <template>
+          <div class="location-brochure" data-theme="house">
+            <div class="brochure-hero">
+              <img class="brochure-hero-img" src="../images/locations/house-1.jpg" alt="" loading="lazy" />
+              <div class="brochure-hero-caption">
+                <span class="brochure-eyebrow">The Inbetween</span>
+                <h4 class="brochure-title">The House</h4>
+              </div>
+            </div>
+            <div class="brochure-body">
+              <div class="brochure-gallery">
+                <img src="../images/locations/house-2.jpg" alt="The House" loading="lazy" />
+                <img src="../images/locations/house-3.jpg" alt="The House" loading="lazy" />
+                <img src="../images/locations/house-4.jpg" alt="The House" loading="lazy" />
+              </div>
+              <p>The House sits at the center of the Inbetween &mdash; everything revolves around it. Tucked just out of sight of Town Center in a small forested area, with a clear view of the beach behind it. It houses residents, takes care of them, and controls everything within the Inbetween.</p>
+            </div>
+          </div>
+        </template>
+      </button>
+
+      <button type="button" class="location-pin" style="--x:70%; --y:48%; --tilt:2deg;">
+        <img class="location-pin-photo" src="../images/locations/beach-1.jpg" alt="" loading="lazy" />
+        <span class="location-pin-caption">The Beach</span>
+        <template>
+          <div class="location-brochure" data-theme="beach">
+            <div class="brochure-hero">
+              <img class="brochure-hero-img" src="../images/locations/beach-1.jpg" alt="" loading="lazy" />
+              <div class="brochure-hero-caption">
+                <span class="brochure-eyebrow">The Inbetween</span>
+                <h4 class="brochure-title">The Beach</h4>
+              </div>
+            </div>
+            <div class="brochure-body">
+              <div class="brochure-gallery">
+                <img src="../images/locations/beach-2.jpg" alt="The Beach" loading="lazy" />
+                <img src="../images/locations/beach-3.jpg" alt="The Beach" loading="lazy" />
+                <img src="../images/locations/beach-4.jpg" alt="The Beach" loading="lazy" />
+              </div>
+              <p>Runs the length of the Boardwalk and is open to visitors day and night. Plenty of holidays and events happen here, including the Lantern Festival every Summer.</p>
+            </div>
+          </div>
+        </template>
+      </button>
+
+      <button type="button" class="location-pin" style="--x:80%; --y:58%; --tilt:-2deg;">
+        <img class="location-pin-photo" src="../images/locations/boardwalk-1.jpg" alt="" loading="lazy" />
+        <span class="location-pin-caption">The Boardwalk</span>
+        <template>
+          <div class="location-brochure" data-theme="boardwalk">
+            <div class="brochure-hero">
+              <img class="brochure-hero-img" src="../images/locations/boardwalk-1.jpg" alt="" loading="lazy" />
+              <div class="brochure-hero-caption">
+                <span class="brochure-eyebrow">The Inbetween</span>
+                <h4 class="brochure-title">The Boardwalk</h4>
+              </div>
+            </div>
+            <div class="brochure-body">
+              <div class="brochure-gallery">
+                <img src="../images/locations/boardwalk-2.jpg" alt="The Boardwalk" loading="lazy" />
+                <img src="../images/locations/boardwalk-3.jpg" alt="The Boardwalk" loading="lazy" />
+                <img src="../images/locations/boardwalk-4.jpg" alt="The Boardwalk" loading="lazy" />
+              </div>
+              <p>One of only two places in the Inbetween that are consistently crowded. Lined with small shops and studios built around entertainment and hobbies &mdash; most actual shopping happens at the Market in Town Center instead. The Beach runs alongside it, the other spot that's always buzzing.</p>
+            </div>
+          </div>
+        </template>
+      </button>
+
+      <button type="button" class="location-pin" style="--x:28%; --y:58%; --tilt:4deg;">
+        <img class="location-pin-photo" src="../images/locations/towncenter-1.jpg" alt="" loading="lazy" />
+        <span class="location-pin-caption">Town Center</span>
+        <template>
+          <div class="location-brochure" data-theme="towncenter">
+            <div class="brochure-hero">
+              <img class="brochure-hero-img" src="../images/locations/towncenter-1.jpg" alt="" loading="lazy" />
+              <div class="brochure-hero-caption">
+                <span class="brochure-eyebrow">The Inbetween</span>
+                <h4 class="brochure-title">Town Center</h4>
+              </div>
+            </div>
+            <div class="brochure-body">
+              <div class="brochure-gallery">
+                <img src="../images/locations/towncenter-2.jpg" alt="Town Center" loading="lazy" />
+                <img src="../images/locations/towncenter-3.jpg" alt="Town Center" loading="lazy" />
+                <img src="../images/locations/towncenter-4.jpg" alt="Town Center" loading="lazy" />
+              </div>
+              <p>One of the most important places a resident could end up. The Market is open 24/7 (though not every stall stays open all night, since they're all resident-run), and residents can find nearly anything here that The House hasn't already provided. A bulletin board sits in the main square with calendars, notes, and requests from residents, next to a signpost pointing the way to every notable location in the Inbetween.</p>
+            </div>
+          </div>
+        </template>
+      </button>
+
+      <button type="button" class="location-pin" style="--x:18%; --y:24%; --tilt:-4deg;">
+        <img class="location-pin-photo" src="../images/locations/dreamgarden-1.jpg" alt="" loading="lazy" />
+        <span class="location-pin-caption">The Dream Garden</span>
+        <template>
+          <div class="location-brochure" data-theme="garden">
+            <div class="brochure-hero">
+              <img class="brochure-hero-img" src="../images/locations/dreamgarden-1.jpg" alt="" loading="lazy" />
+              <div class="brochure-hero-caption">
+                <span class="brochure-eyebrow">The Inbetween</span>
+                <h4 class="brochure-title">The Dream Garden</h4>
+              </div>
+            </div>
+            <div class="brochure-body">
+              <div class="brochure-gallery">
+                <img src="../images/locations/dreamgarden-2.jpg" alt="The Dream Garden" loading="lazy" />
+                <img src="../images/locations/dreamgarden-3.jpg" alt="The Dream Garden" loading="lazy" />
+                <img src="../images/locations/dreamgarden-4.jpg" alt="The Dream Garden" loading="lazy" />
+                <span class="brochure-icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+                    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+                  </svg>
+                </span>
+              </div>
+              <p>A sprawling garden full of native and alien flora, spanning several acres &mdash; though the main walkway winds through the whole thing in under fifteen minutes. Many of the plants have their own quirks and abilities, including letting residents watch memories drift by through the petals during New Bloom.</p>
+            </div>
+          </div>
+        </template>
+      </button>
+
+      <button type="button" class="location-pin" style="--x:76%; --y:20%; --tilt:3deg;">
+        <img class="location-pin-photo" src="../images/locations/library-1.jpg" alt="" loading="lazy" />
+        <span class="location-pin-caption">Library of All Pages</span>
+        <template>
+          <div class="location-brochure" data-theme="library">
+            <div class="brochure-hero">
+              <img class="brochure-hero-img" src="../images/locations/library-1.jpg" alt="" loading="lazy" />
+              <div class="brochure-hero-caption">
+                <span class="brochure-eyebrow">The Inbetween</span>
+                <h4 class="brochure-title">The Library of All Pages</h4>
+              </div>
+            </div>
+            <div class="brochure-body">
+              <div class="brochure-gallery">
+                <img src="../images/locations/library-2.jpg" alt="The Library of All Pages" loading="lazy" />
+                <img src="../images/locations/library-3.jpg" alt="The Library of All Pages" loading="lazy" />
+                <img src="../images/locations/library-4.jpg" alt="The Library of All Pages" loading="lazy" />
+              </div>
+              <p>Existed since before the Awakening of The House, and is run entirely by the D.A.I.S.Y. collective. Since they're all AI, none of them actually live in The House &mdash; they stay at the Library around the clock instead. It never technically closes, though few residents visit after 10pm. The catalogue covers millions of topics across hundreds of thousands of other worlds &mdash; though only three books in the whole collection are about the Inbetween itself. It also doubles as an informal school: Pink D.A.I.S.Y. and a few former teachers hold lessons some days.</p>
+            </div>
+          </div>
+        </template>
+      </button>
+
+      <button type="button" class="location-pin" style="--x:44%; --y:78%; --tilt:-3deg;">
+        <img class="location-pin-photo" src="../images/locations/atrium-1.jpg" alt="" loading="lazy" />
+        <span class="location-pin-caption">Atrium of All Skies</span>
+        <template>
+          <div class="location-brochure" data-theme="atrium">
+            <div class="brochure-hero">
+              <img class="brochure-hero-img" src="../images/locations/atrium-1.jpg" alt="" loading="lazy" />
+              <div class="brochure-hero-caption">
+                <span class="brochure-eyebrow">The Inbetween</span>
+                <h4 class="brochure-title">The Atrium of All Skies</h4>
+              </div>
+            </div>
+            <div class="brochure-body">
+              <div class="brochure-gallery">
+                <img src="../images/locations/atrium-2.jpg" alt="The Atrium of All Skies" loading="lazy" />
+                <img src="../images/locations/atrium-3.jpg" alt="The Atrium of All Skies" loading="lazy" />
+                <img src="../images/locations/atrium-4.jpg" alt="The Atrium of All Skies" loading="lazy" />
+              </div>
+              <p>A large building that's deceptively bigger on the inside than its footprint suggests. Hundreds of rooms inside, each one holding a small simulated field under the sky of a world some resident left behind &mdash; your own, or one you've never seen. The weather's always pleasant, so residents come here for a little warmth outdoors even in the dead of Winter.</p>
+            </div>
+          </div>
+        </template>
+      </button>
+
+      <button type="button" class="location-pin" style="--x:14%; --y:75%; --tilt:2deg;">
+        <img class="location-pin-photo" src="../images/locations/theatre-1.jpg" alt="" loading="lazy" />
+        <span class="location-pin-caption">Playback Theatre</span>
+        <template>
+          <div class="location-brochure" data-theme="theatre">
+            <div class="brochure-hero">
+              <img class="brochure-hero-img" src="../images/locations/theatre-1.jpg" alt="" loading="lazy" />
+              <div class="brochure-hero-caption">
+                <span class="brochure-eyebrow">The Inbetween</span>
+                <h4 class="brochure-title">The Playback Theatre</h4>
+              </div>
+            </div>
+            <div class="brochure-body">
+              <div class="brochure-gallery">
+                <img src="../images/locations/theatre-2.jpg" alt="The Playback Theatre" loading="lazy" />
+                <img src="../images/locations/theatre-3.jpg" alt="The Playback Theatre" loading="lazy" />
+                <img src="../images/locations/theatre-4.jpg" alt="The Playback Theatre" loading="lazy" />
+              </div>
+              <p>One of the Inbetween's recreational spots, with only two showings a day &mdash; one in the morning, one in the evening &mdash; and open for general use the rest of the time. Nothing is ever posted about what's actually playing except its genre, which is part of the mystery. In truth, the theatre's employees are each quietly handed a single memory from a resident of the Inbetween to dramatize for the stage &mdash; sometimes played for laughs, sometimes played uncomfortably close to the bone. Residents occasionally find themselves watching their own memory performed back at them, and don't always leave in better spirits than they arrived. When that happens, they're pointed toward The Replay next door.</p>
+            </div>
+          </div>
+        </template>
+      </button>
+
+      <button type="button" class="location-pin" style="--x:20%; --y:86%; --tilt:-2deg;">
+        <img class="location-pin-photo" src="../images/locations/replay-1.jpg" alt="" loading="lazy" />
+        <span class="location-pin-caption">The Replay</span>
+        <template>
+          <div class="location-brochure" data-theme="replay">
+            <div class="brochure-hero">
+              <img class="brochure-hero-img" src="../images/locations/replay-1.jpg" alt="" loading="lazy" />
+              <div class="brochure-hero-caption">
+                <span class="brochure-eyebrow">The Inbetween</span>
+                <h4 class="brochure-title">The Replay</h4>
+              </div>
+            </div>
+            <div class="brochure-body">
+              <div class="brochure-gallery">
+                <img src="../images/locations/replay-2.jpg" alt="The Replay" loading="lazy" />
+                <img src="../images/locations/replay-3.jpg" alt="The Replay" loading="lazy" />
+                <img src="../images/locations/replay-4.jpg" alt="The Replay" loading="lazy" />
+              </div>
+              <p>A bar and grill attached to the Playback Theatre, with its own streetside entrance separate from the theatre's foot traffic. A standard hangout spot, with a smaller section set aside nearer the theatre for underage patrons and families.</p>
+            </div>
+          </div>
+        </template>
+      </button>
+
+    </div>
+
+  </main>
+
+  <div class="note-overlay" id="note-overlay">
+    <div class="note-panel" id="note-content">
+      <button class="note-close" id="note-close">&times;</button>
+      <div id="note-body"></div>
+    </div>
+  </div>
+
+  <site-footer></site-footer>
+
+  <script src="../components.js" defer></script>
+  <script src="../locations.js" defer></script>
+</body>
+</html>

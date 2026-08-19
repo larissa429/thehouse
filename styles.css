@@ -1312,6 +1312,201 @@ a.tag { text-decoration: none; }
   box-shadow: 0 20px 34px rgba(0,0,0,0.6);
 }
 
+/* ============================================================
+   LOCATION MAP — resources/locations
+   ============================================================ */
+.location-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-width: 56rem;
+  margin: 2rem auto;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(227, 169, 78, 0.09), transparent 55%),
+    radial-gradient(circle at 75% 75%, rgba(227, 169, 78, 0.06), transparent 50%),
+    var(--wall);
+  border: var(--edge);
+  border-radius: 6px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 60px rgba(0,0,0,0.35);
+  overflow: hidden;
+}
+/* pinned-polaroid style — a photo pin, not just a dot marker. Draggable,
+   same as the trivia notes and connections-board pins elsewhere. */
+.location-pin {
+  position: absolute;
+  left: var(--x, 50%);
+  top: var(--y, 50%);
+  transform: translate(-50%, -50%) rotate(var(--tilt, -2deg));
+  width: 92px;
+  background: #f2f1ee;
+  border: none;
+  border-radius: 2px;
+  padding: 0.4rem 0.4rem 1.5rem;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.5);
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, z-index 0s;
+}
+.location-pin:active { cursor: grabbing; }
+.location-pin:hover,
+.location-pin:focus-visible {
+  transform: translate(-50%, -50%) rotate(var(--tilt, -2deg)) scale(1.1);
+  box-shadow: 0 14px 26px rgba(0,0,0,0.6);
+  z-index: 5;
+}
+.location-pin-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--wall-lit);
+}
+.location-pin-caption {
+  position: absolute;
+  left: 0.4rem;
+  right: 0.4rem;
+  bottom: 0.35rem;
+  font-family: var(--hand);
+  font-size: 0.82rem;
+  line-height: 1.05;
+  color: #2e2118;
+  text-align: center;
+}
+@media (max-width: 700px) {
+  .location-map { aspect-ratio: 3 / 4; }
+  .location-pin { width: 74px; padding: 0.3rem 0.3rem 1.2rem; }
+  .location-pin-caption { font-size: 0.72rem; }
+}
+
+/* ---- LOCATION BROCHURE POPUP --------------------------------
+   Replaces the sticky-note look just for this page's popup — a
+   little travel-brochure panel instead, themed per location via
+   data-theme (same idea as the connection-note data-color themes).
+   The .note-panel wrapper is a plain, unstyled shell; the brochure
+   itself supplies its own background/shadow so each theme reads
+   as a distinct little postcard. ------------------------------- */
+.note-panel {
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  max-width: 26rem;
+  transform: none;
+}
+.note-panel .note-close {
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 8, 6, 0.55);
+  color: #fff;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.location-brochure {
+  --b-bg: var(--wall);
+  --b-accent: var(--lamp);
+  --b-text: var(--ink);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--b-bg);
+  color: var(--b-text);
+  box-shadow: 0 20px 44px rgba(0,0,0,0.55);
+}
+.location-brochure[data-theme="house"]       { --b-bg: #3a2a1c; --b-accent: #e3a94e; --b-text: #f3e9d8; }
+.location-brochure[data-theme="beach"]       { --b-bg: #1c5b73; --b-accent: #f4d58d; --b-text: #eef8fb; }
+.location-brochure[data-theme="boardwalk"]   { --b-bg: #1f6f78; --b-accent: #ff9f4d; --b-text: #fff6e8; }
+.location-brochure[data-theme="towncenter"]  { --b-bg: #7a3b1e; --b-accent: #f2b544; --b-text: #fbeee0; }
+.location-brochure[data-theme="garden"]      { --b-bg: #2f4a34; --b-accent: #a8d5ba; --b-text: #eef7ee; }
+.location-brochure[data-theme="library"]     { --b-bg: #23243d; --b-accent: #c9a24b; --b-text: #ece8f4; }
+.location-brochure[data-theme="atrium"]      { --b-bg: #3d3159; --b-accent: #f2a6c8; --b-text: #f6eefb; }
+.location-brochure[data-theme="theatre"]     { --b-bg: #4a1620; --b-accent: #d4a446; --b-text: #f7e9de; }
+.location-brochure[data-theme="replay"]      { --b-bg: #4a3018; --b-accent: #e0975a; --b-text: #f7ead9; }
+
+.brochure-hero { position: relative; }
+.brochure-hero-img {
+  width: 100%;
+  height: 11rem;
+  object-fit: cover;
+  display: block;
+  background: rgba(0,0,0,0.2);
+}
+.brochure-hero-caption {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 1rem 1.2rem 0.7rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+}
+.brochure-eyebrow {
+  display: block;
+  font-family: var(--label);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--b-accent);
+  margin-bottom: 0.2rem;
+}
+.brochure-title {
+  font-family: var(--display);
+  font-size: 1.9rem;
+  color: #fff;
+  margin: 0;
+  line-height: 1.1;
+}
+.brochure-body { padding: 1.1rem 1.3rem 1.4rem; }
+.brochure-gallery {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  margin: 0 0 1rem;
+  padding: 0.2rem 0.1rem 0.4rem;
+}
+.brochure-gallery img {
+  flex: 0 0 auto;
+  width: 5rem;
+  height: 5rem;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid var(--b-accent);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.2);
+}
+/* a themed SVG icon slot, sized to match the photo circles — fills the
+   row out to four items so the gallery never ends on an empty gap */
+.brochure-icon {
+  flex: 0 0 auto;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  border: 3px solid var(--b-accent);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--b-accent);
+}
+.brochure-icon svg {
+  width: 2.1rem;
+  height: 2.1rem;
+}
+.brochure-body p {
+  margin: 0;
+  font-family: var(--body);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--b-text);
+}
+@media (max-width: 700px) {
+  .brochure-title { font-size: 1.5rem; }
+  .brochure-gallery img,
+  .brochure-icon { width: 4.4rem; height: 4.4rem; }
+  .brochure-icon svg { width: 1.8rem; height: 1.8rem; }
+}
+
 .char-pagination {
   display: flex;
   justify-content: space-between;

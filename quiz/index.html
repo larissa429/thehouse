@@ -318,28 +318,6 @@
     // this array over time; nothing else needs to change to grow it.
     const QUESTIONS = [
       {
-        type: "anagram",
-        q: "Unscramble it. The answer is hiding somewhere on this very site.",
-        answer: "The House is listening."
-      },
-      {
-        type: "sort",
-        q: "Drag these residents into order, oldest to youngest in the inbetween.",
-        items: ["Journal", "Mirror", "Abstract Painting", "Blue Marble", "Long Play", "Cassette", "-⁵⁄₂₈", "Dream", "Dumptruck", "Charlie"]
-      },
-      {
-        q: "Who's in the basement?",
-        glitch: true,
-        glitchAria: "Redacted",
-        options: ["#####", "###", "######", "####"],
-        correct: [0, 1, 2, 3]
-      },
-      {
-        type: "puzzle",
-        q: "Put the picture back together.",
-        image: "../images/promo.webp"
-      },
-      {
         q: "What does D.A.I.S.Y. actually stand for?",
         options: [
           "Directory And Index System... Yes!",
@@ -386,21 +364,6 @@
         correct: 3
       },
       {
-        q: "Who was last seen pulling residents clear of the crowd during Summer 28th?",
-        options: ["Snaps", "Journal", "Parker", "-⁵⁄₂₈"],
-        correct: 2
-      },
-      {
-        q: "What object is Parker?",
-        options: ["A parking meter", "A lantern", "A life preserver", "A streetlamp"],
-        correct: 0
-      },
-      {
-        q: "What object is Snaps?",
-        options: ["A photo album", "A polaroid", "A camera", "A pair of scissors"],
-        correct: 2
-      },
-      {
         q: "How many residents does The House have?",
         options: ["42", "1,875", "2.7 million", "The correct number of residents"],
         correct: 3,
@@ -417,9 +380,22 @@
         correct: [0, 3]
       },
       {
-        q: "What object is Long Play?",
-        options: ["A vinyl record", "A cassette tape", "A record player", "A CD"],
+        q: "Why did LP struggle to communicate for most of her life, until meeting Cassette?",
+        options: [
+          "She was born without a mouth",
+          "She's mute by choice",
+          "She only speaks in song lyrics",
+          "She doesn't trust anyone easily"
+        ],
         correct: 0
+      },
+      {
+        q: "What was LP originally called, before The House?",
+        glitch: true,
+        glitchAria: "Redacted",
+        options: ["######", "##", "#########", "###"],
+        correct: [0, 1, 2, 3],
+        trick: true
       },
       {
         q: "Which D.A.I.S.Y. serves as head librarian of the Library of All Pages?",
@@ -435,6 +411,17 @@
         q: "Who is Long Play's girlfriend?",
         options: ["Mirror", "Blue Marble", "Cassette", "Dumptruck"],
         correct: 2
+      },
+      {
+        type: "puzzle",
+        q: "Put the picture back together.",
+        image: "../images/promo.webp"
+      },
+      {
+        q: "Who is Penny?",
+        options: ["???", "???", "???", "???"],
+        correct: [0, 1, 2, 3],
+        trick: true
       },
       {
         q: "Who does Abstract Painting think she is?",
@@ -469,13 +456,23 @@
         trick: true
       },
       {
-        q: "What is Dream?",
-        options: ["Sentient memories", "Off color yinyang symbol", "-⁵⁄₂₈'s imaginary friend", "Some cool looking clouds"],
+        q: "What is Dream, really?",
+        options: [
+          "A rare overflow of memories from the Dream Garden that somehow gained sentience",
+          "One of -⁵⁄₂₈'s creations",
+          "A ghost from another world entirely",
+          "Off-color yin-yang symbol"
+        ],
         correct: 0
       },
       {
-        q: "Where is Dream from?",
-        options: ["The Dream Garden", "-⁵⁄₂₈'s world", "Earth", "Universe W-716X"],
+        q: "Who picked Dream's name?",
+        options: [
+          "Dream did, itself",
+          "-⁵⁄₂₈ named it",
+          "Green D.A.I.S.Y. assigned it",
+          "It doesn't have a real name"
+        ],
         correct: 0
       },
       {
@@ -489,16 +486,170 @@
         correct: 0
       },
       {
-        q: "Who is Penny?",
-        options: ["???", "???", "???", "???"],
-        correct: [0, 1, 2, 3],
-        trick: true
-      },
-      {
         q: "How do you say -⁵⁄₂₈'s name?",
         options: ["Negative five twenty eighths", "Negative five over twenty eight", "Neggy five", "You don't — you just point"],
         correct: 0,
         trick: true
+      },
+      {
+        q: "What's the actual cause of Dumptruck's lisp?",
+        options: [
+          "The pointy tooth sticking out of the left side of her mouth",
+          "She talks with her mouth full of trash",
+          "A dent in her hopper",
+          "She's still learning to speak"
+        ],
+        correct: 0
+      },
+      {
+        q: "What set off Liz's meltdown at school?",
+        options: [
+          "Her teacher confiscated Charlie during a test",
+          "She failed a math test",
+          "Brayden broke her solar system diorama",
+          "She lost her backpack"
+        ],
+        correct: 0
+      },
+      {
+        q: "Between Cool S and Clickbaity, who's actually good at video games?",
+        options: ["Cool S", "Clickbaity", "Neither of them", "Both, equally"],
+        correct: 0
+      },
+      {
+        type: "sort",
+        q: "Drag these residents into order, oldest to youngest in the inbetween.",
+        items: ["Journal", "Mirror", "Abstract Painting", "Blue Marble", "Long Play", "Cassette", "-⁵⁄₂₈", "Dream", "Dumptruck", "Charlie"]
+      },
+      {
+        q: "Why does Cassette specifically dislike PBC?",
+        options: [
+          "He likes to mess with LP",
+          "He's loud and disruptive during Library Quiet Hours",
+          "He ruined one of her mixtapes",
+          "He's rude to Blue Marble"
+        ],
+        correct: 0
+      },
+      {
+        q: "What brought Cassette and Blue Marble closer?",
+        options: [
+          "An accident left Blue Marble disabled",
+          "They started rooming together",
+          "Blue Marble helped Cassette learn to skate",
+          "They share the same favorite resident"
+        ],
+        correct: 0
+      },
+      {
+        q: "Which authority figure do Cool S and Clickbaity know better than to cross twice in one visit?",
+        options: ["Green D.A.I.S.Y.", "Journal", "Abstract Painting", "PBC"],
+        correct: 0
+      },
+      {
+        q: "Which of these has NOT been credited for character art on this site?",
+        options: ["KrunchKo_", "timbrainpopkinnie", "bluelight.lobster", "moonlit.static"],
+        correct: 3,
+        trick: true
+      },
+      {
+        q: "One more — which of these artists is made up?",
+        options: ["ladyworld", "hydro.xyzine", "papercut.moth", "KrunchKo_"],
+        correct: 2,
+        trick: true
+      },
+      {
+        q: "How many days make up one bloom, a full year in the Inbetween?",
+        options: ["100", "112", "28", "365"],
+        correct: 1
+      },
+      {
+        q: "What happens during New Bloom?",
+        options: [
+          "The Dream Garden blooms all at once",
+          "Every resident receives a gift",
+          "The House rearranges its rooms",
+          "A parade marches down the Boardwalk"
+        ],
+        correct: 0
+      },
+      {
+        q: "What holiday brings Spring Cleaning week to a close?",
+        options: ["The Sunrise Feast", "New Bloom", "The Grand Potluck", "Block Party"],
+        correct: 0
+      },
+      {
+        q: "What is Block Party meant to celebrate?",
+        options: ["Individuality", "The New Year", "Surviving winter", "Friendship"],
+        correct: 0
+      },
+      {
+        q: "What is the Lantern Festival actually for?",
+        options: [
+          "Remembering worlds and loved ones lost or left behind",
+          "Celebrating the year's first harvest",
+          "Welcoming new residents to the House",
+          "Marking the midpoint of the bloom"
+        ],
+        correct: 0
+      },
+      {
+        q: "What do the Inbetween's children do on the first night of the Night Market?",
+        options: ["Candy Run", "Light lanterns", "Tell ghost stories", "Trade masks"],
+        correct: 0
+      },
+      {
+        q: "How many nights does Hearthlights last?",
+        options: ["One", "Two", "Three", "Four"],
+        correct: 2
+      },
+      {
+        q: "What marks the very last day of the bloom?",
+        options: ["Year's End", "The Grand Potluck", "Hearthlights", "New Bloom"],
+        correct: 0
+      },
+      {
+        q: "Every season ends in a holiday on its 28th day. Which season ends with the Lantern Festival?",
+        options: ["Spring", "Summer", "Fall", "Winter"],
+        correct: 1,
+        trick: true
+      },
+      {
+        type: "anagram",
+        q: "Unscramble it. The answer is hiding somewhere on this very site.",
+        answer: "The House is listening."
+      },
+      {
+        q: "Who's in the basement?",
+        glitch: true,
+        glitchAria: "Redacted",
+        options: ["#####", "###", "######", "####"],
+        correct: [0, 1, 2, 3]
+      },
+      {
+        q: "What object is Parker?",
+        options: ["A parking meter", "A lantern", "A life preserver", "A streetlamp"],
+        correct: 0
+      },
+      {
+        q: "What object is Snaps?",
+        options: ["A photo album", "A polaroid", "A camera", "A pair of scissors"],
+        correct: 2
+      },
+      {
+        q: "Who was last seen pulling residents clear of the crowd during Summer 28th?",
+        options: ["Snaps", "Journal", "Parker", "-⁵⁄₂₈"],
+        correct: 2
+      },
+      {
+        q: "Where can you find The House's own page?",
+        options: [
+          "Tucked into Journal's \"favorite resident\" link",
+          "Listed on the Residents page",
+          "Linked in the site footer",
+          "Under the Resources page"
+        ],
+        correct: 0
       },
     ];
 

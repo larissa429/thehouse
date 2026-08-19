@@ -160,8 +160,8 @@
       z-index: 50;
       box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
     }
-    .quiz-sort-list.wrong-flash .quiz-sort-item { background: var(--urgent); color: #fff; }
-    .quiz-sort-list.right-flash .quiz-sort-item { background: #2e7d32; color: #fff; }
+    .quiz-sort-item.wrong-flash { background: var(--urgent); color: #fff; }
+    .quiz-sort-item.right-flash { background: #2e7d32; color: #fff; }
     .quiz-sort-rank {
       font-family: var(--label);
       font-size: 0.8rem;
@@ -889,13 +889,14 @@
 
     // Drag-to-sort question: a vertical list of items the player reorders
     // by dragging, checked against q.items (already given oldest-first)
-    // when they hit submit — wrong answers behave like any other question
-    // (lose a life, retry) rather than flashing per-drag.
+    // when they hit submit. Unlike other question types, a wrong submit
+    // doesn't reshuffle back to a fresh layout — the player's current
+    // arrangement stays put so they can adjust it, and items already in
+    // the right slot flash green even if the overall order is still wrong.
     const SORT_ITEM_GAP = 10; // px between stacked rows
 
     function renderSort(q) {
       sortListEl.innerHTML = '';
-      sortListEl.classList.remove('wrong-flash', 'right-flash');
       sortSubmitEl.disabled = false;
 
       let displayOrder;
@@ -982,12 +983,44 @@
 
       sortSubmitEl.onclick = () => {
         if (sortSubmitEl.disabled) return;
-        const guessOrder = order.map(el => Number(el.dataset.correctIndex));
-        const isCorrect = guessOrder.every((v, i) => v === i);
-        handleAnswer(isCorrect, sortListEl, () => {
-          order.forEach(el => { el.style.pointerEvents = 'none'; });
-          sortSubmitEl.disabled = true;
+        sortSubmitEl.disabled = true;
+        order.forEach(el => { el.style.pointerEvents = 'none'; });
+
+        const correctness = order.map((el, i) => Number(el.dataset.correctIndex) === i);
+        const isCorrect = correctness.every(Boolean);
+        order.forEach((el, i) => {
+          el.classList.add(correctness[i] ? 'right-flash' : 'wrong-flash');
         });
+
+        if (isCorrect) {
+          setTimeout(advance, 450);
+          return;
+        }
+
+        lives--;
+        renderLives();
+        cardEl.classList.remove('shake');
+        void cardEl.offsetWidth;
+        cardEl.classList.add('shake');
+
+        if (lives <= 0) {
+          feedbackEl.textContent = "Out of lives. Back to the start.";
+          setTimeout(() => {
+            current = 0;
+            lives = LIVES_START;
+            renderLives();
+            renderQuestion();
+          }, 900);
+        } else {
+          feedbackEl.textContent = "Wrong. " + lives + " " + (lives === 1 ? "life" : "lives") + " left. Try this one again.";
+          setTimeout(() => {
+            order.forEach(el => {
+              el.classList.remove('right-flash', 'wrong-flash');
+              el.style.pointerEvents = '';
+            });
+            sortSubmitEl.disabled = false;
+          }, 900);
+        }
       };
     }
 

@@ -1459,6 +1459,7 @@ a.tag { text-decoration: none; }
 .brochure-body { padding: 1.1rem 1.3rem 1.4rem; }
 .brochure-gallery {
   display: flex;
+  justify-content: center;
   gap: 0.6rem;
   overflow-x: auto;
   margin: 0 0 1rem;

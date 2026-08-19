@@ -1372,10 +1372,36 @@ a.tag { text-decoration: none; }
   color: #2e2118;
   text-align: center;
 }
+.map-hint-mobile { display: none; }
 @media (max-width: 700px) {
-  .location-map { aspect-ratio: 3 / 4; }
-  .location-pin { width: 104px; padding: 0.4rem 0.4rem 2.5rem; }
-  .location-pin-caption { font-size: 0.76rem; bottom: 0.35rem; }
+  .map-hint-desktop { display: none; }
+  .map-hint-mobile { display: inline; }
+  /* free-form dragging doesn't translate well to a small touchscreen —
+     the map becomes a wrapping grid instead, laid out top-to-bottom in
+     document order rather than pinned at fixed coordinates, so nothing
+     can overlap regardless of how many locations get added later */
+  .location-map {
+    aspect-ratio: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.4rem 1rem;
+  }
+  .location-pin {
+    position: static;
+    width: 122px;
+    padding: 0.4rem 0.4rem 2.2rem;
+    transform: rotate(var(--tilt, -2deg));
+    cursor: pointer;
+    touch-action: auto;
+  }
+  .location-pin:hover,
+  .location-pin:focus-visible {
+    transform: rotate(var(--tilt, -2deg)) scale(1.06);
+    z-index: 1;
+  }
+  .location-pin-caption { font-size: 0.78rem; bottom: 0.35rem; }
 }
 
 /* ---- LOCATION BROCHURE POPUP --------------------------------

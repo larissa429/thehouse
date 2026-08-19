@@ -59,43 +59,51 @@
     });
   }
 
+  // Below the 700px breakpoint the map switches to a static wrapping grid
+  // (see styles.css) — dragging a pin there would have nothing visible to
+  // do, since position is no longer absolute, so skip wiring it up at all
+  // rather than fighting the page's own touch scrolling for no benefit.
+  var dragEnabled = window.matchMedia('(min-width: 701px)').matches;
+
   map.querySelectorAll('.location-pin').forEach(function (pin) {
     var dragging = false, moved = false, justDragged = false;
     var startClientX, startClientY, startXPct, startYPct;
 
-    pin.addEventListener('pointerdown', function (e) {
-      dragging = true;
-      moved = false;
-      pin.setPointerCapture(e.pointerId);
-      startClientX = e.clientX;
-      startClientY = e.clientY;
-      // NOT `|| 50` — 0% is falsy in JS and would wrongly snap to center
-      var parsedX = parseFloat(pin.style.getPropertyValue('--x'));
-      var parsedY = parseFloat(pin.style.getPropertyValue('--y'));
-      startXPct = isNaN(parsedX) ? 50 : parsedX;
-      startYPct = isNaN(parsedY) ? 50 : parsedY;
-      e.preventDefault();
-    });
+    if (dragEnabled) {
+      pin.addEventListener('pointerdown', function (e) {
+        dragging = true;
+        moved = false;
+        pin.setPointerCapture(e.pointerId);
+        startClientX = e.clientX;
+        startClientY = e.clientY;
+        // NOT `|| 50` — 0% is falsy in JS and would wrongly snap to center
+        var parsedX = parseFloat(pin.style.getPropertyValue('--x'));
+        var parsedY = parseFloat(pin.style.getPropertyValue('--y'));
+        startXPct = isNaN(parsedX) ? 50 : parsedX;
+        startYPct = isNaN(parsedY) ? 50 : parsedY;
+        e.preventDefault();
+      });
 
-    pin.addEventListener('pointermove', function (e) {
-      if (!dragging) return;
-      var dx = e.clientX - startClientX;
-      var dy = e.clientY - startClientY;
-      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
-      if (!moved) return;
-      var b = map.getBoundingClientRect();
-      var newX = Math.max(0, Math.min(100, startXPct + (dx / b.width) * 100));
-      var newY = Math.max(0, Math.min(100, startYPct + (dy / b.height) * 100));
-      pin.style.setProperty('--x', newX + '%');
-      pin.style.setProperty('--y', newY + '%');
-    });
+      pin.addEventListener('pointermove', function (e) {
+        if (!dragging) return;
+        var dx = e.clientX - startClientX;
+        var dy = e.clientY - startClientY;
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+        if (!moved) return;
+        var b = map.getBoundingClientRect();
+        var newX = Math.max(0, Math.min(100, startXPct + (dx / b.width) * 100));
+        var newY = Math.max(0, Math.min(100, startYPct + (dy / b.height) * 100));
+        pin.style.setProperty('--x', newX + '%');
+        pin.style.setProperty('--y', newY + '%');
+      });
 
-    function endDrag() {
-      if (dragging && moved) justDragged = true;
-      dragging = false;
+      function endDrag() {
+        if (dragging && moved) justDragged = true;
+        dragging = false;
+      }
+      pin.addEventListener('pointerup', endDrag);
+      pin.addEventListener('pointercancel', endDrag);
     }
-    pin.addEventListener('pointerup', endDrag);
-    pin.addEventListener('pointercancel', endDrag);
 
     pin.addEventListener('click', function () {
       if (justDragged) { justDragged = false; return; }

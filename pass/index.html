@@ -345,11 +345,11 @@
     }
 
     if (guessHash === PENNY_HASH) {
-      window.location.href = 'penny/';
+      window.location.href = '../penny/';
     } else if (guessHash === SUMMER_HASH) {
-      window.location.href = 'archive/';
+      window.location.href = '../archive/';
     } else if (guessHash === QUIZ_HASH) {
-      window.location.href = 'quizsecret/';
+      window.location.href = '../quizsecret/';
     } else {
       status.textContent = "Incorrect password.";
       win.classList.remove('shake');
@@ -369,7 +369,7 @@
   });
 
   closeBtn.addEventListener('click', () => {
-    window.location.href = 'index.html';
+    window.location.href = '../';
   });
 </script>
 

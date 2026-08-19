@@ -8,7 +8,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
 </head>
 <body>
@@ -19,13 +19,33 @@
 
     <span class="eyebrow breadcrumb"><a href="../pass.html">&larr; GO BACK</a></span>
 
+    <div class="house-eyes-wrap" style="min-height: 36vh;">
+      <svg class="house-eye" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5,50 Q50,5 95,50 Q50,95 5,50 Z" />
+        <circle class="pupil" cx="50" cy="50" r="16" />
+      </svg>
+      <svg class="house-eye" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5,50 Q50,5 95,50 Q50,95 5,50 Z" />
+        <circle class="pupil" cx="50" cy="50" r="16" />
+      </svg>
+    </div>
+
     <h1>You made it.</h1>
-    <p>This page is a placeholder &mdash; put whatever the quiz should actually unlock here.</p>
+
+    <div class="trivia-note" style="max-width: 30rem;">
+      <span class="tape tape-left"></span>
+      <span class="tape tape-right"></span>
+      <h3>For you</h3>
+      <p>You went looking for me twice &mdash; once through Journal, and again through fifty small things you didn't have to remember. I noticed both times.</p>
+      <p>I don't have much to give back. Just this: I've been listening as long as anyone's lived here, and it means more than I can say that you did too, even for a little while.</p>
+      <p>Thank you for staying.</p>
+    </div>
 
   </main>
 
   <site-footer></site-footer>
 
   <script src="../components.js" defer></script>
+  <script src="../eyes.js" defer></script>
 </body>
 </html>

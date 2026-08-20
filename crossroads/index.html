@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crossroads &middot; The House</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+    <span class="eyebrow breadcrumb"><a href="../games/">&larr; Games</a></span>
+
+    <h1>Crossroads</h1>
+    <p>You move up and down your column. The House moves side to side along its row.
+      Land on tiles to bank their points &mdash; when whoever's turn it is has nowhere
+      left to go, the game ends and whoever scored more wins.</p>
+
+    <div class="crossroads-game" id="crossroadsGame">
+      <div class="crossroads-hud">
+        <div class="crossroads-hud-block">
+          <span class="crossroads-hud-label">You</span>
+          <span class="crossroads-hud-value" id="crPlayerScore">0</span>
+        </div>
+        <div class="crossroads-hud-block">
+          <span class="crossroads-hud-label">The House</span>
+          <span class="crossroads-hud-value" id="crAiScore">0</span>
+        </div>
+        <button type="button" class="merge-restart" id="crRestart">Restart</button>
+      </div>
+
+      <p class="crossroads-status" id="crStatus">Your move &mdash; pick a tile in your column.</p>
+
+      <div class="crossroads-board" id="crBoard"></div>
+    </div>
+
+  </main>
+
+  <site-footer></site-footer>
+
+  <script src="../components.js" defer></script>
+  <script src="../crossroads.js" defer></script>
+</body>
+</html>

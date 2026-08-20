@@ -1693,6 +1693,97 @@ a.tag { text-decoration: none; }
   margin: 0 0 0.4rem;
 }
 
+/* ---- CROSSROADS (grid duel vs The House) ---------------------- */
+.crossroads-game {
+  max-width: 22rem;
+  margin: 2rem auto;
+}
+.crossroads-hud {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  margin-bottom: 0.6rem;
+}
+.crossroads-hud-block {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.crossroads-hud-label {
+  font-family: var(--label);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.crossroads-hud-value {
+  font-family: var(--display);
+  font-size: 1.3rem;
+  color: var(--ink);
+}
+.crossroads-status {
+  font-family: var(--body);
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  margin: 0 0 0.8rem;
+  min-height: 1.3em;
+}
+.crossroads-board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.4rem;
+  background: var(--wall);
+  border: var(--edge);
+  border-radius: 6px;
+  padding: 0.6rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+.crossroads-tile {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--label);
+  font-size: 0.95rem;
+  font-weight: bold;
+  background: var(--wall-lit);
+  color: var(--ink-soft);
+  border: 1px solid rgba(227, 169, 78, 0.18);
+  border-radius: 4px;
+  cursor: default;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.crossroads-tile.is-positive { color: #6fbf73; }
+.crossroads-tile.is-negative { color: #e2726b; }
+.crossroads-tile.is-consumed {
+  background: rgba(0,0,0,0.2);
+  color: transparent;
+  border-color: rgba(227, 169, 78, 0.06);
+}
+.crossroads-tile.is-token {
+  background: var(--lamp);
+  border-color: var(--lamp);
+  padding: 0.2rem;
+}
+.crossroads-token-sprite {
+  width: 65%;
+  height: 65%;
+  color: #241a12;
+}
+.crossroads-tile.is-legal {
+  cursor: pointer;
+  border-color: var(--lamp);
+  box-shadow: 0 0 0 1px var(--lamp) inset;
+}
+.crossroads-tile.is-legal:hover {
+  transform: scale(1.06);
+  background: rgba(227, 169, 78, 0.22);
+}
+.crossroads-tile:disabled {
+  cursor: default;
+}
+
 .char-pagination {
   display: flex;
   justify-content: space-between;

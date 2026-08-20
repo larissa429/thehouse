@@ -60,7 +60,7 @@
     { name: 'Mirror', icon: 'mirror.png', radius: 73, zoom: 1.45, offsetY: -0.07 },
     // Journal's is the most off-center of all of them — background square
     // is barely half the canvas width, shifted well to the right
-    { name: 'Journal', icon: 'journal.png', radius: 80, zoom: 1.95, offsetX: 0.15, offsetY: -0.03 },
+    { name: 'Journal', icon: 'journal.png', radius: 80, zoom: 1.5, offsetX: 0.06, offsetY: -0.02 },
     { name: 'The House', icon: 'the house.png', radius: 90 }
   ];
 

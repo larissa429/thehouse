@@ -7,7 +7,7 @@
   <meta name="description" content="The House &middot; an object show" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&family=Quintessential&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
 </head>
 <body>
@@ -19,18 +19,20 @@
     <span class="eyebrow breadcrumb"><a href="../games/">&larr; Games</a></span>
 
     <h1>Crossroads</h1>
-    <p>You move up and down your column. The House moves side to side along its row.
+    <p>You move up and down your column. Your opponent moves side to side along its row.
       Land on tiles to bank their points &mdash; when whoever's turn it is has nowhere
       left to go, the game ends and whoever scored more wins.</p>
 
     <div class="crossroads-game" id="crossroadsGame">
+      <div class="crossroads-opponent-select" id="crOpponentSelect" role="group" aria-label="Choose your opponent"></div>
+
       <div class="crossroads-hud">
         <div class="crossroads-hud-block">
           <span class="crossroads-hud-label">You</span>
           <span class="crossroads-hud-value" id="crPlayerScore">0</span>
         </div>
         <div class="crossroads-hud-block">
-          <span class="crossroads-hud-label">The House</span>
+          <span class="crossroads-hud-label" id="crAiLabel">The House</span>
           <span class="crossroads-hud-value" id="crAiScore">0</span>
         </div>
         <button type="button" class="merge-restart" id="crRestart">Restart</button>
@@ -38,7 +40,15 @@
 
       <p class="crossroads-status" id="crStatus">Your move &mdash; pick a tile in your column.</p>
 
-      <div class="crossroads-board" id="crBoard"></div>
+      <div class="crossroads-board-wrap">
+        <div class="crossroads-bubble" id="crBubble"><span id="crBubbleText"></span></div>
+        <div class="crossroads-board" id="crBoard"></div>
+        <div class="merge-gameover" id="crGameOver" hidden>
+          <p class="merge-gameover-title" id="crGameOverTitle">You win!</p>
+          <p class="merge-gameover-score" id="crGameOverScore">You: 0 &middot; The House: 0</p>
+          <button type="button" class="merge-restart" id="crRestart2">Play again</button>
+        </div>
+      </div>
     </div>
 
   </main>

@@ -1693,10 +1693,35 @@ a.tag { text-decoration: none; }
   margin: 0 0 0.4rem;
 }
 
-/* ---- CROSSROADS (grid duel vs The House) ---------------------- */
+/* ---- CROSSROADS (grid duel vs a resident of your choosing) ---- */
 .crossroads-game {
   max-width: 22rem;
   margin: 2rem auto;
+}
+.crossroads-opponent-select {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+.crossroads-opponent-btn {
+  padding: 0.35rem 0.8rem;
+  font-family: var(--label);
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  background: var(--wall);
+  color: var(--ink-soft);
+  border: 1px solid rgba(227, 169, 78, 0.25);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.crossroads-opponent-btn.is-active {
+  background: var(--lamp);
+  color: #241a12;
+  border-color: var(--lamp);
+}
+.crossroads-opponent-btn:not(.is-active):hover {
+  border-color: var(--lamp);
+  color: var(--ink);
 }
 .crossroads-hud {
   display: flex;
@@ -1782,6 +1807,55 @@ a.tag { text-decoration: none; }
 }
 .crossroads-tile:disabled {
   cursor: default;
+}
+
+.crossroads-board-wrap {
+  position: relative;
+}
+.crossroads-bubble {
+  position: absolute;
+  top: 0.4rem;
+  left: 100%;
+  margin-left: 0.9rem;
+  width: 10rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--paper);
+  color: var(--ink-on-paper);
+  font-family: var(--hand);
+  font-size: 1.15rem;
+  line-height: 1.25;
+  border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.4);
+  opacity: 0;
+  transform: translateY(6px) scale(0.94);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+.crossroads-bubble::after {
+  content: '';
+  position: absolute;
+  top: 1rem;
+  left: -0.5rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  background: var(--paper);
+  transform: rotate(45deg);
+}
+.crossroads-bubble.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+@media (max-width: 900px) {
+  .crossroads-bubble {
+    position: static;
+    width: auto;
+    max-width: 16rem;
+    margin: 0 0 0.7rem;
+    transform: none;
+  }
+  .crossroads-bubble.is-visible { transform: none; }
+  .crossroads-bubble::after { display: none; }
 }
 
 .char-pagination {

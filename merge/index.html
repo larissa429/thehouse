@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Household &middot; The House</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+    <span class="eyebrow breadcrumb"><a href="../resources/">&larr; Resources</a></span>
+
+    <h1>Household</h1>
+    <p>Drop residents in. Match two of the same and they'll merge into
+      something bigger &mdash; see how far you can go before the room fills up.
+      (Working title &mdash; this one's still a placeholder.)</p>
+
+    <div class="merge-game" id="mergeGame">
+      <div class="merge-hud">
+        <div class="merge-hud-block">
+          <span class="merge-hud-label">Score</span>
+          <span class="merge-hud-value" id="mergeScore">0</span>
+        </div>
+        <div class="merge-hud-block">
+          <span class="merge-hud-label">Best</span>
+          <span class="merge-hud-value" id="mergeBest">&mdash;</span>
+        </div>
+        <button type="button" class="merge-restart" id="mergeRestart">Restart</button>
+      </div>
+
+      <div class="merge-stage" id="mergeStage">
+        <canvas id="mergeCanvas"></canvas>
+        <div class="merge-gameover" id="mergeGameOver" hidden>
+          <p class="merge-gameover-title">Room's full.</p>
+          <p class="merge-gameover-score">Score: <span id="mergeFinalScore">0</span></p>
+          <button type="button" class="merge-restart" id="mergeRestart2">Try again</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <site-footer></site-footer>
+
+  <script src="../components.js" defer></script>
+  <script src="../vendor/matter.min.js" defer></script>
+  <script src="../merge.js" defer></script>
+</body>
+</html>

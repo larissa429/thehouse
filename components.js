@@ -19,7 +19,7 @@
 /* the small, fixed set of non-character utility pages. Anything else
    one level deep is assumed to be a character page — so new
    character folders NEVER need to be added here manually again. */
-var UTILITY_FOLDERS = ["about", "residents", "audition", "calendar", "resources", "art", "guestbook", "credits", "quiz", "quizsecret", "penny"];
+var UTILITY_FOLDERS = ["about", "residents", "audition", "calendar", "resources", "art", "guestbook", "credits", "quiz", "quizsecret", "penny", "locations", "games", "merge"];
 
 var pathParts = location.pathname.split("/").filter(Boolean);
 var here = pathParts[pathParts.length - 1] || "";
@@ -61,6 +61,7 @@ class SiteHeader extends HTMLElement {
             <a href="${prefix}about/" data-key="about">About</a>
             <a href="${prefix}residents/" data-key="residents">Characters</a>
             <a href="${prefix}resources/" data-key="resources">Resources</a>
+            <a href="${prefix}games/" data-key="games">Games</a>
             <a href="${prefix}guestbook/" data-key="guestbook">Guestbook</a>
             <a href="${prefix}audition/" data-key="audition">Audition</a>
           </nav>

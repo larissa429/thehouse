@@ -1604,6 +1604,92 @@ a.tag { text-decoration: none; }
   cursor: pointer;
 }
 
+/* ---- MERGE GAME (Household) ----------------------------------- */
+.merge-game {
+  max-width: 22rem;
+  margin: 2rem auto;
+}
+.merge-hud {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  margin-bottom: 0.8rem;
+}
+.merge-hud-block {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.merge-hud-label {
+  font-family: var(--label);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.merge-hud-value {
+  font-family: var(--display);
+  font-size: 1.3rem;
+  color: var(--ink);
+}
+.merge-restart {
+  margin-left: auto;
+  padding: 0.4rem 0.9rem;
+  font-family: var(--label);
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--wall-lit);
+  color: var(--paper);
+  border: var(--edge);
+  border-radius: 3px;
+  cursor: pointer;
+}
+.merge-restart:hover { filter: brightness(1.1); }
+
+.merge-stage {
+  position: relative;
+  border: var(--edge);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  line-height: 0;
+}
+.merge-stage canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  cursor: pointer;
+}
+.merge-gameover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  background: rgba(10, 8, 6, 0.78);
+}
+/* the [hidden] attribute and a class-based `display` rule have equal CSS
+   specificity, so without this the class rule above (later in the
+   cascade) would win and the overlay would show even while hidden */
+.merge-gameover[hidden] {
+  display: none;
+}
+.merge-gameover-title {
+  font-family: var(--display);
+  font-size: 1.6rem;
+  color: var(--paper);
+  margin: 0;
+}
+.merge-gameover-score {
+  font-family: var(--body);
+  color: var(--paper);
+  margin: 0 0 0.4rem;
+}
+
 .char-pagination {
   display: flex;
   justify-content: space-between;

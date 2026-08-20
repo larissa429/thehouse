@@ -1661,6 +1661,8 @@ a.tag { text-decoration: none; }
   height: auto;
   touch-action: none;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 .merge-gameover {
   position: absolute;

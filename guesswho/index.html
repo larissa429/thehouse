@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Who's in the House? &middot; The House</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    .gw-game {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      max-width: 64rem;
+    }
+
+    .gw-board {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1rem;
+      padding: 1.25rem;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 10px;
+    }
+    .gw-board-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.6rem;
+      border-radius: 10px;
+      transition: opacity 0.2s ease, filter 0.2s ease;
+    }
+    .gw-board-item img {
+      width: 84px;
+      height: 84px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: var(--wall-lit);
+    }
+    .gw-board-item span {
+      font-family: var(--label);
+      font-size: 0.78rem;
+      color: var(--ink-soft);
+      text-align: center;
+      line-height: 1.2;
+    }
+    .gw-board-item.is-out {
+      opacity: 0.28;
+      filter: grayscale(1);
+    }
+    .gw-board-item.is-target {
+      opacity: 0.28;
+      filter: grayscale(1);
+    }
+    @media (max-width: 760px) {
+      .gw-board { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; padding: 0.6rem; }
+      .gw-board-item { gap: 0.2rem; padding: 0.2rem; }
+      .gw-board-item img { width: 44px; height: 44px; }
+      .gw-board-item span { font-size: 0.6rem; }
+    }
+    @media (max-width: 380px) {
+      .gw-board { gap: 0.25rem; padding: 0.4rem; }
+      .gw-board-item { gap: 0.1rem; padding: 0.1rem; }
+      .gw-board-item img { width: 34px; height: 34px; }
+      .gw-board-item span { font-size: 0.52rem; }
+    }
+
+    .gw-hud {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .gw-hud-label {
+      font-family: var(--label);
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      color: var(--ink-soft);
+    }
+    .gw-hud-value {
+      font-family: var(--display);
+      color: var(--paper);
+      font-size: 1.1rem;
+    }
+    .gw-restart {
+      font-family: var(--label);
+      font-size: 0.75rem;
+      background: transparent;
+      border: var(--edge);
+      color: var(--ink);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .gw-restart:hover { background: var(--wall-lit); }
+    .gw-restart:disabled { opacity: 0.5; cursor: not-allowed; }
+    .gw-hud-buttons { display: flex; gap: 0.5rem; }
+
+    .gw-log {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      max-height: 22rem;
+      overflow-y: auto;
+      padding: 1rem;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 10px;
+    }
+    .gw-msg {
+      max-width: 80%;
+      padding: 0.5rem 0.8rem;
+      border-radius: 10px;
+      font-family: var(--body);
+      font-size: 0.95rem;
+      line-height: 1.35;
+    }
+    .gw-msg-player {
+      align-self: flex-end;
+      background: var(--lamp);
+      color: var(--shadow);
+      border-bottom-right-radius: 2px;
+    }
+    .gw-msg-house {
+      align-self: flex-start;
+      background: var(--wall-lit);
+      color: var(--ink);
+      border-bottom-left-radius: 2px;
+    }
+    .gw-msg-system {
+      align-self: center;
+      color: var(--ink-soft);
+      font-family: var(--label);
+      font-size: 0.75rem;
+      background: none;
+    }
+
+    .gw-form {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .gw-input {
+      flex: 1;
+      padding: 0.65rem 0.8rem;
+      border-radius: 8px;
+      border: var(--edge);
+      background: var(--wall);
+      color: var(--ink);
+      font-family: var(--body);
+      font-size: 1rem;
+    }
+    .gw-input:focus { outline: 2px solid var(--lamp); outline-offset: 1px; }
+    .gw-form button {
+      font-family: var(--label);
+      font-size: 0.85rem;
+      background: var(--lamp);
+      color: var(--shadow);
+      border: none;
+      padding: 0 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .gw-form button:hover { filter: brightness(1.08); }
+    .gw-form button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .gw-guess-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .gw-guess-row select {
+      flex: 1;
+      min-width: 10rem;
+      padding: 0.6rem 0.7rem;
+      border-radius: 8px;
+      border: var(--edge);
+      background: var(--wall);
+      color: var(--ink);
+      font-family: var(--body);
+    }
+
+    .gw-result {
+      padding: 0.9rem 1rem;
+      border-radius: 10px;
+      border: var(--edge);
+      background: var(--wall-lit);
+      font-family: var(--display);
+      font-size: 1.15rem;
+      color: var(--paper);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+    <span class="eyebrow breadcrumb"><a href="../games/">&larr; Games</a></span>
+
+    <h1>Who's in the House?</h1>
+    <p>The House has picked one resident and isn't telling. Ask yes/no questions &mdash; type them however feels natural &mdash; and narrow it down before you make your guess.</p>
+
+    <div class="gw-game" id="gwGame">
+
+      <div class="gw-hud">
+        <div>
+          <span class="gw-hud-label">QUESTIONS ASKED</span><br />
+          <span class="gw-hud-value" id="gwTurnCount">0</span>
+        </div>
+        <div>
+          <span class="gw-hud-label">REMAINING</span><br />
+          <span class="gw-hud-value" id="gwRemainingCount">&mdash;</span>
+        </div>
+        <div class="gw-hud-buttons">
+          <button type="button" class="gw-restart" id="gwHint">Hint</button>
+          <button type="button" class="gw-restart" id="gwRestart">New game</button>
+        </div>
+      </div>
+
+      <div class="gw-board" id="gwBoard"></div>
+
+      <div class="gw-log" id="gwLog"></div>
+
+      <div id="gwResult" class="gw-result" hidden></div>
+
+      <form class="gw-form" id="gwAskForm">
+        <input type="text" class="gw-input" id="gwInput" placeholder="Ask a yes/no question&hellip;" autocomplete="off" />
+        <button type="submit">Ask</button>
+      </form>
+
+      <div class="gw-guess-row">
+        <select id="gwGuessSelect">
+          <option value="">Guess who it is&hellip;</option>
+        </select>
+        <button type="button" class="gw-restart" id="gwGuessBtn">Guess</button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <site-footer></site-footer>
+
+  <script src="../components.js" defer></script>
+  <script src="../guesswho.js" defer></script>
+</body>
+</html>

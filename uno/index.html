@@ -7,7 +7,7 @@
   <meta name="description" content="The House &middot; an object show" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&family=Parisienne&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
   <style>
     /* Guards every [hidden] element in this page against being overridden
@@ -20,6 +20,48 @@
       flex-direction: column;
       gap: 1.25rem;
       max-width: 56rem;
+      position: relative;
+    }
+
+    .uno-bubble {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform: translate(-50%, calc(-100% - 12px)) translateY(6px) scale(0.94);
+      width: max-content;
+      max-width: 12rem;
+      padding: 0.6rem 0.8rem;
+      background: var(--paper);
+      color: var(--ink-on-paper);
+      font-family: var(--hand);
+      font-size: 1.05rem;
+      line-height: 1.25;
+      border-radius: 10px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.4);
+      opacity: 0;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      pointer-events: none;
+      z-index: 20;
+      text-align: center;
+    }
+    .uno-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -0.45rem;
+      left: 50%;
+      width: 0.9rem;
+      height: 0.9rem;
+      margin-left: -0.45rem;
+      background: var(--paper);
+      transform: rotate(45deg);
+    }
+    .uno-bubble.is-visible {
+      opacity: 1;
+      transform: translate(-50%, calc(-100% - 12px)) translateY(0) scale(1);
+    }
+    .uno-bubble.is-mirror {
+      font-family: "Parisienne", cursive;
+      font-size: 1.3rem;
     }
 
     .uno-start {
@@ -367,6 +409,84 @@
       color: var(--shadow);
       border-color: var(--lamp);
     }
+
+    .uno-player-count-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .uno-player-count-label {
+      font-family: var(--label);
+      font-size: 0.75rem;
+      color: var(--ink-soft);
+      margin-right: 0.25rem;
+    }
+    .uno-count-btn {
+      font-family: var(--label);
+      font-size: 0.85rem;
+      background: transparent;
+      border: var(--edge);
+      color: var(--ink-soft);
+      width: 2.2rem;
+      height: 2.2rem;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .uno-count-btn:hover { background: var(--wall-lit); }
+    .uno-count-btn.is-active {
+      background: var(--lamp);
+      color: var(--shadow);
+      border-color: var(--lamp);
+    }
+
+    .uno-house-row {
+      flex-wrap: wrap;
+      row-gap: 1rem;
+    }
+    .uno-house-seat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.4rem 0.6rem;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .uno-house-seat.is-active-seat {
+      border-color: var(--lamp);
+      background: var(--wall-lit);
+    }
+
+    .uno-swap-picker {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 1rem;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 12px;
+    }
+    .uno-swap-picker p {
+      width: 100%;
+      text-align: center;
+      font-family: var(--label);
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+      margin: 0 0 0.3rem;
+    }
+    .uno-swap-btn {
+      font-family: var(--label);
+      font-size: 0.85rem;
+      background: transparent;
+      border: var(--edge);
+      color: var(--ink);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .uno-swap-btn:hover { background: var(--wall-lit); }
   </style>
 </head>
 <body>
@@ -389,6 +509,12 @@
 
       <div class="uno-start" id="unoStart">
         <p>The House is shuffling.</p>
+        <div class="uno-player-count-row" id="unoPlayerCountRow">
+          <span class="uno-player-count-label">Players</span>
+          <button type="button" class="uno-count-btn is-active" data-count="2">2</button>
+          <button type="button" class="uno-count-btn" data-count="3">3</button>
+          <button type="button" class="uno-count-btn" data-count="4">4</button>
+        </div>
         <button type="button" class="uno-restart uno-start-btn" id="unoStartBtn">Start game</button>
       </div>
 
@@ -397,12 +523,8 @@
         <button type="button" class="uno-restart" id="unoRestart">New game</button>
       </div>
 
-      <div class="uno-house-row" id="unoHouseRow" hidden>
-        <div class="uno-pile-wrap">
-          <div class="uno-house-cards" id="unoHouseCards"></div>
-          <span class="uno-house-label" id="unoHouseCount">The House &mdash; 7 cards</span>
-        </div>
-      </div>
+      <div class="uno-house-row" id="unoHouseRow" hidden></div>
+      <div class="uno-bubble" id="unoBubble"><span id="unoBubbleText"></span></div>
 
       <div class="uno-table" id="unoTable" hidden>
         <div class="uno-pile-wrap">
@@ -423,6 +545,10 @@
       <div class="uno-stack-indicator" id="unoStackIndicator" hidden>
         <span id="unoStackText">Stack: 2</span>
         <div class="uno-stack-bar-track"><div class="uno-stack-bar" id="unoStackBar"></div></div>
+      </div>
+
+      <div class="uno-swap-picker" id="unoSwapPicker" hidden>
+        <p>Play your 7 against&hellip;</p>
       </div>
 
       <div class="uno-color-picker" id="unoColorPicker" hidden>

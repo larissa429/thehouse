@@ -1,10 +1,9 @@
 /* ============================================================
-   uno.js — Uno, one on one against The House.
-   Milestone 1: standard rules only (no stacking, jump-in, 7-0, or the
-   slap-on-5 house rule yet — those come later, along with 3-4 player
-   support). Built so those can layer on top without a rewrite: turn
-   order already goes through a `direction` value, and drawing/playing
-   are separate steps like real Uno instead of one combined action.
+   uno.js — Uno against The House, 2-4 players (you + 1-3 House seats).
+   Turn order runs through a seat array + a direction flag so Reverse
+   actually does something once there's more than one House seat.
+   House Rules mode adds: slap-on-5, +2/+4 stacking, 7-0 (swap/rotate
+   hands), and jump-in — all generalized to work with any seat count.
 
    Deck: standard 108 cards — 4 colors x (one 0, two each of 1-9, two
    Skip, two Reverse, two Draw Two) + 4 Wild + 4 Wild Draw Four.
@@ -15,8 +14,10 @@
 
   var statusEl = document.getElementById('unoStatus');
   var restartBtn = document.getElementById('unoRestart');
-  var houseCardsEl = document.getElementById('unoHouseCards');
-  var houseCountEl = document.getElementById('unoHouseCount');
+  var houseRowEl = document.getElementById('unoHouseRow');
+  var gameEl = document.getElementById('unoGame');
+  var bubbleEl = document.getElementById('unoBubble');
+  var bubbleTextEl = document.getElementById('unoBubbleText');
   var drawPileEl = document.getElementById('unoDrawPile');
   var discardTopEl = document.getElementById('unoDiscardTop');
   var discardWrapEl = discardTopEl.closest('.uno-discard-wrap');
@@ -27,6 +28,7 @@
   var colorLabelEl = document.getElementById('unoColorLabel');
   var colorSwatchEl = document.getElementById('unoColorSwatch');
   var colorPickerEl = document.getElementById('unoColorPicker');
+  var swapPickerEl = document.getElementById('unoSwapPicker');
   var handEl = document.getElementById('unoHand');
   var callBtn = document.getElementById('unoCallBtn');
   var resultEl = document.getElementById('unoResult');
@@ -34,16 +36,24 @@
   var unoStartEl = document.getElementById('unoStart');
   var startBtn = document.getElementById('unoStartBtn');
   var unoHudEl = document.getElementById('unoHud');
-  var houseRowEl = document.getElementById('unoHouseRow');
   var tableEl = document.getElementById('unoTable');
   var introEl = document.getElementById('unoIntro');
   var modeStandardBtn = document.getElementById('unoModeStandard');
   var modeHouseRulesBtn = document.getElementById('unoModeHouseRules');
+  var countBtns = document.querySelectorAll('.uno-count-btn');
 
-  // 'standard' | 'houseRules' — no rule differences wired in yet, this is
-  // just the toggle scaffold. Individual house rules (slap-on-5 first)
-  // branch on this as they're added.
+  // 'standard' | 'houseRules'
   var mode = 'standard';
+
+  // 2, 3, or 4 total players — chosen on the start screen, takes effect
+  // on the next deal.
+  var playerCount = 2;
+  countBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      playerCount = parseInt(btn.getAttribute('data-count'), 10);
+      countBtns.forEach(function (b) { b.classList.toggle('is-active', b === btn); });
+    });
+  });
 
   // Drops the Uno button at a random spot in the viewport — makes
   // catching it a reflex thing instead of a predictable click target.
@@ -102,13 +112,46 @@
     return arr;
   }
 
+  // --- seats -------------------------------------------------------
+  // seatOrder is the fixed rotation order for the round: always starts
+  // with 'player', then 1-3 House seats. `direction` (+1/-1) combined
+  // with nextSeatId() is how Reverse actually changes anything once
+  // there's more than one House seat to reverse past.
+  var SEAT_NAMES = { house1: 'The House', house2: 'Journal', house3: 'Mirror' };
+
+  // Each House seat plays a little differently:
+  // - The House: sharp — always takes the best available card, saves
+  //   wilds, calls colors and stacks with full confidence.
+  // - Journal: sloppy — friendly but not paying close attention, picks
+  //   pretty much at random among whatever's legal.
+  // - Mirror: soft — mostly sharp, but would rather not put you on the
+  //   spot. Sometimes plays a plain number card out of pity when she
+  //   could've hit you harder, and is reluctant to pass a stack your way.
+  var PERSONALITY = { house1: 'sharp', house2: 'sloppy', house3: 'soft' };
+  var seatOrder, direction, hands, unoCalled, houseUnoTimers;
+
+  function seatLabel(seatId) {
+    return seatId === 'player' ? 'You' : SEAT_NAMES[seatId];
+  }
+
+  function isHouseSeat(seatId) {
+    return seatId !== 'player';
+  }
+
+  function allHouseSeats() {
+    return seatOrder.filter(isHouseSeat);
+  }
+
+  function nextSeatId(fromId, steps) {
+    var idx = seatOrder.indexOf(fromId);
+    var n = seatOrder.length;
+    var newIdx = ((idx + steps * direction) % n + n) % n;
+    return seatOrder[newIdx];
+  }
+
   // --- game state --------------------------------------------------
-  var drawPile, discardPile, playerHand, houseHand;
-  var currentColor, turn, over, pendingWildCard;
-  // Uno-call state: playerUnoCalled/houseUnoCalled are only meaningful
-  // while that hand actually has 1 card — see the length checks at each
-  // use site rather than clearing these explicitly on every hand change.
-  var playerUnoCalled, houseUnoCalled, houseUnoTimerId;
+  var drawPile, discardPile;
+  var currentColor, turn, over, pendingWildCard, pendingSevenCard;
   var HOUSE_UNO_MAX_DELAY_MS = 3000;
 
   // --- House Rules: slap-on-5 -----------------------------------------
@@ -139,10 +182,12 @@
     discardWrapEl.classList.remove('is-slappable');
     slapLabelEl.hidden = true;
     if (winner === 'player') {
-      drawCards(houseHand, 2);
-      log('You slap it first! The House draws 2.');
+      var seats = allHouseSeats();
+      var target = seats[Math.floor(Math.random() * seats.length)];
+      drawCards(hands[target], 2);
+      log('You slap it first! ' + seatLabel(target) + ' draws 2.');
     } else {
-      drawCards(playerHand, 2);
+      drawCards(hands.player, 2);
       log('The House slaps it first! You draw 2.');
     }
     render();
@@ -169,7 +214,7 @@
   // doesn't have to match. You get a short window to click one before
   // it's assumed you don't have one (or don't want to use it) and the
   // whole pile lands on you.
-  var pendingStack = null; // { count, owedBy } while a stack is live
+  var pendingStack = null; // { count, owedBy: <seatId> } while a stack is live
   var stackWindowActive = false;
   var stackTimerId = null;
   var STACK_WINDOW_MS = 1800;
@@ -190,23 +235,35 @@
     stackBarEl.style.width = '100%';
   }
 
+  // Whether a House seat bothers stacking a Draw Two/Four it's holding,
+  // rather than just taking the pile. Sharp always does. Sloppy mostly
+  // does, no real strategy behind it either way. Soft (Mirror) hesitates
+  // more, and especially doesn't want to pass the pile on to you.
+  function houseWantsToStack(seatId) {
+    var personality = PERSONALITY[seatId] || 'sharp';
+    if (personality === 'sharp') return true;
+    if (personality === 'sloppy') return Math.random() < 0.7;
+    var passesTo = nextSeatId(seatId, 1);
+    return Math.random() < (passesTo === 'player' ? 0.4 : 0.8);
+  }
+
   function handleStackResponse() {
     if (!pendingStack) return;
-    if (pendingStack.owedBy === 'house') {
+    var owed = pendingStack.owedBy;
+    if (owed !== 'player') {
       setTimeout(function () {
         if (!pendingStack || over) return;
-        var idx = findStackableIdx(houseHand);
-        if (idx !== -1) {
-          log('The House stacks another one on.');
-          playCard('house', idx);
+        var idx = findStackableIdx(hands[owed]);
+        if (idx !== -1 && houseWantsToStack(owed)) {
+          log(seatLabel(owed) + ' stacks another one on.');
+          playCard(owed, idx);
         } else {
-          resolveStackDraw('house');
+          resolveStackDraw(owed);
         }
       }, HOUSE_STACK_THINK_MS);
       return;
     }
-    // owedBy === 'player'
-    if (findStackableIdx(playerHand) === -1) {
+    if (findStackableIdx(hands.player) === -1) {
       wait(700).then(function () { resolveStackDraw('player'); });
       return;
     }
@@ -234,54 +291,6 @@
     }, STACK_WINDOW_MS);
   }
 
-  // Jump-in: if you're holding the *exact* same card (color and value)
-  // as the current top of the discard pile, you can play it the instant
-  // you spot it — even out of turn — cutting the line. The House gets
-  // the same chance while it's your turn: a short random delay, then a
-  // coin-flip on whether it takes the opening.
-  var houseJumpTimerId = null;
-
-  function isExactMatch(card) {
-    var top = topCard();
-    return card.color === top.color && card.value === top.value;
-  }
-
-  function canJumpIn(who) {
-    if (mode !== 'houseRules' || over || turn === 'dealing') return false;
-    if (pendingStack || stackWindowActive || slapActive || pendingWildCard) return false;
-    return turn !== who; // only makes sense out of turn
-  }
-
-  function jumpIn(who, idx) {
-    clearTimeout(houseTurnTimerId);
-    houseTurnTimerId = null;
-    clearTimeout(houseJumpTimerId);
-    houseJumpTimerId = null;
-    turn = who;
-    log((who === 'player' ? 'You jump in!' : 'The House jumps in!'));
-    playCard(who, idx);
-  }
-
-  function maybeHouseJumpIn() {
-    if (!canJumpIn('house') || houseJumpTimerId) return;
-    var idx = -1;
-    for (var i = 0; i < houseHand.length; i++) {
-      if (isExactMatch(houseHand[i])) { idx = i; break; }
-    }
-    if (idx === -1) return;
-    if (Math.random() > 0.5) return; // doesn't always take the opening
-    houseJumpTimerId = setTimeout(function () {
-      houseJumpTimerId = null;
-      if (!canJumpIn('house')) return;
-      var freshIdx = -1;
-      for (var i = 0; i < houseHand.length; i++) {
-        if (isExactMatch(houseHand[i])) { freshIdx = i; break; }
-      }
-      if (freshIdx === -1) return;
-      jumpIn('house', freshIdx);
-    }, 900 + Math.random() * 700);
-  }
-
   function cancelStackWindow() {
     stackWindowActive = false;
     clearTimeout(stackTimerId);
@@ -300,21 +309,136 @@
   function resolveStackDraw(who) {
     if (!pendingStack) return;
     var count = pendingStack.count;
-    var hand = who === 'player' ? playerHand : houseHand;
-    drawCards(hand, count);
-    log((who === 'player' ? 'You draw ' : 'The House draws ') + count + ' from the stack.');
+    drawCards(hands[who], count);
+    log((who === 'player' ? 'You draw ' : seatLabel(who) + ' draws ') + count + ' from the stack.');
     pendingStack = null;
     cancelStackWindow();
     clearTimeout(houseTurnTimerId);
     houseTurnTimerId = null;
     clearTimeout(houseJumpTimerId);
     houseJumpTimerId = null;
-    turn = who === 'player' ? 'house' : 'player';
+    turn = nextSeatId(who, 1);
     render();
     if (!over) {
-      if (turn === 'house') houseTurn();
-      else statusEl.textContent = 'Your turn again.';
+      if (turn === 'player') statusEl.textContent = 'Your turn again.';
+      else houseTurn(turn);
     }
+  }
+
+  // --- House Rules: jump-in --------------------------------------------
+  // If you're holding the *exact* same card (color and value) as the
+  // current top of the discard pile, you can play it the instant you
+  // spot it — even out of turn — cutting the line. Any House seat gets
+  // the same chance while it isn't their turn: a short random delay,
+  // then a coin-flip on whether it takes the opening.
+  var houseJumpTimerId = null;
+
+  function isExactMatch(card) {
+    var top = topCard();
+    return card.color === top.color && card.value === top.value;
+  }
+
+  function findExactIdx(hand) {
+    for (var i = 0; i < hand.length; i++) if (isExactMatch(hand[i])) return i;
+    return -1;
+  }
+
+  function canJumpIn(who) {
+    if (mode !== 'houseRules' || over || turn === 'dealing') return false;
+    if (pendingStack || stackWindowActive || slapActive || pendingWildCard || pendingSevenCard) return false;
+    return turn !== who; // only makes sense out of turn
+  }
+
+  function jumpIn(who, idx) {
+    clearTimeout(houseTurnTimerId);
+    houseTurnTimerId = null;
+    clearTimeout(houseJumpTimerId);
+    houseJumpTimerId = null;
+    turn = who;
+    log(who === 'player' ? 'You jump in!' : seatLabel(who) + ' jumps in!');
+    playCard(who, idx);
+  }
+
+  // How eager a seat is to jump in when it spots the chance — sharp
+  // pounces most of the time, sloppy is a coin flip, soft mostly lets
+  // it go by (especially since jumping in ahead of you cuts your turn
+  // short, which isn't very Mirror of her).
+  var JUMP_IN_CHANCE = { sharp: 0.7, sloppy: 0.5, soft: 0.25 };
+
+  function maybeHouseJumpIn() {
+    if (mode !== 'houseRules' || over || turn === 'dealing' || houseJumpTimerId) return;
+    if (pendingStack || stackWindowActive || slapActive || pendingWildCard || pendingSevenCard) return;
+    var candidates = [];
+    allHouseSeats().forEach(function (s) {
+      if (s === turn) return;
+      if (findExactIdx(hands[s]) !== -1) candidates.push(s);
+    });
+    if (!candidates.length) return;
+    var seat = candidates[Math.floor(Math.random() * candidates.length)];
+    var chance = JUMP_IN_CHANCE[PERSONALITY[seat]] || 0.5;
+    if (Math.random() > chance) return; // doesn't always take the opening
+    houseJumpTimerId = setTimeout(function () {
+      houseJumpTimerId = null;
+      if (mode !== 'houseRules' || over || seat === turn) return;
+      var idx = findExactIdx(hands[seat]);
+      if (idx === -1) return;
+      jumpIn(seat, idx);
+    }, 900 + Math.random() * 700);
+  }
+
+  // --- House Rules: 7-0 (swap / rotate hands) ---------------------------
+  function swapHands(a, b) {
+    var tmp = hands[a];
+    hands[a] = hands[b];
+    hands[b] = tmp;
+  }
+
+  function rotateAllHands() {
+    var n = seatOrder.length;
+    var newHands = {};
+    seatOrder.forEach(function (s, i) {
+      var srcIdx = ((i - direction) % n + n) % n;
+      newHands[s] = hands[seatOrder[srcIdx]];
+    });
+    hands = newHands;
+  }
+
+  function pickHouseSwapTarget(who) {
+    var others = seatOrder.filter(function (s) { return s !== who; });
+    var personality = PERSONALITY[who] || 'sharp';
+    if (personality === 'sloppy') {
+      return others[Math.floor(Math.random() * others.length)];
+    }
+    var leader = others.reduce(function (best, s) {
+      return hands[s].length < hands[best].length ? s : best;
+    }, others[0]);
+    if (personality === 'soft' && leader === 'player' && others.length > 1 && Math.random() < 0.6) {
+      // would rather not undercut you specifically — pick among the others instead
+      var rest = others.filter(function (s) { return s !== 'player'; });
+      return rest[Math.floor(Math.random() * rest.length)];
+    }
+    return leader;
+  }
+
+  function showSwapPicker(card) {
+    pendingSevenCard = card;
+    swapPickerEl.innerHTML = '<p>Play your 7 against&hellip;</p>';
+    allHouseSeats().forEach(function (t) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'uno-swap-btn';
+      btn.textContent = seatLabel(t) + ' (' + hands[t].length + ')';
+      btn.addEventListener('click', function () {
+        swapPickerEl.hidden = true;
+        swapHands('player', t);
+        log('You swap hands with ' + seatLabel(t) + '!');
+        pendingSevenCard = null;
+        continueCardEffect('player', card);
+      });
+      swapPickerEl.appendChild(btn);
+    });
+    swapPickerEl.hidden = false;
+    render();
   }
 
   function log(text) {
@@ -368,43 +492,27 @@
   var HOUSE_THINK_MS = 1800;
 
   // Builds a fresh shuffled round, deals with a staggered visual animation,
-  // then pauses before The House opens — replaces the old instant-deal
-  // resetGame() so a fresh page load doesn't dump a drawn-2 penalty on you
-  // with zero buildup. The House always leads off a new round now.
-  // Bails back to the Start screen without finishing the round — used
-  // when the ruleset is switched mid-game, since silently changing rules
-  // partway through a hand doesn't make sense.
+  // then pauses before the round opens. Bails back to the Start screen
+  // without finishing the round — used when the ruleset is switched
+  // mid-game, since silently changing rules partway through a hand
+  // doesn't make sense.
   function returnToStartScreen() {
     over = true;
-    clearTimeout(houseUnoTimerId);
-    cancelSlap();
-    pendingStack = null;
-    cancelStackWindow();
-    clearTimeout(houseTurnTimerId);
-    houseTurnTimerId = null;
-    clearTimeout(houseJumpTimerId);
-    houseJumpTimerId = null;
+    clearAllTimers();
     unoStartEl.hidden = false;
     unoHudEl.hidden = true;
     houseRowEl.hidden = true;
     tableEl.hidden = true;
     logEl.hidden = true;
     colorPickerEl.hidden = true;
+    swapPickerEl.hidden = true;
     callBtn.hidden = true;
     resultEl.hidden = true;
   }
 
-  function dealGame() {
-    drawPile = shuffle(buildDeck());
-    discardPile = [];
-    playerHand = [];
-    houseHand = [];
-    over = false;
-    pendingWildCard = null;
-    playerUnoCalled = true;
-    houseUnoCalled = true;
-    clearTimeout(houseUnoTimerId);
-    houseUnoTimerId = null;
+  function clearAllTimers() {
+    Object.keys(houseUnoTimers || {}).forEach(function (k) { clearTimeout(houseUnoTimers[k]); });
+    houseUnoTimers = {};
     cancelSlap();
     pendingStack = null;
     cancelStackWindow();
@@ -412,9 +520,122 @@
     houseTurnTimerId = null;
     clearTimeout(houseJumpTimerId);
     houseJumpTimerId = null;
+    banterTimerIds.forEach(function (id) { clearTimeout(id); });
+    banterTimerIds = [];
+    hideBubble();
+  }
+
+  // --- flavor dialogue ---------------------------------------------------
+  // The House barely talks — on rare turns it just gets an "..." logged,
+  // no comment attached. Journal and Mirror are chattier: the odd one-off
+  // remark on their own turn, or (when they're both at the table) a short
+  // back-and-forth logged as two lines a beat apart, like they're talking
+  // past you rather than to you.
+  var banterTimerIds = [];
+  var bubbleHideTimer = null;
+
+  // Positions the shared bubble directly above whichever seat is
+  // "speaking" — computed once at show time (like the Uno-call button's
+  // random placement), not tracked continuously, so it doesn't need to
+  // survive houseRowEl's per-render rebuild.
+  function positionBubbleAt(seatId) {
+    var seatWrap = houseRowEl.querySelector('[data-seat="' + seatId + '"]');
+    if (!seatWrap) return false;
+    var gameRect = gameEl.getBoundingClientRect();
+    var seatRect = seatWrap.getBoundingClientRect();
+    bubbleEl.style.left = (seatRect.left - gameRect.left + seatRect.width / 2) + 'px';
+    bubbleEl.style.top = (seatRect.top - gameRect.top) + 'px';
+    return true;
+  }
+
+  function showBubble(seatId, text) {
+    if (!text || !positionBubbleAt(seatId)) return;
+    clearTimeout(bubbleHideTimer);
+    bubbleTextEl.textContent = text;
+    bubbleEl.classList.toggle('is-mirror', seatId === 'house3');
+    bubbleEl.classList.add('is-visible');
+    bubbleHideTimer = setTimeout(function () {
+      bubbleEl.classList.remove('is-visible');
+    }, 2200);
+  }
+
+  function hideBubble() {
+    clearTimeout(bubbleHideTimer);
+    bubbleEl.classList.remove('is-visible');
+  }
+
+  var JOURNAL_LINES = [
+    'Good one!',
+    "Didn't see that coming.",
+    "This deck's got a mind of its own.",
+    'My turn already? Alright, alright.',
+    "Careful with that draw pile."
+  ];
+
+  var MIRROR_LINES = [
+    'Take your time.',
+    'Mm. Interesting choice.',
+    "I don't mind losing, you know.",
+    "You're doing well.",
+    'Just here to keep you company.'
+  ];
+
+  // [speaker, line, replier, reply] — always logged in this order.
+  var EXCHANGES = [
+    ['house2', "Careful, she's got that look again.", 'house3', "I do not have a look."],
+    ['house3', 'You could ease up on them a little.', 'house2', "Where's the fun in that?"],
+    ['house2', 'Think you can beat them, Mirror?', 'house3', "I'm not trying to beat anyone."],
+    ['house3', "You're being loud again, Journal.", 'house2', "I'm always loud."],
+    ['house2', 'Bet you five it rains tomorrow.', 'house3', "It doesn't rain here."]
+  ];
+
+  function maybeSeatBanter(seatId) {
+    if (seatId === 'house1') {
+      if (Math.random() < 0.12) {
+        log('The House: "..."');
+        showBubble(seatId, '...');
+      }
+      return;
+    }
+    if (seatId !== 'house2' && seatId !== 'house3') return;
+    var otherSeat = seatId === 'house2' ? 'house3' : 'house2';
+    if (seatOrder.indexOf(otherSeat) !== -1 && Math.random() < 0.3) {
+      var ex = EXCHANGES[Math.floor(Math.random() * EXCHANGES.length)];
+      log(seatLabel(ex[0]) + ': "' + ex[1] + '"');
+      showBubble(ex[0], ex[1]);
+      var id = setTimeout(function () {
+        if (over) return;
+        log(seatLabel(ex[2]) + ': "' + ex[3] + '"');
+        showBubble(ex[2], ex[3]);
+      }, 600 + Math.random() * 500);
+      banterTimerIds.push(id);
+      return;
+    }
+    if (Math.random() < 0.25) {
+      var lines = seatId === 'house2' ? JOURNAL_LINES : MIRROR_LINES;
+      var line = lines[Math.floor(Math.random() * lines.length)];
+      log(seatLabel(seatId) + ': "' + line + '"');
+      showBubble(seatId, line);
+    }
+  }
+
+  function dealGame() {
+    seatOrder = ['player', 'house1', 'house2', 'house3'].slice(0, playerCount);
+    direction = 1;
+    hands = {};
+    unoCalled = {};
+    seatOrder.forEach(function (s) { hands[s] = []; unoCalled[s] = true; });
+
+    drawPile = shuffle(buildDeck());
+    discardPile = [];
+    over = false;
+    pendingWildCard = null;
+    pendingSevenCard = null;
+    clearAllTimers();
     logEl.innerHTML = '';
     resultEl.hidden = true;
     colorPickerEl.hidden = true;
+    swapPickerEl.hidden = true;
     callBtn.hidden = true;
     restartBtn.disabled = true; // no restarting mid-deal
     unoHudEl.hidden = false;
@@ -424,8 +645,7 @@
     turn = 'dealing'; // blocks hand clicks / draw pile / pass — see render() and handlers
     statusEl.textContent = 'Dealing…';
 
-    drawCards(playerHand, 7);
-    drawCards(houseHand, 7);
+    seatOrder.forEach(function (s) { drawCards(hands[s], 7); });
 
     // first discard can't be a wild — keep drawing until it's a color card
     var first;
@@ -438,28 +658,47 @@
     currentColor = first.color;
 
     log('New round. The House deals 7 cards each.');
-    applyCardEffectIfStarting(first);
+    var opener = seatOrder.length > 1 ? nextSeatId('player', 1) : 'player';
+    var startTurn = applyCardEffectIfStarting(first, opener);
 
     justDealt = true;
     render();
 
     wait(HOUSE_THINK_MS).then(function () {
       restartBtn.disabled = false;
-      turn = 'house';
-      houseTurn();
+      turn = startTurn;
+      if (turn === 'player') render();
+      else houseTurn(turn);
     });
   }
 
-  // Only Skip/Reverse/Draw Two matter as a starting card in a 2-player
-  // game (Reverse behaves like Skip with only one opponent); Wild Draw
-  // Four never gets here since the discard-flip loop above skips wilds.
-  function applyCardEffectIfStarting(card) {
-    if (card.value === 'skip' || card.value === 'reverse') {
-      log('The House starts with ' + describeCard(card) + ' — you go first anyway.');
-    } else if (card.value === 'draw2') {
-      drawCards(playerHand, 2);
-      log('The starting card is Draw Two — you draw 2 to open.');
+  // The opening actor is always the first House seat — a Skip/Reverse/
+  // Draw Two flipped as the starting card can change who actually goes
+  // first, or (with 3-4 players) flip turn direction before anyone's
+  // moved at all.
+  function applyCardEffectIfStarting(card, opener) {
+    if (card.value === 'skip') {
+      var t = nextSeatId(opener, 1);
+      log('The House starts with ' + describeCard(card) + ' — ' + (t === 'player' ? 'you go' : seatLabel(t) + ' goes') + ' first instead.');
+      return t;
     }
+    if (card.value === 'reverse') {
+      if (seatOrder.length > 2) {
+        direction *= -1;
+        var t2 = nextSeatId(opener, 1);
+        log('The House starts with ' + describeCard(card) + ' — turn order reverses, ' + (t2 === 'player' ? 'you go' : seatLabel(t2) + ' goes') + ' first.');
+        return t2;
+      }
+      var t3 = nextSeatId(opener, 1);
+      log('The House starts with ' + describeCard(card) + ' — ' + (t3 === 'player' ? 'you go' : seatLabel(t3) + ' goes') + ' first instead.');
+      return t3;
+    }
+    if (card.value === 'draw2') {
+      drawCards(hands[opener], 2);
+      log((opener === 'player' ? 'You open' : seatLabel(opener) + ' opens') + ' on a Draw Two and draws 2 first.');
+      return opener;
+    }
+    return opener;
   }
 
   function describeCard(card) {
@@ -520,19 +759,34 @@
   }
 
   function render() {
-    // house hand (backs only, count shown)
-    houseCardsEl.innerHTML = '';
-    for (var i = 0; i < houseHand.length; i++) {
-      var backEl = makeCardEl(null, false);
-      applyDealAnimation(backEl, i);
-      houseCardsEl.appendChild(backEl);
-    }
-    houseCountEl.textContent = 'The House — ' + houseHand.length + ' card' + (houseHand.length === 1 ? '' : 's');
+    // house seats (backs only, count shown), rebuilt fresh each render
+    houseRowEl.innerHTML = '';
+    allHouseSeats().forEach(function (seatId) {
+      var seatWrap = document.createElement('div');
+      seatWrap.className = 'uno-house-seat' + (turn === seatId ? ' is-active-seat' : '');
+      seatWrap.setAttribute('data-seat', seatId);
+      var pileWrap = document.createElement('div');
+      pileWrap.className = 'uno-pile-wrap';
+      var cardsEl = document.createElement('div');
+      cardsEl.className = 'uno-house-cards';
+      hands[seatId].forEach(function (c, i) {
+        var backEl = makeCardEl(null, false);
+        applyDealAnimation(backEl, i);
+        cardsEl.appendChild(backEl);
+      });
+      var labelEl = document.createElement('span');
+      labelEl.className = 'uno-house-label';
+      labelEl.textContent = seatLabel(seatId) + ' — ' + hands[seatId].length + ' card' + (hands[seatId].length === 1 ? '' : 's');
+      pileWrap.appendChild(cardsEl);
+      pileWrap.appendChild(labelEl);
+      seatWrap.appendChild(pileWrap);
+      houseRowEl.appendChild(seatWrap);
+    });
 
     // discard top
     discardTopEl.innerHTML = '';
     var topEl = makeCardEl(topCard(), true);
-    applyDealAnimation(topEl, houseHand.length + playerHand.length);
+    applyDealAnimation(topEl, 20);
     discardTopEl.appendChild(topEl);
     colorLabelEl.textContent = currentColor;
     colorSwatchEl.className = 'uno-current-color color-' + currentColor;
@@ -541,7 +795,7 @@
     // player hand
     var inStackWindow = stackWindowActive && pendingStack && pendingStack.owedBy === 'player';
     handEl.innerHTML = '';
-    playerHand.forEach(function (card, idx) {
+    hands.player.forEach(function (card, idx) {
       var el = makeCardEl(card, true);
       // During your own stack window, only Draw Two/Four are clickable —
       // normal color/value matching doesn't apply, any stack card works.
@@ -579,12 +833,12 @@
     drawPileEl.classList.toggle('is-disabled', drawLocked);
 
     // Visible any time you're sitting on one card and haven't called it
-    // yet — not gated to your turn, since the risk window is "before the
-    // House's next move," which can land mid-opponent-turn. It jumps to a
-    // fresh random spot only on the hidden->visible transition, not on
-    // every render, so it's a "spot it and click it" reflex moment
-    // rather than a target that keeps sliding around while you aim.
-    var shouldShowCall = playerHand.length === 1 && !playerUnoCalled && !over;
+    // yet — not gated to your turn, since the risk window is "before
+    // someone else's next move," which can land mid-opponent-turn. It
+    // jumps to a fresh random spot only on the hidden->visible
+    // transition, not on every render, so it's a "spot it and click it"
+    // reflex moment rather than a target that keeps sliding around.
+    var shouldShowCall = hands.player.length === 1 && !unoCalled.player && !over;
     if (shouldShowCall && callBtn.hidden) repositionCallBtnRandomly();
     callBtn.hidden = !shouldShowCall;
 
@@ -593,8 +847,8 @@
         statusEl.textContent = 'Stack it or take it!';
       } else if (turn === 'player') {
         statusEl.textContent = 'Your turn.';
-      } else if (turn === 'house') {
-        statusEl.textContent = "The House's turn.";
+      } else if (isHouseSeat(turn)) {
+        statusEl.textContent = seatLabel(turn) + "'s turn.";
       }
       // turn === 'dealing': leave whatever status dealGame() already set
     }
@@ -605,18 +859,34 @@
   }
 
   // --- turn resolution -------------------------------------------------
-  function playCard(who, idx) {
-    // Catch The House not calling Uno: if it's sitting on exactly one
-    // card and hasn't "said" it yet, any move you make (including a
-    // forced auto-play out of drawUntilPlayable) catches it out.
-    if (who === 'player' && houseHand.length === 1 && !houseUnoCalled) {
-      clearTimeout(houseUnoTimerId);
-      houseUnoCalled = true;
-      drawCards(houseHand, 2);
-      log('The House forgot to say Uno! It draws 2.');
-    }
+  function catchForgottenUnoCalls(exceptWho) {
+    seatOrder.forEach(function (s) {
+      if (s === exceptWho) return;
+      if (hands[s].length === 1 && !unoCalled[s]) {
+        unoCalled[s] = true;
+        clearTimeout(houseUnoTimers[s]);
+        drawCards(hands[s], 2);
+        log((s === 'player' ? 'You forgot' : seatLabel(s) + ' forgot') + ' to say Uno! ' + (s === 'player' ? 'You draw' : seatLabel(s) + ' draws') + ' 2.');
+      }
+    });
+  }
 
-    var hand = who === 'player' ? playerHand : houseHand;
+  // Drawing itself is evidence you didn't call it in time — the card
+  // count is about to change either way, so there's no window left to
+  // call into. Catches the seat on itself, right before it draws.
+  function catchSelfIfDrawingUncalled(seatId) {
+    if (hands[seatId].length !== 1 || unoCalled[seatId]) return false;
+    unoCalled[seatId] = true;
+    clearTimeout(houseUnoTimers[seatId]);
+    drawCards(hands[seatId], 2);
+    log((seatId === 'player' ? 'You forgot' : seatLabel(seatId) + ' forgot') + ' to say Uno before drawing! ' + (seatId === 'player' ? 'You draw' : seatLabel(seatId) + ' draws') + ' 2.');
+    return true;
+  }
+
+  function playCard(who, idx) {
+    catchForgottenUnoCalls(who);
+
+    var hand = hands[who];
     var card = hand[idx];
     hand.splice(idx, 1);
     discardPile.push(card);
@@ -628,13 +898,13 @@
         render();
         return; // wait for color choice before resolving the rest of the turn
       } else {
-        var chosen = houseChooseColor();
+        var chosen = houseChooseColor(who);
         currentColor = chosen;
-        log('The House plays ' + describeCard(card) + ' and calls ' + chosen + '.');
+        log(seatLabel(who) + ' plays ' + describeCard(card) + ' and calls ' + chosen + '.');
       }
     } else {
       currentColor = card.color;
-      log((who === 'player' ? 'You play ' : 'The House plays ') + describeCard(card) + '.');
+      log((who === 'player' ? 'You play ' : seatLabel(who) + ' plays ') + describeCard(card) + '.');
     }
 
     if (mode === 'houseRules' && card.value === '5') startSlap();
@@ -642,89 +912,145 @@
     resolveCardEffect(who, card);
   }
 
-  function houseChooseColor() {
-    // simple heuristic: whichever color the House holds the most of
+  // Chance a seat just picks a random color instead of the one that
+  // actually suits its hand — how "sloppy" its color sense is.
+  var RANDOM_COLOR_CHANCE = { sharp: 0, sloppy: 0.6, soft: 0.25 };
+
+  function houseChooseColor(seatId) {
+    var personality = PERSONALITY[seatId] || 'sharp';
+    if (Math.random() < (RANDOM_COLOR_CHANCE[personality] || 0)) {
+      return COLORS[Math.floor(Math.random() * COLORS.length)];
+    }
+    // heuristic: whichever color that seat holds the most of
     var counts = { red: 0, yellow: 0, green: 0, blue: 0 };
-    houseHand.forEach(function (c) { if (counts[c.color] !== undefined) counts[c.color]++; });
+    hands[seatId].forEach(function (c) { if (counts[c.color] !== undefined) counts[c.color]++; });
     var best = 'red', bestCount = -1;
     COLORS.forEach(function (c) { if (counts[c] > bestCount) { bestCount = counts[c]; best = c; } });
     return best;
   }
 
-  function resolveCardEffect(who, card) {
-    var opponent = who === 'player' ? 'house' : 'player';
-    var opponentHand = opponent === 'player' ? playerHand : houseHand;
+  // Card choice among whatever's legal, colored by personality:
+  // - sharp: always the best pick — a non-wild match first, wild only
+  //   as a last resort.
+  // - sloppy: picks at random among every legal card, wilds included,
+  //   no attempt to save them for later.
+  // - soft: usually plays sharp, but sometimes pity-picks a harmless
+  //   plain number card over a stronger option — more likely to hold
+  //   back when it would otherwise hit you specifically.
+  function pickCardIdxForSeat(seatId) {
+    var hand = hands[seatId];
+    var legal = [];
+    for (var i = 0; i < hand.length; i++) if (cardMatches(hand[i])) legal.push(i);
+    if (!legal.length) return -1;
 
+    var personality = PERSONALITY[seatId] || 'sharp';
+
+    if (personality === 'sloppy') {
+      return legal[Math.floor(Math.random() * legal.length)];
+    }
+
+    if (personality === 'soft') {
+      var target = nextSeatId(seatId, 1);
+      var pityChance = target === 'player' ? 0.35 : 0.15;
+      if (Math.random() < pityChance) {
+        var gentle = legal.filter(function (i) { return /^[0-9]$/.test(hand[i].value); });
+        if (gentle.length) return gentle[Math.floor(Math.random() * gentle.length)];
+      }
+      // falls through to the sharp pick below when there's no gentle option
+    }
+
+    for (var j = 0; j < legal.length; j++) if (hand[legal[j]].color !== 'wild') return legal[j];
+    return legal[0];
+  }
+
+  function resolveCardEffect(who, card) {
     if (checkWin(who)) return;
 
-    if (mode === 'houseRules' && (card.value === '7' || card.value === '0')) {
-      var swapTmp = playerHand;
-      playerHand = houseHand;
-      houseHand = swapTmp;
-      log(who === 'player' ? 'You swap hands with The House!' : 'The House swaps hands with you!');
+    if (mode === 'houseRules' && card.value === '0') {
+      rotateAllHands();
+      log((who === 'player' ? 'You play' : seatLabel(who) + ' plays') + ' 0 — hands rotate around the table!');
     }
 
-    // Landed on exactly one card — start (or restart) that side's Uno
+    if (mode === 'houseRules' && card.value === '7') {
+      if (who === 'player') {
+        var targets = allHouseSeats();
+        if (targets.length > 1) {
+          showSwapPicker(card);
+          return; // resumes in the swap-picker button handler
+        }
+        if (targets.length === 1) {
+          swapHands('player', targets[0]);
+          log('You swap hands with ' + seatLabel(targets[0]) + '!');
+        }
+      } else {
+        var target2 = pickHouseSwapTarget(who);
+        swapHands(who, target2);
+        log(seatLabel(who) + ' swaps hands with ' + (target2 === 'player' ? 'you' : seatLabel(target2)) + '!');
+      }
+    }
+
+    continueCardEffect(who, card);
+  }
+
+  function continueCardEffect(who, card) {
+    if (checkWin(who)) return; // a swap/rotate could have just emptied someone's hand
+
+    // Landed on exactly one card — start (or restart) that seat's Uno
     // clock. Growing back past 1 later (a draw penalty, etc.) just makes
     // these checks irrelevant again on their own; nothing to clean up.
-    if (who === 'player' && playerHand.length === 1) {
-      playerUnoCalled = false;
-    }
-    if (who === 'house' && houseHand.length === 1) {
-      houseUnoCalled = false;
-      clearTimeout(houseUnoTimerId);
-      var delay = Math.random() * HOUSE_UNO_MAX_DELAY_MS;
-      houseUnoTimerId = setTimeout(function () {
-        if (over || houseHand.length !== 1 || houseUnoCalled) return;
-        houseUnoCalled = true;
-        log('The House calls "Uno!"');
-      }, delay);
+    if (hands[who].length === 1) {
+      unoCalled[who] = false;
+      if (who !== 'player') {
+        clearTimeout(houseUnoTimers[who]);
+        var delay = Math.random() * HOUSE_UNO_MAX_DELAY_MS;
+        houseUnoTimers[who] = setTimeout(function () {
+          if (over || hands[who].length !== 1 || unoCalled[who]) return;
+          unoCalled[who] = true;
+          log(seatLabel(who) + ' calls "Uno!"');
+        }, delay);
+      }
     }
 
     if (card.value === 'draw2' || card.value === 'wild4') {
       var amt = card.value === 'draw2' ? 2 : 4;
+      var target = nextSeatId(who, 1);
       if (mode === 'houseRules') {
         // Stack instead of resolving immediately — see handleStackResponse.
-        pendingStack = { count: (pendingStack ? pendingStack.count : 0) + amt, owedBy: opponent };
+        pendingStack = { count: (pendingStack ? pendingStack.count : 0) + amt, owedBy: target };
         render();
         handleStackResponse();
         return;
       }
-      drawCards(opponentHand, amt);
-      log((opponent === 'player' ? 'You draw ' + amt + ' and lose' : 'The House draws ' + amt + ' and loses') + ' the turn.');
-      turn = who; // same player goes again (opponent skipped)
-    } else if (card.value === 'skip' || card.value === 'reverse') {
-      // 2-player game: Reverse acts like Skip — the same player goes again
-      turn = who;
+      drawCards(hands[target], amt);
+      log((target === 'player' ? 'You draw ' : seatLabel(target) + ' draws ') + amt + ' and loses the turn.');
+      turn = nextSeatId(who, 2); // skip the drawer, continue after them
+    } else if (card.value === 'skip') {
+      turn = nextSeatId(who, 2);
+    } else if (card.value === 'reverse') {
+      if (seatOrder.length === 2) {
+        turn = who; // acts like Skip with only 2 players
+      } else {
+        direction *= -1;
+        turn = nextSeatId(who, 1);
+      }
     } else {
-      turn = opponent;
+      turn = nextSeatId(who, 1);
     }
 
     render();
     if (!over) {
-      if (turn === 'house') {
-        houseTurn();
-      } else {
-        statusEl.textContent = 'Your turn again.';
-      }
+      if (turn === 'player') statusEl.textContent = 'Your turn again.';
+      else houseTurn(turn);
     }
   }
 
   function checkWin(who) {
-    var hand = who === 'player' ? playerHand : houseHand;
-    if (hand.length > 0) return false;
+    if (hands[who].length > 0) return false;
     over = true;
-    clearTimeout(houseUnoTimerId);
-    cancelSlap();
-    pendingStack = null;
-    cancelStackWindow();
-    clearTimeout(houseTurnTimerId);
-    houseTurnTimerId = null;
-    clearTimeout(houseJumpTimerId);
-    houseJumpTimerId = null;
+    clearAllTimers();
     restartBtn.disabled = false;
     resultEl.hidden = false;
-    resultEl.textContent = who === 'player' ? 'You win! The House is out of comebacks.' : 'The House wins this round.';
+    resultEl.textContent = who === 'player' ? 'You win! The House is out of comebacks.' : seatLabel(who) + ' wins this round.';
     statusEl.textContent = resultEl.textContent;
     render();
     return true;
@@ -749,7 +1075,7 @@
   // your hand playable, the draw pile locks (see hasLegalCard() below),
   // and you have to click the card yourself to actually play it.
   function hasLegalCard() {
-    return playerHand.some(function (c) { return cardMatches(c); });
+    return hands.player.some(function (c) { return cardMatches(c); });
   }
 
   drawPileEl.addEventListener('click', function () {
@@ -759,23 +1085,24 @@
     }
     if (turn !== 'player' || over) return;
     if (hasLegalCard()) return; // already have something playable — play it first
+    catchSelfIfDrawingUncalled('player'); // draw still happens below either way
     reshuffleIfNeeded();
     if (drawPile.length === 0) {
       log('Nothing left to draw.');
-      turn = 'house';
+      turn = nextSeatId('player', 1);
       render();
-      houseTurn();
+      if (turn !== 'player') houseTurn(turn);
       return;
     }
     var card = drawPile.pop();
-    playerHand.push(card);
+    hands.player.push(card);
     log(cardMatches(card) ? 'You draw a playable card.' : 'You draw. Still nothing to play.');
     render();
   });
 
   callBtn.addEventListener('click', function () {
-    if (playerHand.length !== 1 || playerUnoCalled || over) return;
-    playerUnoCalled = true;
+    if (hands.player.length !== 1 || unoCalled.player || over) return;
+    unoCalled.player = true;
     log('You call "Uno!"');
     render();
   });
@@ -783,62 +1110,51 @@
   // --- House AI ---------------------------------------------------------
   var houseTurnTimerId = null;
 
-  function houseTurn() {
+  function houseTurn(seatId) {
     if (over) return;
-    statusEl.textContent = "The House's turn.";
+    statusEl.textContent = seatLabel(seatId) + "'s turn.";
+    maybeSeatBanter(seatId);
     houseTurnTimerId = setTimeout(function () {
       houseTurnTimerId = null;
       if (over) return;
 
-      // Catch the player not calling Uno before this move resolves.
-      if (playerHand.length === 1 && !playerUnoCalled) {
-        drawCards(playerHand, 2);
-        log('You forgot to say Uno! You draw 2.');
-      }
-
-      var legalIdx = -1;
-      // prefer a non-wild legal card, save wilds for when nothing else matches
-      for (var i = 0; i < houseHand.length; i++) {
-        if (houseHand[i].color !== 'wild' && cardMatches(houseHand[i])) { legalIdx = i; break; }
-      }
-      if (legalIdx === -1) {
-        for (var j = 0; j < houseHand.length; j++) {
-          if (cardMatches(houseHand[j])) { legalIdx = j; break; }
-        }
-      }
+      var legalIdx = pickCardIdxForSeat(seatId);
       if (legalIdx !== -1) {
-        playCard('house', legalIdx);
+        playCard(seatId, legalIdx);
         return;
       }
-      houseDrawUntilPlayable();
+      houseDrawUntilPlayable(seatId);
     }, HOUSE_THINK_MS);
   }
 
-  // Same "draw until playable" rule applies to The House — no single
-  // draw-then-pass for it either.
+  // Same "draw until playable" rule applies to every House seat — no
+  // single draw-then-pass for them either.
   var HOUSE_DRAW_STAGGER_MS = 350;
 
-  function houseDrawUntilPlayable() {
+  function houseDrawUntilPlayable(seatId) {
+    catchSelfIfDrawingUncalled(seatId);
     (function step() {
       reshuffleIfNeeded();
       if (drawPile.length === 0) {
-        log('The House has nothing left to draw. It passes.');
-        turn = 'player';
+        log(seatLabel(seatId) + ' has nothing left to draw. It passes.');
+        turn = nextSeatId(seatId, 1);
         render();
+        if (!over && turn !== 'player') houseTurn(turn);
         return;
       }
       var card = drawPile.pop();
-      houseHand.push(card);
+      hands[seatId].push(card);
       render();
       // render() rebuilds the whole row from scratch, so the freshly
       // added card back is always the last child — pop it in rather than
       // letting the row just jump straight to its new length.
-      var lastBack = houseCardsEl.lastElementChild;
+      var cardsEl = houseRowEl.querySelector('[data-seat="' + seatId + '"] .uno-house-cards');
+      var lastBack = cardsEl && cardsEl.lastElementChild;
       if (lastBack) lastBack.classList.add('uno-pop-in');
       if (cardMatches(card)) {
         wait(HOUSE_DRAW_STAGGER_MS).then(function () {
-          log('The House draws until it finds a match.');
-          playCard('house', houseHand.length - 1);
+          log(seatLabel(seatId) + ' draws until it finds a match.');
+          playCard(seatId, hands[seatId].length - 1);
         });
       } else {
         wait(HOUSE_DRAW_STAGGER_MS).then(step);
@@ -853,8 +1169,8 @@
   });
 
   var MODE_INTROS = {
-    standard: 'Standard rules, one on one against The House. Match color or number, stack your action cards, and empty your hand first.',
-    houseRules: 'House Rules, one on one against The House. More advanced than Standard, including jump-ins, 5 slaps, hand swapping, and stacking +2s and +4s.'
+    standard: 'Standard rules, against The House. Match color or number, stack your action cards, and empty your hand first.',
+    houseRules: 'House Rules, against The House. More advanced than Standard, including jump-ins, 5 slaps, hand swapping, and stacking +2s and +4s.'
   };
 
   function setMode(newMode) {

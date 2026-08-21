@@ -40,149 +40,149 @@
   // Secret characters (Penny, Telly) are intentionally left out — their
   // statblocks are too thin/unconfirmed to trait fairly.
   var CHARACTERS = [
-    { id: 'ap', name: 'Abstract Painting', icon: '../images/icons/ap.png',
+    { id: 'ap', name: 'Abstract Painting', icon: '../images/guesswhoicons/ap.png',
       usesShe: true, usesHe: false, usesThey: false, usesIt: false,
       isHuman: false, isObject: true, verbal: true, nonverbal: false,
       blind: false, disabled: false, hasLegs: true, hasArms: true, floats: false,
       hasPartner: false, ancient: false, newResident: false, vaNeeded: true,
       isAlgebralien: false, earthOrigin: true,
-      isGreen: true, isBlue: true, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: true, isWhite: true, isPink: false, isGirl: true, isBoy: false, isNonbinary: false,
+      isGreen: true, isBlue: true, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: true, isWhite: true, isPink: false, isGirl: true, isBoy: false, isNonbinary: false, isCisgender: true,
       roundShape: false, rectangularShape: true },
-    { id: 'bluemarble', name: 'Blue Marble', icon: '../images/icons/bluemarble.png',
+    { id: 'bluemarble', name: 'Blue Marble', icon: '../images/guesswhoicons/bluemarble.png',
       usesShe: true, usesHe: false, usesThey: false, usesIt: false,
       isHuman: false, isObject: true, verbal: true, nonverbal: false,
       blind: false, disabled: true, hasLegs: true, hasArms: true, floats: false,
       hasPartner: false, ancient: false, newResident: false, vaNeeded: false,
       isAlgebralien: false, earthOrigin: true,
-      isGreen: false, isBlue: true, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: true, isBoy: false, isNonbinary: false,
+      isGreen: false, isBlue: true, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: true, isBoy: false, isNonbinary: false, isCisgender: true,
       roundShape: true, rectangularShape: false },
-    { id: 'charlie', name: 'Charlie', icon: '../images/icons/charlie.png',
+    { id: 'charlie', name: 'Charlie', icon: '../images/guesswhoicons/charlie.png',
       usesShe: true, usesHe: false, usesThey: false, usesIt: false,
       isHuman: false, isObject: true, verbal: true, nonverbal: false,
       blind: false, disabled: false, hasLegs: true, hasArms: true, floats: false,
       hasPartner: false, ancient: false, newResident: true, vaNeeded: false,
       isAlgebralien: false, earthOrigin: true,
-      isGreen: false, isBlue: true, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: true, isGirl: false, isBoy: false, isNonbinary: true,
+      isGreen: false, isBlue: true, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: true, isGirl: false, isBoy: false, isNonbinary: true, isCisgender: false,
       roundShape: false, rectangularShape: false },
-    { id: 'cools', name: 'Cool S', icon: '../images/icons/cool s.png',
+    { id: 'cools', name: 'Cool S', icon: '../images/guesswhoicons/cool s.png',
       usesShe: false, usesHe: false, usesThey: true, usesIt: false,
       isHuman: false, isObject: false, verbal: false, nonverbal: true,
       blind: false, disabled: false, hasLegs: false, hasArms: true, floats: true,
       hasPartner: true, ancient: false, newResident: true, vaNeeded: false,
       isAlgebralien: true, earthOrigin: false,
-      isGreen: false, isBlue: false, isPurple: true, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true,
+      isGreen: false, isBlue: false, isPurple: true, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true, isCisgender: false,
       roundShape: false, rectangularShape: false },
-    { id: 'clickbaity', name: 'Clickbaity', icon: '../images/icons/cool s.png',
+    { id: 'clickbaity', name: 'Clickbaity', icon: '../images/guesswhoicons/cool s.png',
       usesShe: false, usesHe: true, usesThey: false, usesIt: false,
       isHuman: false, isObject: true, verbal: true, nonverbal: false,
       blind: false, disabled: false, hasLegs: false, hasArms: false, floats: true,
       hasPartner: true, ancient: false, newResident: true, vaNeeded: false,
       isAlgebralien: false, earthOrigin: false,
-      isGreen: false, isBlue: false, isPurple: false, isOrange: true, isYellow: false, isBrown: false, isDark: false, isRed: true, isWhite: false, isPink: false, isGirl: false, isBoy: true, isNonbinary: false,
+      isGreen: false, isBlue: false, isPurple: false, isOrange: true, isYellow: false, isBrown: false, isDark: false, isRed: true, isWhite: false, isPink: false, isGirl: false, isBoy: true, isNonbinary: false, isCisgender: true,
       roundShape: false, rectangularShape: false },
-    { id: 'dream', name: 'Dream', icon: '../images/icons/dream.png',
+    { id: 'dream', name: 'Dream', icon: '../images/guesswhoicons/dream.png',
       usesShe: false, usesHe: true, usesThey: false, usesIt: true,
       isHuman: false, isObject: false, verbal: false, nonverbal: true,
       blind: false, disabled: false, hasLegs: false, hasArms: false, floats: true,
       hasPartner: false, ancient: false, newResident: false, vaNeeded: false,
       isAlgebralien: false, earthOrigin: false,
-      isGreen: false, isBlue: true, isPurple: true, isOrange: false, isYellow: false, isBrown: false, isDark: true, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true,
+      isGreen: false, isBlue: true, isPurple: true, isOrange: false, isYellow: false, isBrown: false, isDark: true, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true, isCisgender: false,
       roundShape: true, rectangularShape: false },
-    { id: 'dumptruck', name: 'Dumptruck', icon: '../images/icons/dumptruck.png',
+    { id: 'dumptruck', name: 'Dumptruck', icon: '../images/guesswhoicons/dumptruck.png',
       usesShe: true, usesHe: false, usesThey: false, usesIt: false,
       isHuman: false, isObject: true, verbal: true, nonverbal: false,
-      blind: false, disabled: true, hasLegs: false, hasArms: true, floats: false,
+      blind: false, disabled: false, hasLegs: false, hasArms: true, floats: false,
       hasPartner: false, ancient: false, newResident: true, vaNeeded: true,
       isAlgebralien: false, earthOrigin: false,
-      isGreen: true, isBlue: false, isPurple: false, isOrange: false, isYellow: true, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: true, isBoy: false, isNonbinary: false,
+      isGreen: true, isBlue: false, isPurple: false, isOrange: false, isYellow: true, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: true, isBoy: false, isNonbinary: false, isCisgender: true,
       roundShape: false, rectangularShape: true },
-    { id: 'geeky', name: 'Geeky', icon: '../images/icons/geeky.png',
+    { id: 'geeky', name: 'Geeky', icon: '../images/guesswhoicons/geeky.png',
       usesShe: false, usesHe: true, usesThey: false, usesIt: false,
       isHuman: false, isObject: true, verbal: true, nonverbal: false,
       blind: false, disabled: false, hasLegs: true, hasArms: true, floats: false,
       hasPartner: false, ancient: false, newResident: false, vaNeeded: false,
       isAlgebralien: false, earthOrigin: true,
-      isGreen: false, isBlue: false, isPurple: false, isOrange: true, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: true, isNonbinary: false,
+      isGreen: false, isBlue: false, isPurple: false, isOrange: true, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: true, isNonbinary: false, isCisgender: true,
       roundShape: false, rectangularShape: false },
-    { id: 'indigo', name: 'Indigo', icon: '../images/icons/indigo.png',
+    { id: 'indigo', name: 'Indigo', icon: '../images/guesswhoicons/indigo.png',
       usesShe: false, usesHe: true, usesThey: false, usesIt: false,
       isHuman: false, isObject: false, verbal: false, nonverbal: true,
       blind: false, disabled: false, hasLegs: true, hasArms: false, floats: false,
       hasPartner: false, ancient: true, newResident: false, vaNeeded: false,
       isAlgebralien: false, earthOrigin: false,
-      isGreen: false, isBlue: false, isPurple: true, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true,
+      isGreen: false, isBlue: false, isPurple: true, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true, isCisgender: false,
       roundShape: true, rectangularShape: false },
-    { id: 'journal', name: 'Journal', icon: '../images/icons/journal.png',
+    { id: 'journal', name: 'Journal', icon: '../images/guesswhoicons/journal.png',
       usesShe: false, usesHe: true, usesThey: false, usesIt: false,
       isHuman: false, isObject: true, verbal: true, nonverbal: false,
       blind: false, disabled: false, hasLegs: true, hasArms: true, floats: false,
       hasPartner: false, ancient: true, newResident: false, vaNeeded: true,
       isAlgebralien: false, earthOrigin: false,
-      isGreen: false, isBlue: false, isPurple: false, isOrange: false, isYellow: true, isBrown: true, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: true, isNonbinary: false,
+      isGreen: false, isBlue: false, isPurple: false, isOrange: false, isYellow: true, isBrown: true, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: true, isNonbinary: false, isCisgender: true,
       roundShape: false, rectangularShape: true },
-    { id: 'liz', name: 'Liz', icon: '../images/icons/liz.png',
+    { id: 'liz', name: 'Liz', icon: '../images/guesswhoicons/liz.png',
       usesShe: true, usesHe: false, usesThey: false, usesIt: false,
       isHuman: true, isObject: false, verbal: true, nonverbal: false,
       blind: false, disabled: false, hasLegs: true, hasArms: true, floats: false,
       hasPartner: false, ancient: false, newResident: false, vaNeeded: true,
       isAlgebralien: false, earthOrigin: true,
-      isGreen: false, isBlue: false, isPurple: false, isOrange: false, isYellow: true, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: true, isGirl: true, isBoy: false, isNonbinary: false,
+      isGreen: false, isBlue: false, isPurple: false, isOrange: false, isYellow: true, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: true, isGirl: true, isBoy: false, isNonbinary: false, isCisgender: true,
       roundShape: false, rectangularShape: false },
-    { id: 'lp', name: 'Long Play', icon: '../images/icons/lp.png',
+    { id: 'lp', name: 'Long Play', icon: '../images/guesswhoicons/lp.png',
       usesShe: true, usesHe: false, usesThey: false, usesIt: false,
       isHuman: false, isObject: true, verbal: false, nonverbal: true,
       blind: false, disabled: true, hasLegs: true, hasArms: true, floats: false,
       hasPartner: true, ancient: false, newResident: false, vaNeeded: false,
       isAlgebralien: false, earthOrigin: false,
-      isGreen: false, isBlue: true, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: true, isRed: false, isWhite: false, isPink: true, isGirl: true, isBoy: false, isNonbinary: false,
+      isGreen: false, isBlue: true, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: true, isRed: false, isWhite: false, isPink: true, isGirl: true, isBoy: false, isNonbinary: false, isCisgender: true,
       roundShape: true, rectangularShape: false },
-    { id: 'mirror', name: 'Mirror', icon: '../images/icons/mirror.png',
+    { id: 'mirror', name: 'Mirror', icon: '../images/guesswhoicons/mirror.png',
       usesShe: true, usesHe: false, usesThey: false, usesIt: false,
       isHuman: false, isObject: true, verbal: true, nonverbal: false,
       blind: false, disabled: false, hasLegs: true, hasArms: true, floats: false,
       hasPartner: false, ancient: true, newResident: false, vaNeeded: false,
       isAlgebralien: false, earthOrigin: true,
-      isGreen: false, isBlue: true, isPurple: false, isOrange: false, isYellow: true, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: true, isBoy: false, isNonbinary: false,
+      isGreen: false, isBlue: true, isPurple: false, isOrange: false, isYellow: true, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: true, isBoy: false, isNonbinary: false, isCisgender: true,
       roundShape: true, rectangularShape: false },
-    { id: 'n528', name: '-⁵⁄₂₈', icon: '../images/icons/n528.png',
+    { id: 'n528', name: '-⁵⁄₂₈', icon: '../images/guesswhoicons/n528.png',
       usesShe: false, usesHe: true, usesThey: true, usesIt: false,
       isHuman: false, isObject: false, verbal: true, nonverbal: false,
       blind: false, disabled: false, hasLegs: true, hasArms: true, floats: false,
       hasPartner: false, ancient: false, newResident: false, vaNeeded: false,
       isAlgebralien: true, earthOrigin: false,
-      isGreen: true, isBlue: false, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true,
+      isGreen: true, isBlue: false, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true, isCisgender: false,
       roundShape: false, rectangularShape: false },
-    { id: 'pbc', name: 'PBC', icon: '../images/icons/pbc.png',
+    { id: 'pbc', name: 'PBC', icon: '../images/guesswhoicons/pbc.png',
       usesShe: false, usesHe: true, usesThey: false, usesIt: false,
       isHuman: false, isObject: true, verbal: true, nonverbal: false,
       blind: false, disabled: false, hasLegs: true, hasArms: true, floats: false,
       hasPartner: false, ancient: false, newResident: true, vaNeeded: true,
       isAlgebralien: false, earthOrigin: true,
-      isGreen: false, isBlue: false, isPurple: false, isOrange: true, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: true, isNonbinary: false,
+      isGreen: false, isBlue: false, isPurple: false, isOrange: true, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: true, isNonbinary: false, isCisgender: true,
       roundShape: false, rectangularShape: false },
-    { id: 'cassette', name: 'Cassette', icon: '../images/icons/cassette.png',
+    { id: 'cassette', name: 'Cassette', icon: '../images/guesswhoicons/cassette.png',
       usesShe: true, usesHe: false, usesThey: true, usesIt: false,
       isHuman: false, isObject: true, verbal: true, nonverbal: false,
       blind: true, disabled: true, hasLegs: true, hasArms: true, floats: false,
       hasPartner: true, ancient: false, newResident: false, vaNeeded: false,
       isAlgebralien: false, earthOrigin: false,
-      isGreen: false, isBlue: false, isPurple: false, isOrange: true, isYellow: true, isBrown: false, isDark: true, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true,
+      isGreen: false, isBlue: false, isPurple: false, isOrange: true, isYellow: true, isBrown: false, isDark: true, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true, isCisgender: false,
       roundShape: false, rectangularShape: true },
-    { id: 'greendaisy', name: 'Green D.A.I.S.Y.', icon: '../images/icons/greendaisy.png',
+    { id: 'greendaisy', name: 'Green D.A.I.S.Y.', icon: '../images/guesswhoicons/greendaisy.png',
       usesShe: true, usesHe: false, usesThey: true, usesIt: false,
       isHuman: false, isObject: true, verbal: true, nonverbal: false,
       blind: false, disabled: false, hasLegs: true, hasArms: true, floats: false,
       hasPartner: false, ancient: true, newResident: false, vaNeeded: true,
       isAlgebralien: false, earthOrigin: false,
-      isGreen: true, isBlue: false, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true,
+      isGreen: true, isBlue: false, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true, isCisgender: false,
       roundShape: false, rectangularShape: true },
-    { id: 'thehouse', name: 'The House', icon: '../images/icons/the house.png',
+    { id: 'thehouse', name: 'The House', icon: '../images/guesswhoicons/the house.png',
       usesShe: false, usesHe: false, usesThey: false, usesIt: true,
       isHuman: false, isObject: false, verbal: false, nonverbal: true,
       blind: false, disabled: false, hasLegs: false, hasArms: false, floats: false,
       hasPartner: false, ancient: true, newResident: false, vaNeeded: false,
       isAlgebralien: false, earthOrigin: false,
-      isGreen: false, isBlue: false, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true,
+      isGreen: false, isBlue: false, isPurple: false, isOrange: false, isYellow: false, isBrown: false, isDark: false, isRed: false, isWhite: false, isPink: false, isGirl: false, isBoy: false, isNonbinary: true, isCisgender: false,
       roundShape: false, rectangularShape: false }
   ];
 
@@ -193,14 +193,14 @@
   // meant almost every question got hijacked into a pronoun match. Pronoun
   // questions now require an actually pronoun-shaped phrase.
   var QUESTIONS = [
-    { trait: 'usesShe', prompt: "Does your pick use she/her pronouns?", yes: 'Yes, she uses she/her pronouns.', no: "No, she's not a she/her.",
-      triggers: ['sheher', 'she her', 'use she', 'uses she', 'goes by she', 'go by she', 'her pronoun', 'her pronouns', 'female pronoun'] },
-    { trait: 'usesHe', prompt: "Does your pick use he/him pronouns?", yes: 'Yes, he uses he/him pronouns.', no: "No, he's not a he/him.",
-      triggers: ['hehim', 'he him', 'use he', 'uses he', 'goes by he', 'go by he', 'his pronoun', 'his pronouns', 'male pronoun'] },
+    { trait: 'usesShe', prompt: "Does your pick use she/her pronouns?", yes: 'Yes, she uses she/her pronouns.', no: "No, not she/her.",
+      triggers: ['sheher', 'she her', 'use she', 'uses she', 'goes by she', 'go by she', 'she pronoun', 'she pronouns', 'her pronoun', 'her pronouns', 'female pronoun'] },
+    { trait: 'usesHe', prompt: "Does your pick use he/him pronouns?", yes: 'Yes, he uses he/him pronouns.', no: "No, not he/him.",
+      triggers: ['hehim', 'he him', 'use he', 'uses he', 'goes by he', 'go by he', 'he pronoun', 'he pronouns', 'his pronoun', 'his pronouns', 'male pronoun'] },
     { trait: 'usesThey', prompt: "Does your pick use they/them pronouns?", yes: 'Yes, they use they/them pronouns.', no: "No, not they/them.",
-      triggers: ['theythem', 'they them', 'use they', 'uses they', 'goes by they', 'go by they', 'their pronoun', 'their pronouns', 'nonbinary pronoun'] },
+      triggers: ['theythem', 'they them', 'use they', 'uses they', 'goes by they', 'go by they', 'they pronoun', 'they pronouns', 'their pronoun', 'their pronouns', 'nonbinary pronoun'] },
     { trait: 'usesIt', prompt: "Does your pick use it/its pronouns?", yes: 'Yes, it goes by it/its.', no: "No, not it/its.",
-      triggers: ['itits', 'it its', 'use it', 'uses it', 'goes by it', 'go by it', 'its pronoun', 'its pronouns'] },
+      triggers: ['itits', 'it its', 'use it', 'uses it', 'goes by it', 'go by it', 'it pronoun', 'it pronouns', 'its pronoun', 'its pronouns'] },
     { trait: 'isHuman', prompt: "Is your pick human?", yes: "Yes, they're human.", no: "No, not human.",
       triggers: ['human', 'person', 'people'] },
     { trait: 'isObject', prompt: "Is your pick a physical object?", yes: "Yes, they're a physical object.", no: "No — something stranger than that.",
@@ -260,44 +260,20 @@
     { trait: 'isBoy', prompt: "Is your pick a boy?", yes: "Yes, they're a boy.", no: "No, not a boy.",
       triggers: ['boy', 'man', 'male'] },
     { trait: 'isNonbinary', prompt: "Is your pick nonbinary?", yes: "Yes, they're nonbinary.", no: "No, not nonbinary.",
-      triggers: ['nonbinary', 'non binary', 'genderless', 'no gender', 'agender'] }
+      triggers: ['nonbinary', 'non binary', 'genderless', 'no gender', 'agender'] },
+    { trait: 'isCisgender', prompt: "Is your pick cisgender?", yes: "Yes, they're cisgender.", no: "No, not cisgender.",
+      triggers: ['cisgender', 'cis gender', 'cis'] }
   ];
 
-  // --- Icon cropping --------------------------------------------------
-  // Same problem merge.js already solved: several source icon PNGs have
-  // an off-center or padded background square, so a plain object-fit
-  // render leaves characters (e.g. Charlie's ears/emotion lines) looking
-  // off-frame. These zoom/position values are ported straight from
-  // merge.js's per-tile crop table (it already audited every icon's
-  // actual composition) and converted from source-pixel offsets to
-  // CSS background-position percentages. Characters merge.js doesn't
-  // include get the same validated default-zoom crop the rest share.
-  var DEFAULT_ICON_ZOOM = 1;
-  // offsetX/offsetY are fractions of the source image's own width/height,
-  // independent of zoom — dialing zoom up or down keeps each character
-  // correctly recentered instead of just rescaling a fixed percentage.
-  var ICON_CROP = {};
-
-  function iconStyle(c) {
-    var crop = ICON_CROP[c.id] || {};
-    var zoom = crop.zoom || DEFAULT_ICON_ZOOM;
-    var offsetX = crop.offsetX || 0;
-    var offsetY = crop.offsetY || 0;
-    // At zoom 1 there's no room to shift the crop window at all, so skip
-    // the offset math entirely (it would otherwise divide by zero).
-    var posX = zoom === 1 ? 50 : 50 + (100 * offsetX * zoom) / (zoom - 1);
-    var posY = zoom === 1 ? 50 : 50 + (100 * offsetY * zoom) / (zoom - 1);
-    return 'background-image:url(' + JSON.stringify(c.icon) + ');' +
-      'background-size:' + (zoom * 100) + '% ' + (zoom * 100) + '%;' +
-      'background-position:' + posX + '% ' + posY + '%;';
-  }
-
+  // Icons live in images/guesswhoicons/ — manually cropped versions of the
+  // site's character icons, framed specifically for this game's square
+  // tiles, so no runtime zoom/crop math is needed here anymore.
   function makeIconEl(c) {
     var icon = document.createElement('div');
     icon.className = 'gw-icon';
     icon.setAttribute('role', 'img');
     icon.setAttribute('aria-label', c.name);
-    icon.setAttribute('style', iconStyle(c));
+    icon.style.backgroundImage = 'url(' + JSON.stringify(c.icon) + ')';
     return icon;
   }
 

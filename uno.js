@@ -854,7 +854,7 @@
 
   var MODE_INTROS = {
     standard: 'Standard rules, one on one against The House. Match color or number, stack your action cards, and empty your hand first.',
-    houseRules: 'House Rules, one on one against The House. Everything from Standard, plus whatever chaos gets added here next.'
+    houseRules: 'House Rules, one on one against The House. More advanced than Standard, including jump-ins, 5 slaps, hand swapping, and stacking +2s and +4s.'
   };
 
   function setMode(newMode) {

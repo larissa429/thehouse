@@ -19,7 +19,7 @@
 /* the small, fixed set of non-character utility pages. Anything else
    one level deep is assumed to be a character page — so new
    character folders NEVER need to be added here manually again. */
-var UTILITY_FOLDERS = ["about", "residents", "audition", "calendar", "resources", "art", "guestbook", "credits", "quiz", "quizsecret", "penny", "locations", "games", "merge", "crossroads", "guesswho"];
+var UTILITY_FOLDERS = ["about", "residents", "audition", "calendar", "resources", "art", "guestbook", "credits", "quiz", "quizsecret", "penny", "locations", "games", "merge", "crossroads", "guesswho", "uno"];
 
 var pathParts = location.pathname.split("/").filter(Boolean);
 var here = pathParts[pathParts.length - 1] || "";
@@ -83,7 +83,7 @@ class SiteHeader extends HTMLElement {
         a.setAttribute("aria-current", "page");
       }
       // individual game pages light up "Games" too, not just /games/ itself
-      if (key === "games" && ["merge", "crossroads", "guesswho"].indexOf(here) !== -1) {
+      if (key === "games" && ["merge", "crossroads", "guesswho", "uno"].indexOf(here) !== -1) {
         a.setAttribute("aria-current", "page");
       }
     });

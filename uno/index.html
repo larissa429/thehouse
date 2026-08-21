@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Uno &middot; The House</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    /* Guards every [hidden] element in this page against being overridden
+       by a later same-specificity `display:` rule (bit us once already
+       with the color picker — cheaper to fix it globally here). */
+    [hidden] { display: none !important; }
+
+    .uno-game {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      max-width: 56rem;
+    }
+
+    .uno-start {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 2.5rem 1rem;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 12px;
+    }
+    .uno-start p {
+      font-family: var(--display);
+      font-size: 1.2rem;
+      color: var(--paper);
+      margin: 0;
+    }
+    .uno-start-btn {
+      font-size: 0.95rem;
+      padding: 0.7rem 1.4rem;
+    }
+
+    @keyframes unoDealIn {
+      from { opacity: 0; transform: translateY(-30px) scale(0.8) rotate(-8deg); }
+      to { opacity: 1; transform: none; }
+    }
+    .uno-deal-in {
+      animation: unoDealIn 0.4s ease both;
+    }
+
+    @keyframes unoPopIn {
+      from { opacity: 0; transform: scale(0.4); }
+      to { opacity: 1; transform: none; }
+    }
+    .uno-pop-in {
+      animation: unoPopIn 0.25s ease both;
+    }
+
+    @keyframes unoPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(192, 70, 60, 0.55); }
+      50% { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(192, 70, 60, 0); }
+    }
+    .uno-call-btn {
+      font-family: var(--display);
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: white;
+      background: #c0463c;
+      border: 3px solid #e6a099;
+      border-radius: 999px;
+      padding: 0.5rem 1.6rem;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      animation: unoPulse 1s ease-in-out infinite;
+    }
+    .uno-call-btn:hover { filter: brightness(1.1); }
+    .uno-call-btn.is-floating {
+      position: fixed;
+      z-index: 50;
+    }
+
+    .uno-hud {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .uno-status {
+      font-family: var(--body);
+      color: var(--paper);
+      font-size: 1.05rem;
+    }
+    .uno-restart {
+      font-family: var(--label);
+      font-size: 0.8rem;
+      background: transparent;
+      border: var(--edge);
+      color: var(--ink);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .uno-restart:hover { background: var(--wall-lit); }
+    .uno-restart:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .uno-house-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1rem;
+    }
+    .uno-house-cards {
+      display: flex;
+      gap: -18px;
+    }
+    .uno-house-cards .uno-card {
+      margin-left: -28px;
+    }
+    .uno-house-cards .uno-card:first-child { margin-left: 0; }
+    .uno-house-label {
+      font-family: var(--label);
+      font-size: 0.75rem;
+      color: var(--ink-soft);
+      text-align: center;
+    }
+
+    .uno-table {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      padding: 1.5rem;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 12px;
+      min-height: 160px;
+      position: relative;
+    }
+    .uno-pile-label {
+      font-family: var(--label);
+      font-size: 0.65rem;
+      color: var(--ink-soft);
+      text-align: center;
+      margin-top: 0.4rem;
+    }
+    .uno-pile-wrap { display: flex; flex-direction: column; align-items: center; }
+    .uno-discard-wrap { position: relative; }
+
+    @keyframes unoSlapGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(217, 164, 65, 0.65); }
+      50% { box-shadow: 0 0 0 14px rgba(217, 164, 65, 0); }
+    }
+    .uno-discard-wrap.is-slappable #unoDiscardTop {
+      cursor: pointer;
+      border-radius: 8px;
+      animation: unoSlapGlow 0.7s ease-in-out infinite;
+    }
+    @keyframes unoSlapLabelPulse {
+      0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.85; }
+      50% { transform: translateX(-50%) scale(1.12); opacity: 1; }
+    }
+    .uno-slap-label {
+      position: absolute;
+      top: -2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--display);
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--lamp);
+      letter-spacing: 0.05em;
+      animation: unoSlapLabelPulse 0.7s ease-in-out infinite;
+      white-space: nowrap;
+    }
+
+    @keyframes unoStackPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .uno-stack-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      margin: -0.5rem auto 0;
+      animation: unoStackPulse 0.8s ease-in-out infinite;
+    }
+    .uno-stack-indicator span {
+      font-family: var(--display);
+      font-size: 1.05rem;
+      font-weight: bold;
+      color: var(--lamp);
+      letter-spacing: 0.03em;
+    }
+    .uno-stack-bar-track {
+      width: 140px;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--wall);
+      border: var(--edge);
+      overflow: hidden;
+    }
+    .uno-stack-bar {
+      height: 100%;
+      width: 100%;
+      background: var(--lamp);
+      transform-origin: left;
+    }
+
+    .uno-card {
+      width: 64px;
+      height: 92px;
+      border-radius: 8px;
+      border: 3px solid var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--label);
+      font-weight: bold;
+      font-size: 1.6rem;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.35);
+      user-select: none;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .uno-card-back {
+      background: linear-gradient(135deg, #1a1310, #33241a);
+      border-color: var(--lamp);
+      color: var(--lamp);
+      cursor: pointer;
+    }
+    #unoDrawPile.is-disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      filter: grayscale(0.6);
+    }
+    .uno-card-back > svg:not(.uno-mini-house) {
+      width: 28px;
+      height: 28px;
+    }
+    .uno-mini-house {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+    }
+    .uno-card-back .uno-mini-house { opacity: 0.75; }
+    .uno-mini-house.corner-tl { top: 5px; left: 5px; }
+    /* mirrored corner, same as a real card's rotated corner pip so it
+       reads right-side-up from the opposite side of the table */
+    .uno-mini-house.corner-br { bottom: 5px; right: 5px; transform: rotate(180deg); }
+    .uno-mini-house-front {
+      stroke: white;
+      fill: none;
+      stroke-width: 1.6;
+      opacity: 0.9;
+    }
+    .uno-card.color-red { background: #c0463c; border-color: #e6a099; }
+    .uno-card.color-yellow { background: #d9a441; border-color: #f2d69c; }
+    .uno-card.color-green { background: #4c8c5c; border-color: #a3d4b2; }
+    .uno-card.color-blue { background: #3b6ea5; border-color: #9dc1e0; }
+    .uno-card.color-wild { background: conic-gradient(#c0463c 0deg 90deg, #d9a441 90deg 180deg, #4c8c5c 180deg 270deg, #3b6ea5 270deg 360deg); border-color: #e9e2d0; }
+
+    .uno-hand {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      padding: 1rem;
+    }
+    .uno-hand .uno-card {
+      cursor: pointer;
+      transition: transform 0.12s ease;
+    }
+    .uno-hand .uno-card:hover { transform: translateY(-8px); }
+    .uno-hand .uno-card.is-illegal {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .uno-hand .uno-card.is-illegal:hover { transform: none; }
+
+    .uno-current-color {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--shadow);
+      vertical-align: middle;
+      margin-left: 0.4rem;
+    }
+
+    .uno-log {
+      max-height: 6rem;
+      overflow-y: auto;
+      font-family: var(--body);
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+      padding: 0.5rem 0.9rem;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 8px;
+    }
+    .uno-log p { margin: 0.2rem 0; }
+
+    .uno-color-picker[hidden] { display: none; }
+    .uno-color-picker {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: center;
+      padding: 1rem;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 10px;
+    }
+    .uno-color-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 3px solid var(--shadow);
+      cursor: pointer;
+    }
+    .uno-color-btn.color-red { background: #c0463c; }
+    .uno-color-btn.color-yellow { background: #d9a441; }
+    .uno-color-btn.color-green { background: #4c8c5c; }
+    .uno-color-btn.color-blue { background: #3b6ea5; }
+
+    .uno-result {
+      padding: 0.9rem 1rem;
+      border-radius: 10px;
+      border: var(--edge);
+      background: var(--wall-lit);
+      font-family: var(--display);
+      font-size: 1.15rem;
+      color: var(--paper);
+      text-align: center;
+    }
+
+    .uno-pass-row {
+      display: flex;
+      justify-content: center;
+    }
+
+    .uno-mode-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .uno-mode-btn {
+      font-family: var(--label);
+      font-size: 0.8rem;
+      background: transparent;
+      border: var(--edge);
+      color: var(--ink-soft);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .uno-mode-btn:hover { background: var(--wall-lit); }
+    .uno-mode-btn.is-active {
+      background: var(--lamp);
+      color: var(--shadow);
+      border-color: var(--lamp);
+    }
+  </style>
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+    <span class="eyebrow breadcrumb"><a href="../games/">&larr; Games</a></span>
+
+    <h1>Uno</h1>
+    <p id="unoIntro">Standard rules, one on one against The House. Match color or number, stack your action cards, and empty your hand first.</p>
+
+    <div class="uno-mode-row">
+      <button type="button" class="uno-mode-btn is-active" id="unoModeStandard">Standard</button>
+      <button type="button" class="uno-mode-btn" id="unoModeHouseRules">House Rules</button>
+    </div>
+
+    <div class="uno-game" id="unoGame">
+
+      <div class="uno-start" id="unoStart">
+        <p>The House is shuffling.</p>
+        <button type="button" class="uno-restart uno-start-btn" id="unoStartBtn">Start game</button>
+      </div>
+
+      <div class="uno-hud" id="unoHud" hidden>
+        <div class="uno-status" id="unoStatus">Dealing&hellip;</div>
+        <button type="button" class="uno-restart" id="unoRestart">New game</button>
+      </div>
+
+      <div class="uno-house-row" id="unoHouseRow" hidden>
+        <div class="uno-pile-wrap">
+          <div class="uno-house-cards" id="unoHouseCards"></div>
+          <span class="uno-house-label" id="unoHouseCount">The House &mdash; 7 cards</span>
+        </div>
+      </div>
+
+      <div class="uno-table" id="unoTable" hidden>
+        <div class="uno-pile-wrap">
+          <div class="uno-card uno-card-back" id="unoDrawPile">
+            <svg class="uno-mini-house corner-tl" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3L2 12h3v8z"/></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3L2 12h3v8z"/></svg>
+            <svg class="uno-mini-house corner-br" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3L2 12h3v8z"/></svg>
+          </div>
+          <span class="uno-pile-label">Draw</span>
+        </div>
+        <div class="uno-pile-wrap uno-discard-wrap">
+          <div class="uno-slap-label" id="unoSlapLabel" hidden>Slap!</div>
+          <div id="unoDiscardTop"></div>
+          <span class="uno-pile-label">Discard &mdash; color: <span id="unoColorLabel">&mdash;</span><span class="uno-current-color" id="unoColorSwatch"></span></span>
+        </div>
+      </div>
+
+      <div class="uno-stack-indicator" id="unoStackIndicator" hidden>
+        <span id="unoStackText">Stack: 2</span>
+        <div class="uno-stack-bar-track"><div class="uno-stack-bar" id="unoStackBar"></div></div>
+      </div>
+
+      <div class="uno-color-picker" id="unoColorPicker" hidden>
+        <button type="button" class="uno-color-btn color-red" data-color="red" aria-label="Red"></button>
+        <button type="button" class="uno-color-btn color-yellow" data-color="yellow" aria-label="Yellow"></button>
+        <button type="button" class="uno-color-btn color-green" data-color="green" aria-label="Green"></button>
+        <button type="button" class="uno-color-btn color-blue" data-color="blue" aria-label="Blue"></button>
+      </div>
+
+      <div class="uno-hand" id="unoHand"></div>
+
+      <div class="uno-pass-row">
+        <button type="button" class="uno-call-btn" id="unoCallBtn" hidden>UNO!</button>
+      </div>
+
+      <div id="unoResult" class="uno-result" hidden></div>
+
+      <div class="uno-log" id="unoLog" hidden></div>
+
+    </div>
+
+  </main>
+
+  <site-footer></site-footer>
+
+  <script src="../components.js" defer></script>
+  <script src="../uno.js" defer></script>
+</body>
+</html>

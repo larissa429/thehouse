@@ -26,6 +26,15 @@
   var guessSelectEl = document.getElementById('gwGuessSelect');
   var guessBtnEl = document.getElementById('gwGuessBtn');
   var resultEl = document.getElementById('gwResult');
+  var introEl = document.getElementById('gwIntro');
+  var modeSoloBtn = document.getElementById('gwModeSolo');
+  var modeDuelBtn = document.getElementById('gwModeDuel');
+  var pickerEl = document.getElementById('gwPicker');
+  var pickerBoardEl = document.getElementById('gwPickerBoard');
+  var houseTurnEl = document.getElementById('gwHouseTurn');
+  var houseQuestionEl = document.getElementById('gwHouseQuestion');
+  var houseYesBtn = document.getElementById('gwHouseYes');
+  var houseNoBtn = document.getElementById('gwHouseNo');
 
   // --- Character data -----------------------------------------------
   // Secret characters (Penny, Telly) are intentionally left out — their
@@ -184,75 +193,113 @@
   // meant almost every question got hijacked into a pronoun match. Pronoun
   // questions now require an actually pronoun-shaped phrase.
   var QUESTIONS = [
-    { trait: 'usesShe', yes: 'Yes, she uses she/her pronouns.', no: "No, she's not a she/her.",
+    { trait: 'usesShe', prompt: "Does your pick use she/her pronouns?", yes: 'Yes, she uses she/her pronouns.', no: "No, she's not a she/her.",
       triggers: ['sheher', 'she her', 'use she', 'uses she', 'goes by she', 'go by she', 'her pronoun', 'her pronouns', 'female pronoun'] },
-    { trait: 'usesHe', yes: 'Yes, he uses he/him pronouns.', no: "No, he's not a he/him.",
+    { trait: 'usesHe', prompt: "Does your pick use he/him pronouns?", yes: 'Yes, he uses he/him pronouns.', no: "No, he's not a he/him.",
       triggers: ['hehim', 'he him', 'use he', 'uses he', 'goes by he', 'go by he', 'his pronoun', 'his pronouns', 'male pronoun'] },
-    { trait: 'usesThey', yes: 'Yes, they use they/them pronouns.', no: "No, not they/them.",
+    { trait: 'usesThey', prompt: "Does your pick use they/them pronouns?", yes: 'Yes, they use they/them pronouns.', no: "No, not they/them.",
       triggers: ['theythem', 'they them', 'use they', 'uses they', 'goes by they', 'go by they', 'their pronoun', 'their pronouns', 'nonbinary pronoun'] },
-    { trait: 'usesIt', yes: 'Yes, it goes by it/its.', no: "No, not it/its.",
+    { trait: 'usesIt', prompt: "Does your pick use it/its pronouns?", yes: 'Yes, it goes by it/its.', no: "No, not it/its.",
       triggers: ['itits', 'it its', 'use it', 'uses it', 'goes by it', 'go by it', 'its pronoun', 'its pronouns'] },
-    { trait: 'isHuman', yes: "Yes, they're human.", no: "No, not human.",
+    { trait: 'isHuman', prompt: "Is your pick human?", yes: "Yes, they're human.", no: "No, not human.",
       triggers: ['human', 'person', 'people'] },
-    { trait: 'isObject', yes: "Yes, they're a physical object.", no: "No — something stranger than that.",
+    { trait: 'isObject', prompt: "Is your pick a physical object?", yes: "Yes, they're a physical object.", no: "No — something stranger than that.",
       triggers: ['object', 'item', 'toy'] },
-    { trait: 'verbal', yes: 'Yes, they talk normally.', no: "No, they don't really talk.",
+    { trait: 'verbal', prompt: "Does your pick talk normally?", yes: 'Yes, they talk normally.', no: "No, they don't really talk.",
       triggers: ['talk', 'speak', 'verbal', 'voice', 'loud', 'chatty'] },
-    { trait: 'nonverbal', yes: "Yes, they're nonverbal.", no: "No, they're not nonverbal.",
+    { trait: 'nonverbal', prompt: "Is your pick nonverbal or silent?", yes: "Yes, they're nonverbal.", no: "No, they're not nonverbal.",
       triggers: ['nonverbal', 'silent', 'mute', 'dont talk', 'doesnt talk'] },
-    { trait: 'blind', yes: "Yes, they're blind.", no: 'No, they can see just fine.',
+    { trait: 'blind', prompt: "Is your pick blind?", yes: "Yes, they're blind.", no: 'No, they can see just fine.',
       triggers: ['blind', 'cant see', 'sight'] },
-    { trait: 'disabled', yes: 'Yes, they have a disability.', no: 'No disability.',
+    { trait: 'disabled', prompt: "Does your pick have a disability?", yes: 'Yes, they have a disability.', no: 'No disability.',
       triggers: ['disabled', 'disability', 'impairment'] },
-    { trait: 'hasLegs', yes: 'Yes, they have legs.', no: "No, no legs.",
+    { trait: 'hasLegs', prompt: "Does your pick have legs?", yes: 'Yes, they have legs.', no: "No, no legs.",
       triggers: ['legs', 'leg', 'feet', 'walk'] },
-    { trait: 'hasArms', yes: 'Yes, they have arms.', no: "No, no arms.",
+    { trait: 'hasArms', prompt: "Does your pick have arms?", yes: 'Yes, they have arms.', no: "No, no arms.",
       triggers: ['arms', 'arm', 'hands', 'hand'] },
-    { trait: 'floats', yes: 'Yes, they float.', no: "No, they don't float.",
+    { trait: 'floats', prompt: "Does your pick float?", yes: 'Yes, they float.', no: "No, they don't float.",
       triggers: ['float', 'floats', 'floating', 'fly', 'hover'] },
-    { trait: 'hasPartner', yes: 'Yes, they have a romantic partner.', no: "No, they're single.",
+    { trait: 'hasPartner', prompt: "Does your pick have a romantic partner?", yes: 'Yes, they have a romantic partner.', no: "No, they're single.",
       triggers: ['partner', 'girlfriend', 'boyfriend', 'dating', 'couple', 'relationship'] },
-    { trait: 'ancient', yes: "Yes, they've been here 1,000+ blooms.", no: "No, under 1,000 blooms.",
+    { trait: 'ancient', prompt: "Has your pick been in the Inbetween 1,000+ blooms?", yes: "Yes, they've been here 1,000+ blooms.", no: "No, under 1,000 blooms.",
       triggers: ['ancient', 'oldest resident', '1000 blooms', '1,000 blooms', 'long time', 'very old'] },
-    { trait: 'newResident', yes: "Yes, they're a newer resident, under 50 blooms.", no: "No, they've been here longer than that.",
+    { trait: 'newResident', prompt: "Is your pick a newer resident, under 50 blooms?", yes: "Yes, they're a newer resident, under 50 blooms.", no: "No, they've been here longer than that.",
       triggers: ['newest', 'recently arrived', 'brand new', 'just arrived'] },
-    { trait: 'vaNeeded', yes: 'Yes, their casting is still open.', no: "No, that role isn't open right now.",
+    { trait: 'vaNeeded', prompt: "Does your pick's casting still need a voice actor?", yes: 'Yes, their casting is still open.', no: "No, that role isn't open right now.",
       triggers: ['va needed', 'voice actor', 'need a voice', 'casting', 'voiced yet'] },
-    { trait: 'isAlgebralien', yes: "Yes, they're an Algebralien.", no: "No, not an Algebralien.",
+    { trait: 'isAlgebralien', prompt: "Is your pick an Algebralien?", yes: "Yes, they're an Algebralien.", no: "No, not an Algebralien.",
       triggers: ['algebralien', 'alien species', 'alien'] },
-    { trait: 'earthOrigin', yes: "Yes, they're originally from Earth.", no: "No, not from Earth.",
+    { trait: 'earthOrigin', prompt: "Is your pick originally from Earth?", yes: "Yes, they're originally from Earth.", no: "No, not from Earth.",
       triggers: ['earth', 'from earth', 'earth origin'] },
-    { trait: 'isGreen', yes: "Yes, they're green.", no: "No, not green.",
+    { trait: 'isGreen', prompt: "Is your pick green?", yes: "Yes, they're green.", no: "No, not green.",
       triggers: ['green'] },
-    { trait: 'isBlue', yes: "Yes, they're blue.", no: "No, not blue.",
+    { trait: 'isBlue', prompt: "Is your pick blue?", yes: "Yes, they're blue.", no: "No, not blue.",
       triggers: ['blue'] },
-    { trait: 'isPurple', yes: "Yes, they're purple.", no: "No, not purple.",
+    { trait: 'isPurple', prompt: "Is your pick purple?", yes: "Yes, they're purple.", no: "No, not purple.",
       triggers: ['purple', 'violet', 'indigo colored', 'indigo coloured'] },
-    { trait: 'isOrange', yes: "Yes, they're orange.", no: "No, not orange.",
+    { trait: 'isOrange', prompt: "Is your pick orange?", yes: "Yes, they're orange.", no: "No, not orange.",
       triggers: ['orange'] },
-    { trait: 'isYellow', yes: "Yes, they're yellow.", no: "No, not yellow.",
+    { trait: 'isYellow', prompt: "Is your pick yellow?", yes: "Yes, they're yellow.", no: "No, not yellow.",
       triggers: ['yellow', 'gold', 'golden'] },
-    { trait: 'isBrown', yes: "Yes, they're brown.", no: "No, not brown.",
+    { trait: 'isBrown', prompt: "Is your pick brown?", yes: "Yes, they're brown.", no: "No, not brown.",
       triggers: ['brown', 'tan'] },
-    { trait: 'isDark', yes: "Yes, they're dark-colored — black or near enough.", no: "No, not dark-colored.",
+    { trait: 'isDark', prompt: "Is your pick dark-colored?", yes: "Yes, they're dark-colored — black or near enough.", no: "No, not dark-colored.",
       triggers: ['black', 'dark colored', 'dark coloured', 'dark colour'] },
-    { trait: 'isRed', yes: "Yes, they're red.", no: "No, not red.",
+    { trait: 'isRed', prompt: "Is your pick red?", yes: "Yes, they're red.", no: "No, not red.",
       triggers: ['red'] },
-    { trait: 'isWhite', yes: "Yes, they're white.", no: "No, not white.",
+    { trait: 'isWhite', prompt: "Is your pick white?", yes: "Yes, they're white.", no: "No, not white.",
       triggers: ['white', 'cream colored', 'cream coloured'] },
-    { trait: 'isPink', yes: "Yes, they're pink.", no: "No, not pink.",
+    { trait: 'isPink', prompt: "Is your pick pink?", yes: "Yes, they're pink.", no: "No, not pink.",
       triggers: ['pink', 'magenta'] },
-    { trait: 'roundShape', yes: "Yes, they're round — a circle, sphere, or close to it.", no: "No, not round.",
+    { trait: 'roundShape', prompt: "Is your pick round?", yes: "Yes, they're round — a circle, sphere, or close to it.", no: "No, not round.",
       triggers: ['round', 'circle', 'circular', 'sphere', 'ball shaped', 'ball-shaped'] },
-    { trait: 'rectangularShape', yes: "Yes, they're rectangular — boxy, book-shaped, screen-shaped.", no: "No, not rectangular.",
+    { trait: 'rectangularShape', prompt: "Is your pick rectangular?", yes: "Yes, they're rectangular — boxy, book-shaped, screen-shaped.", no: "No, not rectangular.",
       triggers: ['rectangular', 'rectangle', 'square', 'box shaped', 'box-shaped', 'boxy'] },
-    { trait: 'isGirl', yes: "Yes, they're a girl.", no: "No, not a girl.",
+    { trait: 'isGirl', prompt: "Is your pick a girl?", yes: "Yes, they're a girl.", no: "No, not a girl.",
       triggers: ['girl', 'woman', 'female'] },
-    { trait: 'isBoy', yes: "Yes, they're a boy.", no: "No, not a boy.",
+    { trait: 'isBoy', prompt: "Is your pick a boy?", yes: "Yes, they're a boy.", no: "No, not a boy.",
       triggers: ['boy', 'man', 'male'] },
-    { trait: 'isNonbinary', yes: "Yes, they're nonbinary.", no: "No, not nonbinary.",
+    { trait: 'isNonbinary', prompt: "Is your pick nonbinary?", yes: "Yes, they're nonbinary.", no: "No, not nonbinary.",
       triggers: ['nonbinary', 'non binary', 'genderless', 'no gender', 'agender'] }
   ];
+
+  // --- Icon cropping --------------------------------------------------
+  // Same problem merge.js already solved: several source icon PNGs have
+  // an off-center or padded background square, so a plain object-fit
+  // render leaves characters (e.g. Charlie's ears/emotion lines) looking
+  // off-frame. These zoom/position values are ported straight from
+  // merge.js's per-tile crop table (it already audited every icon's
+  // actual composition) and converted from source-pixel offsets to
+  // CSS background-position percentages. Characters merge.js doesn't
+  // include get the same validated default-zoom crop the rest share.
+  var DEFAULT_ICON_ZOOM = 1;
+  // offsetX/offsetY are fractions of the source image's own width/height,
+  // independent of zoom — dialing zoom up or down keeps each character
+  // correctly recentered instead of just rescaling a fixed percentage.
+  var ICON_CROP = {};
+
+  function iconStyle(c) {
+    var crop = ICON_CROP[c.id] || {};
+    var zoom = crop.zoom || DEFAULT_ICON_ZOOM;
+    var offsetX = crop.offsetX || 0;
+    var offsetY = crop.offsetY || 0;
+    // At zoom 1 there's no room to shift the crop window at all, so skip
+    // the offset math entirely (it would otherwise divide by zero).
+    var posX = zoom === 1 ? 50 : 50 + (100 * offsetX * zoom) / (zoom - 1);
+    var posY = zoom === 1 ? 50 : 50 + (100 * offsetY * zoom) / (zoom - 1);
+    return 'background-image:url(' + JSON.stringify(c.icon) + ');' +
+      'background-size:' + (zoom * 100) + '% ' + (zoom * 100) + '%;' +
+      'background-position:' + posX + '% ' + posY + '%;';
+  }
+
+  function makeIconEl(c) {
+    var icon = document.createElement('div');
+    icon.className = 'gw-icon';
+    icon.setAttribute('role', 'img');
+    icon.setAttribute('aria-label', c.name);
+    icon.setAttribute('style', iconStyle(c));
+    return icon;
+  }
 
   function normalize(str) {
     return str.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
@@ -278,17 +325,48 @@
   }
 
   // --- Game state ------------------------------------------------------
+  var mode = 'solo'; // 'solo' | 'duel'
   var secret = null;
-  var asked = []; // trait keys already asked
-  var alive = {};  // id -> true if still a live candidate
+  var asked = []; // trait keys already asked (player's questions about the House's pick)
+  var alive = {};  // id -> true if still a live candidate (House's pick, from player's POV)
   var turns = 0;
   var over = false;
+
+  // Duel-only state: the House trying to guess the player's chosen character.
+  var playerCharId = null;
+  var houseAsked = [];
+  var houseAlive = {};
+  var pendingHouseQuestion = null;
 
   function pickSecret() {
     return CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)];
   }
 
+  function setMode(newMode) {
+    mode = newMode;
+    modeSoloBtn.classList.toggle('is-active', mode === 'solo');
+    modeDuelBtn.classList.toggle('is-active', mode === 'duel');
+    resetGame();
+  }
+
   function resetGame() {
+    pendingHouseQuestion = null;
+    houseTurnEl.hidden = true;
+    if (mode === 'duel') {
+      startDuelPicker();
+    } else {
+      startSoloGame();
+    }
+  }
+
+  function startSoloGame() {
+    introEl.textContent = "The House has picked one resident and isn't telling. Ask yes/no questions — type them however feels natural — and narrow it down before you make your guess.";
+    pickerEl.hidden = true;
+    boardEl.hidden = false;
+    logEl.hidden = false;
+    formEl.hidden = false;
+    document.querySelector('.gw-guess-row').hidden = false;
+
     secret = pickSecret();
     asked = [];
     alive = {};
@@ -308,6 +386,83 @@
     updateHud();
   }
 
+  // --- Head-to-head duel -------------------------------------------------
+  // Player picks a character; the House tries to guess it by asking its own
+  // questions (same entropy-based picker as Hint) while the player races to
+  // guess the House's separately-chosen secret. Turns alternate: after the
+  // player asks/hints, the House immediately asks its own question and
+  // waits for a Yes/No answer before the player can act again.
+  function startDuelPicker() {
+    introEl.textContent = 'Pick a character to be your secret pick — the House will try to guess it while you try to guess its pick.';
+    playerCharId = null;
+    logEl.innerHTML = '';
+    resultEl.hidden = true;
+    pickerEl.hidden = false;
+    boardEl.hidden = true;
+    logEl.hidden = true;
+    formEl.hidden = true;
+    document.querySelector('.gw-guess-row').hidden = true;
+    houseTurnEl.hidden = true;
+    turnCountEl.textContent = '0';
+    remainingCountEl.textContent = '—';
+    renderPickerBoard();
+  }
+
+  function renderPickerBoard() {
+    pickerBoardEl.innerHTML = '';
+    for (var i = 0; i < CHARACTERS.length; i++) {
+      (function (c) {
+        var item = document.createElement('div');
+        item.className = 'gw-board-item';
+        var span = document.createElement('span');
+        span.textContent = c.name;
+        item.appendChild(makeIconEl(c));
+        item.appendChild(span);
+        item.addEventListener('click', function () { beginDuel(c.id); });
+        pickerBoardEl.appendChild(item);
+      })(CHARACTERS[i]);
+    }
+  }
+
+  function beginDuel(charId) {
+    playerCharId = charId;
+    pickerEl.hidden = true;
+    boardEl.hidden = false;
+    logEl.hidden = false;
+    formEl.hidden = false;
+    document.querySelector('.gw-guess-row').hidden = false;
+    introEl.textContent = "You're up against the House. Ask questions to find its pick before it finds yours.";
+
+    do {
+      secret = pickSecret();
+    } while (secret.id === playerCharId && CHARACTERS.length > 1);
+
+    asked = [];
+    alive = {};
+    for (var i = 0; i < CHARACTERS.length; i++) alive[CHARACTERS[i].id] = true;
+    turns = 0;
+    over = false;
+
+    houseAsked = [];
+    houseAlive = {};
+    for (var j = 0; j < CHARACTERS.length; j++) houseAlive[CHARACTERS[j].id] = true;
+
+    logEl.innerHTML = '';
+    resultEl.hidden = true;
+    inputEl.value = '';
+    inputEl.disabled = false;
+    guessSelectEl.disabled = false;
+    guessBtnEl.disabled = false;
+    hintBtn.disabled = false;
+
+    var playerPick = CHARACTERS.filter(function (c) { return c.id === playerCharId; })[0];
+    appendMessage('system', 'Duel started. Your pick: ' + playerPick.name + '. Find the House\'s pick before it finds yours.');
+    renderBoard();
+    renderGuessOptions();
+    updateHud();
+    askHouseQuestion();
+  }
+
   function appendMessage(kind, text) {
     var div = document.createElement('div');
     div.className = 'gw-msg gw-msg-' + kind;
@@ -322,13 +477,9 @@
       var c = CHARACTERS[i];
       var item = document.createElement('div');
       item.className = 'gw-board-item' + (alive[c.id] ? '' : ' is-out');
-      var img = document.createElement('img');
-      img.src = c.icon;
-      img.alt = c.name;
-      img.loading = 'lazy';
       var span = document.createElement('span');
       span.textContent = c.name;
-      item.appendChild(img);
+      item.appendChild(makeIconEl(c));
       item.appendChild(span);
       boardEl.appendChild(item);
     }
@@ -403,17 +554,54 @@
     return text + secret.name + end;
   }
 
-  function endGame(won) {
+  function lockControls() {
     over = true;
     inputEl.disabled = true;
     guessSelectEl.disabled = true;
     guessBtnEl.disabled = true;
     hintBtn.disabled = true;
+    houseTurnEl.hidden = true;
+    pendingHouseQuestion = null;
+  }
+
+  function endGame(won) {
+    lockControls();
+
+    if (mode === 'duel') {
+      var playerPick = CHARACTERS.filter(function (c) { return c.id === playerCharId; })[0];
+      appendMessage('house', withName((won ? pickLine(WIN_LINES) : pickLine(LOSE_LINES)) + ' My pick was '));
+      resultEl.hidden = false;
+      resultEl.textContent = won
+        ? 'You win — the House\'s pick was ' + secret.name + '. It never guessed yours (' + playerPick.name + ').'
+        : 'You lost — the House\'s pick was ' + secret.name + ', and that guess was wrong. Your pick was ' + playerPick.name + '.';
+      return;
+    }
+
     appendMessage('house', withName((won ? pickLine(WIN_LINES) : pickLine(LOSE_LINES)) + ' It was '));
     resultEl.hidden = false;
     resultEl.textContent = won
       ? withName('Correct — it was ')
       : withName('Not quite — it was ') + ' Try again?';
+  }
+
+  // The House guesses the player's pick (duel mode only). Only fires once
+  // its own candidate pool is down to one, so with honest answers this is
+  // always correct — the fallback branch is just a safety net.
+  function houseWinsDuel(guessedChar) {
+    lockControls();
+    var playerPick = CHARACTERS.filter(function (c) { return c.id === playerCharId; })[0];
+    appendMessage('house', 'I guess ' + guessedChar.name + '.');
+    var correct = guessedChar.id === playerCharId;
+    resultEl.hidden = false;
+    if (correct) {
+      resultEl.textContent = 'The House wins — it guessed your pick (' + playerPick.name + ') first. Its own pick was ' + secret.name + '.';
+    } else {
+      // Only reachable with inconsistent answers (the true pick got
+      // eliminated by a contradiction) — a rare tie, not a real win for
+      // either side.
+      appendMessage('house', "That doesn't add up.");
+      resultEl.textContent = 'No winner this round — the House\'s answers stopped adding up, so it guessed ' + guessedChar.name + ' and was wrong. Your pick was ' + playerPick.name + '. Start a new duel and answer straight.';
+    }
   }
 
   // Records an answered trait, narrows the candidate pool, and refreshes
@@ -436,16 +624,15 @@
     }
   }
 
-  // Picks the unasked question that splits the still-live candidates
-  // closest to 50/50 — same information-gain idea as the original
-  // AI-opponent design, just handed to the player on request instead.
-  function bestHintQuestion() {
-    var candidates = CHARACTERS.filter(function (c) { return alive[c.id]; });
+  // Picks the unasked question that splits a candidate pool closest to
+  // 50/50 — the same information-gain idea used for Hint, and for the
+  // House's own questions when it's trying to guess the player's pick.
+  function bestQuestionAmong(candidates, askedList) {
     var best = null;
     var bestScore = Infinity;
     for (var i = 0; i < QUESTIONS.length; i++) {
       var q = QUESTIONS[i];
-      if (asked.indexOf(q.trait) !== -1) continue;
+      if (askedList.indexOf(q.trait) !== -1) continue;
       var yesCount = candidates.filter(function (c) { return !!c[q.trait]; }).length;
       var noCount = candidates.length - yesCount;
       if (yesCount === 0 || noCount === 0) continue; // asking this teaches nothing right now
@@ -458,8 +645,17 @@
     return best;
   }
 
+  function bestHintQuestion() {
+    var candidates = CHARACTERS.filter(function (c) { return alive[c.id]; });
+    return bestQuestionAmong(candidates, asked);
+  }
+
+  function isPlayerTurn() {
+    return mode !== 'duel' || !pendingHouseQuestion;
+  }
+
   function handleAsk(rawText) {
-    if (over) return;
+    if (over || !isPlayerTurn()) return;
     var text = rawText.trim();
     if (!text) return;
     appendMessage('player', text);
@@ -480,10 +676,11 @@
       appendMessage('house', pickLine(ASIDES));
     }
     applyAnswer(q, answer);
+    if (!over && mode === 'duel') askHouseQuestion();
   }
 
   function handleHint() {
-    if (over) return;
+    if (over || !isPlayerTurn()) return;
     var q = bestHintQuestion();
     if (!q) {
       appendMessage('house', "Nothing left worth hinting. You'll have to guess.");
@@ -492,15 +689,59 @@
     var answer = !!secret[q.trait];
     appendMessage('house', '(Hint) ' + (answer ? q.yes : q.no));
     applyAnswer(q, answer);
+    if (!over && mode === 'duel') askHouseQuestion();
   }
 
   function handleGuess() {
-    if (over) return;
+    if (over || !isPlayerTurn()) return;
     var id = guessSelectEl.value;
     if (!id) return;
     var guessed = CHARACTERS.filter(function (c) { return c.id === id; })[0];
     appendMessage('player', 'I guess ' + guessed.name + '.');
     endGame(id === secret.id);
+  }
+
+  // --- The House's turn (duel mode) --------------------------------------
+  function askHouseQuestion() {
+    if (over) return;
+    var candidates = CHARACTERS.filter(function (c) { return houseAlive[c.id]; });
+    var q = bestQuestionAmong(candidates, houseAsked);
+
+    if (!q || candidates.length === 1) {
+      var guess = candidates[0] || CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)];
+      houseWinsDuel(guess);
+      return;
+    }
+
+    pendingHouseQuestion = q;
+    houseQuestionEl.textContent = q.prompt;
+    houseTurnEl.hidden = false;
+    inputEl.disabled = true;
+    hintBtn.disabled = true;
+    guessSelectEl.disabled = true;
+    guessBtnEl.disabled = true;
+  }
+
+  function handleHouseAnswer(isYes) {
+    if (over || !pendingHouseQuestion) return;
+    var q = pendingHouseQuestion;
+    appendMessage('player', isYes ? 'Yes.' : 'No.');
+    houseAsked.push(q.trait);
+    for (var i = 0; i < CHARACTERS.length; i++) {
+      var c = CHARACTERS[i];
+      if (!houseAlive[c.id]) continue;
+      if (!!c[q.trait] !== isYes) houseAlive[c.id] = false;
+    }
+    pendingHouseQuestion = null;
+    houseTurnEl.hidden = true;
+
+    // Hands the turn back to the player — the House doesn't get to ask
+    // again until the player has asked, hinted, or guessed.
+    if (over) return;
+    inputEl.disabled = false;
+    hintBtn.disabled = false;
+    guessSelectEl.disabled = false;
+    guessBtnEl.disabled = false;
   }
 
   formEl.addEventListener('submit', function (e) {
@@ -513,6 +754,10 @@
   guessBtnEl.addEventListener('click', handleGuess);
   hintBtn.addEventListener('click', handleHint);
   restartBtn.addEventListener('click', resetGame);
+  houseYesBtn.addEventListener('click', function () { handleHouseAnswer(true); });
+  houseNoBtn.addEventListener('click', function () { handleHouseAnswer(false); });
+  modeSoloBtn.addEventListener('click', function () { setMode('solo'); });
+  modeDuelBtn.addEventListener('click', function () { setMode('duel'); });
 
-  resetGame();
+  setMode('solo');
 })();

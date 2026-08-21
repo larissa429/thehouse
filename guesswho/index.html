@@ -10,6 +10,63 @@
   <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
   <style>
+    .gw-mode-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .gw-mode-btn {
+      font-family: var(--label);
+      font-size: 0.8rem;
+      background: transparent;
+      border: var(--edge);
+      color: var(--ink-soft);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .gw-mode-btn:hover { background: var(--wall-lit); }
+    .gw-mode-btn.is-active {
+      background: var(--lamp);
+      color: var(--shadow);
+      border-color: var(--lamp);
+    }
+
+    .gw-picker-label {
+      font-family: var(--body);
+      color: var(--ink);
+      margin-bottom: 0.75rem;
+    }
+    .gw-picker .gw-board-item {
+      cursor: pointer;
+    }
+    .gw-picker .gw-board-item:hover .gw-icon {
+      outline: 2px solid var(--lamp);
+      outline-offset: 1px;
+    }
+
+    .gw-house-turn {
+      padding: 1rem;
+      background: var(--wall-lit);
+      border: var(--edge);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .gw-house-question {
+      font-family: var(--body);
+      font-size: 1rem;
+      color: var(--paper);
+      margin: 0;
+    }
+    .gw-house-answers {
+      display: flex;
+      gap: 0.5rem;
+    }
+
     .gw-game {
       display: flex;
       flex-direction: column;
@@ -35,12 +92,12 @@
       border-radius: 10px;
       transition: opacity 0.2s ease, filter 0.2s ease;
     }
-    .gw-board-item img {
+    .gw-board-item .gw-icon {
       width: 84px;
       height: 84px;
-      object-fit: contain;
       border-radius: 8px;
-      background: var(--wall-lit);
+      background-color: var(--wall-lit);
+      background-repeat: no-repeat;
     }
     .gw-board-item span {
       font-family: var(--label);
@@ -60,14 +117,14 @@
     @media (max-width: 760px) {
       .gw-board { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; padding: 0.6rem; }
       .gw-board-item { gap: 0.2rem; padding: 0.2rem; }
-      .gw-board-item img { width: 44px; height: 44px; }
+      .gw-board-item .gw-icon { width: 44px; height: 44px; }
       .gw-board-item span { font-size: 0.6rem; }
     }
     @media (max-width: 380px) {
-      .gw-board { gap: 0.25rem; padding: 0.4rem; }
-      .gw-board-item { gap: 0.1rem; padding: 0.1rem; }
-      .gw-board-item img { width: 34px; height: 34px; }
-      .gw-board-item span { font-size: 0.52rem; }
+      .gw-board { gap: 0.3rem; padding: 0.45rem; }
+      .gw-board-item { gap: 0.15rem; padding: 0.15rem; }
+      .gw-board-item .gw-icon { width: 50px; height: 50px; }
+      .gw-board-item span { font-size: 0.6rem; }
     }
 
     .gw-hud {
@@ -206,9 +263,19 @@
     <span class="eyebrow breadcrumb"><a href="../games/">&larr; Games</a></span>
 
     <h1>Who's in the House?</h1>
-    <p>The House has picked one resident and isn't telling. Ask yes/no questions &mdash; type them however feels natural &mdash; and narrow it down before you make your guess.</p>
+    <p id="gwIntro">The House has picked one resident and isn't telling. Ask yes/no questions &mdash; type them however feels natural &mdash; and narrow it down before you make your guess.</p>
+
+    <div class="gw-mode-row">
+      <button type="button" class="gw-mode-btn is-active" id="gwModeSolo">Solo</button>
+      <button type="button" class="gw-mode-btn" id="gwModeDuel">Head-to-head</button>
+    </div>
 
     <div class="gw-game" id="gwGame">
+
+      <div class="gw-picker" id="gwPicker" hidden>
+        <p class="gw-picker-label">Pick your character &mdash; the House will try to guess it while you try to guess its pick.</p>
+        <div class="gw-board" id="gwPickerBoard"></div>
+      </div>
 
       <div class="gw-hud">
         <div>
@@ -230,6 +297,14 @@
       <div class="gw-log" id="gwLog"></div>
 
       <div id="gwResult" class="gw-result" hidden></div>
+
+      <div class="gw-house-turn" id="gwHouseTurn" hidden>
+        <p class="gw-house-question" id="gwHouseQuestion"></p>
+        <div class="gw-house-answers">
+          <button type="button" class="gw-restart" id="gwHouseYes">Yes</button>
+          <button type="button" class="gw-restart" id="gwHouseNo">No</button>
+        </div>
+      </div>
 
       <form class="gw-form" id="gwAskForm">
         <input type="text" class="gw-input" id="gwInput" placeholder="Ask a yes/no question&hellip;" autocomplete="off" />

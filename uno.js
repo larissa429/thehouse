@@ -155,55 +155,73 @@
   var HOUSE_UNO_MAX_DELAY_MS = 3000;
 
   // --- House Rules: slap-on-5 -----------------------------------------
-  // Whenever a 5 lands on the discard pile, it's a race: tap the pile
-  // before The House "hits" it, or you draw 2. The House gets a short
-  // guaranteed-fair window where it can't win at all (HOUSE_SLAP_MIN_MS),
-  // then a random chance to beat you anywhere in the following stretch —
-  // same shape as the Uno-call timer, just faster and higher-stakes.
+  // Whenever a 5 lands on the discard pile, everyone at the table races
+  // to tap it — every House seat gets its own random reaction time, and
+  // the player has to click. Once everyone but one seat has slapped,
+  // that last holdout is the loser and draws 2. With only one House
+  // seat this collapses back to the original 2-player race.
   var slapActive = false;
-  var slapTimerId = null;
+  var slapSeatTimers = {};
+  var slapDeadlineId = null;
+  var slapOrder = [];
   var HOUSE_SLAP_MIN_MS = 500;
   var HOUSE_SLAP_RANDOM_RANGE_MS = 1500;
 
   function startSlap() {
     if (over) return;
     slapActive = true;
+    slapOrder = [];
     discardWrapEl.classList.add('is-slappable');
     slapLabelEl.hidden = false;
-    clearTimeout(slapTimerId);
-    var delay = HOUSE_SLAP_MIN_MS + Math.random() * HOUSE_SLAP_RANDOM_RANGE_MS;
-    slapTimerId = setTimeout(function () { resolveSlap('house'); }, delay);
+    allHouseSeats().forEach(function (s) {
+      var delay = HOUSE_SLAP_MIN_MS + Math.random() * HOUSE_SLAP_RANDOM_RANGE_MS;
+      slapSeatTimers[s] = setTimeout(function () { registerSlap(s); }, delay);
+    });
+    // Hard deadline in case the player never clicks at all — covers the
+    // worst-case House reaction time plus a beat.
+    clearTimeout(slapDeadlineId);
+    slapDeadlineId = setTimeout(finishSlapRace, HOUSE_SLAP_MIN_MS + HOUSE_SLAP_RANDOM_RANGE_MS + 200);
   }
 
-  function resolveSlap(winner) {
+  function registerSlap(seatId) {
+    if (!slapActive || over || slapOrder.indexOf(seatId) !== -1) return;
+    slapOrder.push(seatId);
+    // Once every seat but one has slapped, that holdout is already the
+    // loser — no reason to keep waiting out the rest of the window.
+    if (slapOrder.length >= seatOrder.length - 1) finishSlapRace();
+  }
+
+  function finishSlapRace() {
     if (!slapActive || over) return;
     slapActive = false;
-    clearTimeout(slapTimerId);
+    Object.keys(slapSeatTimers).forEach(function (s) { clearTimeout(slapSeatTimers[s]); });
+    slapSeatTimers = {};
+    clearTimeout(slapDeadlineId);
+    slapDeadlineId = null;
     discardWrapEl.classList.remove('is-slappable');
     slapLabelEl.hidden = true;
-    if (winner === 'player') {
-      var seats = allHouseSeats();
-      var target = seats[Math.floor(Math.random() * seats.length)];
-      drawCards(hands[target], 2);
-      log('You slap it first! ' + seatLabel(target) + ' draws 2.');
-    } else {
-      drawCards(hands.player, 2);
-      log('The House slaps it first! You draw 2.');
-    }
+    var loser = seatOrder.filter(function (s) { return slapOrder.indexOf(s) === -1; })[0];
+    if (!loser) loser = slapOrder[slapOrder.length - 1]; // everyone somehow slapped — last one in is the loser
+    drawCards(hands[loser], 2);
+    log((loser === 'player' ? 'You were' : seatLabel(loser) + ' was') + ' last to slap the pile! ' +
+      (loser === 'player' ? 'You draw' : seatLabel(loser) + ' draws') + ' 2.');
     render();
   }
 
   function cancelSlap() {
     slapActive = false;
-    clearTimeout(slapTimerId);
-    slapTimerId = null;
+    Object.keys(slapSeatTimers).forEach(function (s) { clearTimeout(slapSeatTimers[s]); });
+    slapSeatTimers = {};
+    clearTimeout(slapDeadlineId);
+    slapDeadlineId = null;
+    slapOrder = [];
     discardWrapEl.classList.remove('is-slappable');
     slapLabelEl.hidden = true;
   }
 
   discardWrapEl.addEventListener('click', function () {
     if (!slapActive) return;
-    resolveSlap('player');
+    registerSlap('player');
   });
 
   // --- House Rules: +2/+4 stacking ------------------------------------
@@ -607,7 +625,7 @@
         if (over) return;
         log(seatLabel(ex[2]) + ': "' + ex[3] + '"');
         showBubble(ex[2], ex[3]);
-      }, 600 + Math.random() * 500);
+      }, 2000 + Math.random() * 400);
       banterTimerIds.push(id);
       return;
     }

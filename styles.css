@@ -41,7 +41,14 @@
 
 /* ---- RESET ------------------------------------------------ */
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden; /* iOS Safari specifically needs this on <html>,
+    not just <body>, or a `position:fixed` element's overflowing child
+    (like the guestbook lightbox) can still open up a sideways pan even
+    with body's own overflow-x hidden */
+  width: 100%;
+}
 body {
   margin: 0;
   background: var(--shadow);
@@ -51,6 +58,7 @@ body {
   line-height: 1.7;
   position: relative;
   min-height: 100vh;
+  width: 100%;
   overflow-x: hidden; /* guards against any one element (a lightbox, a
     wide image, a `vw`-sized box) pushing the whole page wider than the
     viewport and making it pan sideways — nothing on the page is meant
@@ -2423,6 +2431,9 @@ main img {
   justify-content: center;
   z-index: 60;
   padding: 2rem;
+  overflow: hidden; /* a child (like the guestbook lightbox) sizing
+    itself even a hair wider than the viewport shouldn't be able to
+    open up a sideways pan on the fixed overlay itself */
 }
 .photo-overlay.open { display: flex; }
 .photo-overlay img {

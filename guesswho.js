@@ -37,8 +37,6 @@
   var houseNoBtn = document.getElementById('gwHouseNo');
 
   // --- Character data -----------------------------------------------
-  // Secret characters (Penny, Telly) are intentionally left out — their
-  // statblocks are too thin/unconfirmed to trait fairly.
   var CHARACTERS = [
     { id: 'ap', name: 'Abstract Painting', icon: '../images/guesswhoicons/ap.png',
       usesShe: true, usesHe: false, usesThey: false, usesIt: false,

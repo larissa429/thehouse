@@ -3192,6 +3192,17 @@ main img {
   gap: 0.8rem;
   max-width: 90vw;
   max-height: 88vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.2rem; /* keeps the scrollbar off the image/text edges */
+}
+/* .photo-overlay img's own max-height:88vh would let the drawing alone
+   fill the whole lightbox, leaving no room for the name/message/reply
+   stacked below it — cap it shorter here so those aren't what forces
+   the scroll in the common case. */
+.guestbook-lightbox img {
+  max-height: 55vh;
 }
 .guestbook-lightbox-name {
   font-family: var(--display);

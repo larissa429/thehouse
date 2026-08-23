@@ -3214,7 +3214,10 @@ main img {
   font-family: var(--body);
   font-size: 1rem;
   color: var(--ink);
+  width: 100%;
   max-width: 28rem;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
   text-align: center;
   margin: 0;
 }
@@ -3222,7 +3225,10 @@ main img {
   font-family: var(--body);
   font-size: 0.95rem;
   color: var(--lamp);
+  width: 100%;
   max-width: 28rem;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
   text-align: center;
   margin: 0.4rem 0 0;
   padding-top: 0.6rem;

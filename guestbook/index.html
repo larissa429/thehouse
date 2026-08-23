@@ -137,7 +137,7 @@
   <script type="module">
     // 1. Import Firebase from the official Google CDN
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp, query, where, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
@@ -294,8 +294,7 @@
         const q = query(
           collection(db, 'guestbook'),
           where('status', '==', 'approved'),
-          orderBy('submittedAt', 'desc'),
-          limit(12)
+          orderBy('submittedAt', 'desc')
         );
         const snap = await getDocs(q);
         if (snap.empty) {

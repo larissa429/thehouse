@@ -3207,6 +3207,9 @@ main img {
   gap: 0.8rem;
   max-width: 90vw;
   max-height: 88vh;
+  overflow-x: hidden; /* setting only overflow-y computes overflow-x to
+    "auto" too per spec — without this, any sliver of horizontal
+    overflow turns the whole lightbox into a sideways-draggable box */
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;

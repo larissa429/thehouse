@@ -3252,7 +3252,13 @@ main img {
   padding-top: 0.6rem;
   border-top: var(--edge);
 }
-.guestbook-reply-photo {
+/* .guestbook-lightbox-reply prefix bumps specificity above
+   `.photo-overlay img { max-width: 90vw }` — that rule's class+element
+   selector otherwise wins over a bare `.guestbook-reply-photo` class
+   regardless of source order, letting the reply photo render up to
+   90% of the *viewport* width (wider than the actual lightbox box)
+   and get clipped at its right edge. */
+.guestbook-lightbox-reply .guestbook-reply-photo {
   display: block;
   max-width: 100%;
   max-height: 16rem;

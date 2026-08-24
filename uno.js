@@ -220,8 +220,14 @@
   }
 
   discardWrapEl.addEventListener('click', function () {
-    if (!slapActive) return;
+    if (!slapActive || slapOrder.indexOf('player') !== -1) return;
     registerSlap('player');
+    // Stop the pulsing prompt for the player the instant their own
+    // slap lands, even if the race is still waiting on other House
+    // seats to react — otherwise it keeps flashing until everyone's
+    // done and it looks like the click didn't register.
+    discardWrapEl.classList.remove('is-slappable');
+    slapLabelEl.hidden = true;
   });
 
   // --- House Rules: +2/+4 stacking ------------------------------------

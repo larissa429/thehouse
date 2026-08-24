@@ -330,11 +330,40 @@
     resolveStackDraw('player');
   }
 
+  // Reactions to actually getting hit by a stack, not just playing one —
+  // scaled to how bad the pile is. Only Journal and Mirror react out
+  // loud; The House stays quiet as always.
+  var STACK_HIT_LINES = {
+    house2: {
+      big: ["Aw man... that's like the whole deck!", "You've gotta be kidding me.", "That's just mean."],
+      small: ['Ah, come on.', "Guess I'm drawing."]
+    },
+    house3: {
+      big: ['Oh my. That is quite a lot.', 'Well, here goes nothing.', "That's a big one."],
+      small: ["That's alright.", 'No matter.']
+    }
+  };
+
+  function maybeStackHitReaction(who, count) {
+    if (who !== 'house2' && who !== 'house3') return;
+    var bucket = count >= 6 ? 'big' : 'small';
+    if (bucket === 'small' && Math.random() > 0.4) return;
+    var lines = STACK_HIT_LINES[who][bucket];
+    var line = lines[Math.floor(Math.random() * lines.length)];
+    var id = setTimeout(function () {
+      if (over) return;
+      log(seatLabel(who) + ': "' + line + '"');
+      showBubble(who, line);
+    }, 400);
+    banterTimerIds.push(id);
+  }
+
   function resolveStackDraw(who) {
     if (!pendingStack) return;
     var count = pendingStack.count;
     drawCards(hands[who], count);
     log((who === 'player' ? 'You draw ' : seatLabel(who) + ' draws ') + count + ' from the stack.');
+    maybeStackHitReaction(who, count);
     pendingStack = null;
     cancelStackWindow();
     clearTimeout(houseTurnTimerId);
@@ -436,10 +465,15 @@
     var leader = others.reduce(function (best, s) {
       return hands[s].length < hands[best].length ? s : best;
     }, others[0]);
-    if (personality === 'soft' && leader === 'player' && others.length > 1 && Math.random() < 0.6) {
-      // would rather not undercut you specifically — pick among the others instead
-      var rest = others.filter(function (s) { return s !== 'player'; });
-      return rest[Math.floor(Math.random() * rest.length)];
+    if (personality === 'soft' && leader === 'player' && others.length > 1) {
+      // At 3 cards or fewer you're close enough to winning that she
+      // won't risk being the one who set you back — redirect for sure.
+      // Otherwise it's just a general reluctance to undercut you.
+      var nearWin = hands.player.length <= 3;
+      if (nearWin || Math.random() < 0.6) {
+        var rest = others.filter(function (s) { return s !== 'player'; });
+        return rest[Math.floor(Math.random() * rest.length)];
+      }
     }
     return leader;
   }

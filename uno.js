@@ -587,7 +587,14 @@
     "Didn't see that coming.",
     "This deck's got a mind of its own.",
     'My turn already? Alright, alright.',
-    "Careful with that draw pile."
+    "Careful with that draw pile.",
+    "Been a while since I held cards this bad.",
+    "You've got a good hand, I can tell.",
+    "I used to play this with someone else, a long time ago.",
+    "Hah, that's the spirit.",
+    "Oh, I meant to play that one.",
+    "No rush. I've got nowhere to be.",
+    "You're better at this than you let on."
   ];
 
   var MIRROR_LINES = [
@@ -595,7 +602,14 @@
     'Mm. Interesting choice.',
     "I don't mind losing, you know.",
     "You're doing well.",
-    'Just here to keep you company.'
+    'Just here to keep you company.',
+    "I like watching more than playing, really.",
+    "That was a kind move.",
+    "Everyone deserves a turn.",
+    "You remind me of someone who used to visit.",
+    "No need to go easy on me.",
+    "This is nice. Quiet company.",
+    "Win or lose, I'm glad you're here."
   ];
 
   // [speaker, line, replier, reply] — always logged in this order.
@@ -604,7 +618,12 @@
     ['house3', 'You could ease up on them a little.', 'house2', "Where's the fun in that?"],
     ['house2', 'Think you can beat them, Mirror?', 'house3', "I'm not trying to beat anyone."],
     ['house3', "You're being loud again, Journal.", 'house2', "I'm always loud."],
-    ['house2', 'Bet you five it rains tomorrow.', 'house3', "It doesn't rain here."]
+    ['house2', 'Bet you five it rains tomorrow.', 'house3', "It doesn't rain here."],
+    ['house2', "Mirror, you're staring again.", 'house3', "I'm just watching the cards."],
+    ['house3', "You never did teach me this game properly.", 'house2', "You've beaten me plenty of times!"],
+    ['house2', "I'll go easy on you today.", 'house3', "You say that every time."],
+    ['house3', "Do you ever get tired of losing on purpose?", 'house2', "Who says it's on purpose?"],
+    ['house2', "Remember the first time we played this?", 'house3', "I remember you cheated."]
   ];
 
   function maybeSeatBanter(seatId) {

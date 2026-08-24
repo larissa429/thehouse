@@ -13,6 +13,7 @@
   if (!root) return;
 
   var statusEl = document.getElementById('unoStatus');
+  var directionEl = document.getElementById('unoDirection');
   var restartBtn = document.getElementById('unoRestart');
   var houseRowEl = document.getElementById('unoHouseRow');
   var gameEl = document.getElementById('unoGame');
@@ -202,10 +203,29 @@
     slapLabelEl.hidden = true;
     var loser = seatOrder.filter(function (s) { return slapOrder.indexOf(s) === -1; })[0];
     if (!loser) loser = slapOrder[slapOrder.length - 1]; // everyone somehow slapped — last one in is the loser
+    var winner = slapOrder[0];
     drawCards(hands[loser], 2);
     log((loser === 'player' ? 'You were' : seatLabel(loser) + ' was') + ' last to slap the pile! ' +
       (loser === 'player' ? 'You draw' : seatLabel(loser) + ' draws') + ' 2.');
+    reactToSlapOutcome(loser, winner);
     render();
+  }
+
+  function reactToSlapOutcome(loser, winner) {
+    var loserLine = EVENT_LINES.slapLose[loser];
+    var winnerLine = winner !== loser ? EVENT_LINES.slapWin[winner] : null;
+    var saidLoserLine = false;
+    if (loserLine && Math.random() < 0.5) {
+      sayLine(loser, loserLine);
+      saidLoserLine = true;
+    }
+    if (winnerLine && Math.random() < 0.35) {
+      var id = setTimeout(function () {
+        if (over) return;
+        sayLine(winner, winnerLine);
+      }, saidLoserLine ? 900 : 0);
+      banterTimerIds.push(id);
+    }
   }
 
   function cancelSlap() {
@@ -348,12 +368,10 @@
     if (who !== 'house2' && who !== 'house3') return;
     var bucket = count >= 6 ? 'big' : 'small';
     if (bucket === 'small' && Math.random() > 0.4) return;
-    var lines = STACK_HIT_LINES[who][bucket];
-    var line = lines[Math.floor(Math.random() * lines.length)];
+    var line = pickLine(STACK_HIT_LINES[who][bucket]);
     var id = setTimeout(function () {
       if (over) return;
-      log(seatLabel(who) + ': "' + line + '"');
-      showBubble(who, line);
+      sayLine(who, line);
     }, 400);
     banterTimerIds.push(id);
   }
@@ -409,6 +427,7 @@
     houseJumpTimerId = null;
     turn = who;
     log(who === 'player' ? 'You jump in!' : seatLabel(who) + ' jumps in!');
+    if (EVENT_LINES.jumpIn[who] && Math.random() < 0.5) sayLine(who, EVENT_LINES.jumpIn[who]);
     playCard(who, idx);
   }
 
@@ -514,6 +533,11 @@
     drawPile = shuffle(discardPile);
     discardPile = [top];
     log('The draw pile ran out — reshuffling the discards.');
+    var chatty = ['house2', 'house3'].filter(function (s) { return seatOrder && seatOrder.indexOf(s) !== -1; });
+    if (chatty.length && Math.random() < 0.5) {
+      var s = chatty[Math.floor(Math.random() * chatty.length)];
+      sayLine(s, EVENT_LINES.reshuffled[s]);
+    }
   }
 
   function drawCards(hand, count) {
@@ -622,6 +646,17 @@
     bubbleEl.classList.remove('is-visible');
   }
 
+  // Shared by every event-reaction line — logs it and pops the bubble
+  // in one call instead of repeating both at every call site.
+  function sayLine(seatId, line) {
+    log(seatLabel(seatId) + ': "' + line + '"');
+    showBubble(seatId, line);
+  }
+
+  function pickLine(lines) {
+    return lines[Math.floor(Math.random() * lines.length)];
+  }
+
   var JOURNAL_LINES = [
     'Good one!',
     "Didn't see that coming.",
@@ -666,39 +701,59 @@
     ['house2', "Remember the first time we played this?", 'house3', "I remember you cheated."]
   ];
 
+  // Reactions to specific in-game events, beyond the general idle
+  // banter above. Kept as small tables so each event's handler can just
+  // pick a line and call sayLine — see each event's call site below.
+  var EVENT_LINES = {
+    unoCaughtSelf: { house2: 'Oh— right. My bad.', house3: 'Oh. I suppose I did forget.' },
+    unoCaughtPlayer: {
+      house2: "Ha! Forgot your Uno, didn't you?",
+      house3: "You forgot to call it... I'll let this one slide, hm?"
+    },
+    roundWin: { house2: "Hah! Didn't expect that either.", house3: "Oh. I didn't mean for that to happen." },
+    roundLose: { house2: "Well, there's always next round.", house3: 'That is alright. I had fun anyway.' },
+    congratsPlayer: { house2: "Nice one! Didn't see that coming.", house3: "I'm glad. Truly." },
+    jumpIn: { house2: 'Sneaky, I know.', house3: "Sorry — couldn't resist." },
+    playedWild4: { house2: 'Bold move, if I do say so myself.', house3: "I don't love playing this one, but here we are." },
+    reversePlayed: { house2: 'Turn it around!', house3: 'Oh — going the other way now.' },
+    reshuffled: { house2: 'Round two, deck!', house3: "We'll just go again, then." },
+    tensionTwo: { house2: 'Getting close now...', house3: 'Almost there.' },
+    slapLose: { house2: 'Wait, what? Already?', house3: "Oh! I wasn't ready." },
+    slapWin: { house2: 'Reflexes! Ha.', house3: 'Oh — sorry, quick hands.' }
+  };
+
   function maybeSeatBanter(seatId) {
     if (seatId === 'house1') {
-      if (Math.random() < 0.12) {
-        log('The House: "..."');
-        showBubble(seatId, '...');
-      }
+      if (Math.random() < 0.12) sayLine(seatId, '...');
       return;
     }
     if (seatId !== 'house2' && seatId !== 'house3') return;
     var otherSeat = seatId === 'house2' ? 'house3' : 'house2';
     if (seatOrder.indexOf(otherSeat) !== -1 && Math.random() < 0.3) {
       var ex = EXCHANGES[Math.floor(Math.random() * EXCHANGES.length)];
-      log(seatLabel(ex[0]) + ': "' + ex[1] + '"');
-      showBubble(ex[0], ex[1]);
+      sayLine(ex[0], ex[1]);
       var id = setTimeout(function () {
         if (over) return;
-        log(seatLabel(ex[2]) + ': "' + ex[3] + '"');
-        showBubble(ex[2], ex[3]);
+        sayLine(ex[2], ex[3]);
       }, 2000 + Math.random() * 400);
       banterTimerIds.push(id);
       return;
     }
     if (Math.random() < 0.25) {
-      var lines = seatId === 'house2' ? JOURNAL_LINES : MIRROR_LINES;
-      var line = lines[Math.floor(Math.random() * lines.length)];
-      log(seatLabel(seatId) + ': "' + line + '"');
-      showBubble(seatId, line);
+      sayLine(seatId, pickLine(seatId === 'house2' ? JOURNAL_LINES : MIRROR_LINES));
     }
   }
 
+  // Bumped on every new deal so a delayed round-end reaction line
+  // scheduled just before the round ended can't leak into a round the
+  // player already restarted into.
+  var roundToken = 0;
+
   function dealGame() {
+    roundToken++;
     seatOrder = ['player', 'house1', 'house2', 'house3'].slice(0, playerCount);
     direction = 1;
+    lastShownDirection = null;
     hands = {};
     unoCalled = {};
     seatOrder.forEach(function (s) { hands[s] = []; unoCalled[s] = true; });
@@ -835,7 +890,30 @@
     el.style.animationDelay = (index * 70) + 'ms';
   }
 
+  // Only meaningful once there's more than one House seat for Reverse
+  // to actually reverse past — a 2-player game has nothing to show.
+  // Rotated so it always reads starting from "You" regardless of which
+  // way play is actually running, and flashes the arrow on a direction
+  // change so a Reverse is impossible to miss.
+  var lastShownDirection = null;
+  function updateDirectionIndicator() {
+    if (!seatOrder || seatOrder.length <= 2) {
+      directionEl.hidden = true;
+      return;
+    }
+    var order = direction === 1 ? seatOrder : seatOrder.slice().reverse();
+    var startIdx = order.indexOf('player');
+    var rotated = order.slice(startIdx).concat(order.slice(0, startIdx));
+    var names = rotated.map(function (s) { return s === 'player' ? 'You' : seatLabel(s); });
+    var justFlipped = lastShownDirection !== null && lastShownDirection !== direction;
+    lastShownDirection = direction;
+    directionEl.innerHTML = '<span class="uno-direction-arrow' + (justFlipped ? ' just-flipped' : '') + '">' +
+      (direction === 1 ? '⟳' : '⟲') + '</span> ' + names.join(' → ');
+    directionEl.hidden = false;
+  }
+
   function render() {
+    updateDirectionIndicator();
     // house seats (backs only, count shown), rebuilt fresh each render
     houseRowEl.innerHTML = '';
     allHouseSeats().forEach(function (seatId) {
@@ -944,6 +1022,10 @@
         clearTimeout(houseUnoTimers[s]);
         drawCards(hands[s], 2);
         log((s === 'player' ? 'You forgot' : seatLabel(s) + ' forgot') + ' to say Uno! ' + (s === 'player' ? 'You draw' : seatLabel(s) + ' draws') + ' 2.');
+        if (EVENT_LINES.unoCaughtSelf[s] && Math.random() < 0.5) sayLine(s, EVENT_LINES.unoCaughtSelf[s]);
+        else if (s === 'player' && EVENT_LINES.unoCaughtPlayer[exceptWho] && Math.random() < 0.5) {
+          sayLine(exceptWho, EVENT_LINES.unoCaughtPlayer[exceptWho]);
+        }
       }
     });
   }
@@ -978,6 +1060,9 @@
         var chosen = houseChooseColor(who);
         currentColor = chosen;
         log(seatLabel(who) + ' plays ' + describeCard(card) + ' and calls ' + chosen + '.');
+        if (card.value === 'wild4' && EVENT_LINES.playedWild4[who] && Math.random() < 0.4) {
+          sayLine(who, EVENT_LINES.playedWild4[who]);
+        }
       }
     } else {
       currentColor = card.color;
@@ -1086,6 +1171,8 @@
           log(seatLabel(who) + ' calls "Uno!"');
         }, delay);
       }
+    } else if (hands[who].length === 2 && EVENT_LINES.tensionTwo[who] && Math.random() < 0.35) {
+      sayLine(who, EVENT_LINES.tensionTwo[who]);
     }
 
     if (card.value === 'draw2' || card.value === 'wild4') {
@@ -1109,6 +1196,7 @@
       } else {
         direction *= -1;
         turn = nextSeatId(who, 1);
+        if (EVENT_LINES.reversePlayed[who] && Math.random() < 0.5) sayLine(who, EVENT_LINES.reversePlayed[who]);
       }
     } else {
       turn = nextSeatId(who, 1);
@@ -1130,7 +1218,32 @@
     resultEl.textContent = who === 'player' ? 'You win! The House is out of comebacks.' : seatLabel(who) + ' wins this round.';
     statusEl.textContent = resultEl.textContent;
     render();
+    maybeRoundEndReaction(who);
     return true;
+  }
+
+  function scheduleLine(seatId, line, delay) {
+    var token = roundToken;
+    setTimeout(function () {
+      if (roundToken !== token) return; // a new round started before this fired
+      sayLine(seatId, line);
+    }, delay);
+  }
+
+  function maybeRoundEndReaction(winner) {
+    if (winner === 'house2' || winner === 'house3') {
+      scheduleLine(winner, EVENT_LINES.roundWin[winner], 500);
+    } else if (winner === 'player') {
+      var chatty = ['house2', 'house3'].filter(function (s) { return seatOrder.indexOf(s) !== -1; });
+      if (chatty.length) {
+        var s = chatty[Math.floor(Math.random() * chatty.length)];
+        scheduleLine(s, EVENT_LINES.congratsPlayer[s], 500);
+      }
+    }
+    ['house2', 'house3'].forEach(function (s) {
+      if (s === winner || seatOrder.indexOf(s) === -1) return;
+      if (Math.random() < 0.45) scheduleLine(s, EVENT_LINES.roundLose[s], 1300 + Math.random() * 400);
+    });
   }
 
   document.querySelectorAll('.uno-color-btn').forEach(function (btn) {

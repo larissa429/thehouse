@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boardwalk Dash &middot; The House</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+    <span class="eyebrow breadcrumb"><a href="../games/">&larr; Games</a></span>
+
+    <h1>Boardwalk Dash</h1>
+    <p>Indigo's off again &mdash; chaotic, silent, and currently sprinting the length of the Boardwalk.
+      Jump the benches and lampposts. Press Space, tap the stage, or click to hop.</p>
+
+    <div class="merge-game" id="boardwalkGame">
+      <div class="merge-hud">
+        <div class="merge-hud-block">
+          <span class="merge-hud-label">Score</span>
+          <span class="merge-hud-value" id="boardwalkScore">0</span>
+        </div>
+        <div class="merge-hud-block">
+          <span class="merge-hud-label">Best</span>
+          <span class="merge-hud-value" id="boardwalkBest">&mdash;</span>
+        </div>
+        <button type="button" class="merge-restart" id="boardwalkRestart">Restart</button>
+      </div>
+
+      <div class="merge-stage" id="boardwalkStage">
+        <canvas id="boardwalkCanvas"></canvas>
+        <div class="merge-gameover" id="boardwalkStart">
+          <p class="merge-gameover-title">Watch your step.</p>
+          <p class="merge-gameover-score">Space, tap, or click to start.</p>
+        </div>
+        <div class="merge-gameover" id="boardwalkGameOver" hidden>
+          <p class="merge-gameover-title">Caught a lamppost.</p>
+          <p class="merge-gameover-score">Score: <span id="boardwalkFinalScore">0</span></p>
+          <button type="button" class="merge-restart" id="boardwalkRestart2">Try again</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <site-footer></site-footer>
+
+  <script src="../components.js" defer></script>
+  <script src="../boardwalk.js" defer></script>
+</body>
+</html>

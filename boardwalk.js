@@ -62,18 +62,20 @@
   // Add a new obstacle by adding an entry here. `image` draws a single
   // static sprite; `images` (an array) animates through those frames the
   // same way Indigo's run cycle does — 2 frames is enough for a walk
-  // cycle. Omit both to fall back to a hand-drawn shape in drawObstacle()
-  // (only 'bench' and 'lamp' have one — anything else without art falls
-  // back further to a plain box). `weight` controls how often it's
-  // picked relative to the others (higher = more common).
-  var OBSTACLE_FRAME_RATE = 6; // frames per second, only matters for multi-frame obstacles
+  // cycle. `frameRate` overrides OBSTACLE_FRAME_RATE for just that type,
+  // for a walk cycle that shouldn't animate as fast as the default.
+  // Omit `image`/`images` to fall back to a hand-drawn shape in
+  // drawObstacle() (only 'bench' and 'lamp' have one — anything else
+  // without art falls back further to a plain box). `weight` controls
+  // how often it's picked relative to the others (higher = more common).
+  var OBSTACLE_FRAME_RATE = 6; // frames per second, default for multi-frame obstacles
   var OBSTACLE_TYPES = [
     { type: 'bench', w: 46, h: 34, weight: 3, title: 'Ran into a bench.' },
-    { type: 'lamp', w: 14, h: 70, weight: 2, title: 'Caught a lamppost.' }
-    // Examples once art exists:
+    { type: 'lamp', w: 14, h: 70, weight: 2, title: 'Caught a lamppost.' },
+    { type: 'lp-cassette', w: 56, h: 56, weight: 2, title: 'Ran into LP and Cassette.', frameRate: 2,
+      images: ['../images/boardwalk/lp1.png', '../images/boardwalk/lp2.png'] }
+    // Example once more resident art exists:
     // { type: 'charlie', w: 50, h: 50, weight: 1, image: '../images/boardwalk/charlie-obstacle.png', title: 'Tripped over Charlie.' }
-    // { type: 'lp-cassette', w: 64, h: 50, weight: 1, title: 'Ran into LP and Cassette.',
-    //   images: ['../images/boardwalk/lp-cassette-1.png', '../images/boardwalk/lp-cassette-2.png'] }
   ];
   var obstacleFrames = {}; // type -> Image[], populated for any type with `image` or `images`
   OBSTACLE_TYPES.forEach(function (def) {
@@ -278,7 +280,9 @@
     var oy = GROUND_Y - o.h;
     var frames = obstacleFrames[o.type];
     if (frames && frames.length) {
-      var img = frames[Math.floor(elapsed * OBSTACLE_FRAME_RATE) % frames.length];
+      var def = obstacleDef(o.type);
+      var frameRate = (def && def.frameRate) || OBSTACLE_FRAME_RATE;
+      var img = frames[Math.floor(elapsed * frameRate) % frames.length];
       if (img.complete && img.naturalWidth) {
         ctx.drawImage(img, o.x, oy, o.w, o.h);
         return;

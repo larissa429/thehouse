@@ -1,11 +1,15 @@
 /* ============================================================
    boardwalk.js — "Boardwalk Dash", a Chrome-dino-style endless runner.
-   Indigo sprints the length of the Boardwalk, jumping benches and
-   lampposts that scroll in from the right at an ever-increasing speed.
+   Indigo sprints the length of the Boardwalk, jumping obstacles that
+   scroll in from the right at an ever-increasing speed.
 
    Same fixed-internal-resolution canvas approach as merge.js — CSS
    scales the element visually, all game math stays in STAGE_W x STAGE_H
    coordinate space regardless of the on-screen size.
+
+   Everything content-related (Indigo's run frames, obstacle types,
+   background cameos) is data-driven from the config blocks below, so
+   dropping in new art is just adding a file + one line, not a rewrite.
    ============================================================ */
 (function () {
   var root = document.getElementById('boardwalkGame');
@@ -37,11 +41,71 @@
 
   var BEST_KEY = 'boardwalk-best';
 
-  var indigoImg = new Image();
-  indigoImg.src = '../images/icons/indigo.png';
+  function loadImage(src) {
+    var img = new Image();
+    img.src = src;
+    return img;
+  }
+
+  // --- Indigo's sprite -------------------------------------------------
+  // Add a second (or third+) running frame here once it exists — the
+  // animation cycles through however many are in this list, no other
+  // code changes needed. One entry = the current static look.
+  var INDIGO_RUN_FRAME_SRCS = ['../images/icons/indigo.png'];
+  var INDIGO_JUMP_FRAME_SRC = '../images/icons/indigo.png'; // swap for a dedicated jump pose later
+  var RUN_FRAME_RATE = 8; // frames per second while grounded, only matters once there's >1 frame
+
+  var indigoRunFrames = INDIGO_RUN_FRAME_SRCS.map(loadImage);
+  var indigoJumpFrame = loadImage(INDIGO_JUMP_FRAME_SRC);
+
+  // --- Obstacle types ----------------------------------------------------
+  // Add a new obstacle by adding an entry here. `image` draws a sprite;
+  // omit it to fall back to a hand-drawn shape in drawObstacle() (only
+  // 'bench' and 'lamp' have one — anything else without an image falls
+  // back further to a plain box). `weight` controls how often it's
+  // picked relative to the others (higher = more common).
+  var OBSTACLE_TYPES = [
+    { type: 'bench', w: 46, h: 34, weight: 3, title: 'Ran into a bench.' },
+    { type: 'lamp', w: 14, h: 70, weight: 2, title: 'Caught a lamppost.' }
+    // Example once a resident obstacle exists:
+    // { type: 'charlie', w: 50, h: 50, weight: 1, image: '../images/boardwalk/charlie-obstacle.png', title: 'Tripped over Charlie.' }
+  ];
+  var obstacleImages = {}; // type -> Image, only populated for types with an `image`
+  OBSTACLE_TYPES.forEach(function (def) {
+    if (def.image) obstacleImages[def.type] = loadImage(def.image);
+  });
+  var OBSTACLE_WEIGHT_TOTAL = OBSTACLE_TYPES.reduce(function (sum, d) { return sum + d.weight; }, 0);
+
+  function obstacleDef(type) {
+    for (var i = 0; i < OBSTACLE_TYPES.length; i++) if (OBSTACLE_TYPES[i].type === type) return OBSTACLE_TYPES[i];
+    return null;
+  }
+
+  function pickObstacleType() {
+    var roll = Math.random() * OBSTACLE_WEIGHT_TOTAL;
+    for (var i = 0; i < OBSTACLE_TYPES.length; i++) {
+      roll -= OBSTACLE_TYPES[i].weight;
+      if (roll <= 0) return OBSTACLE_TYPES[i];
+    }
+    return OBSTACLE_TYPES[OBSTACLE_TYPES.length - 1];
+  }
+
+  // --- Background cameos ---------------------------------------------
+  // Purely decorative — no collision. Add a resident image here and
+  // they'll start wandering through the background automatically.
+  var BACKGROUND_CAMEO_SRCS = [
+    '../images/icons/mirror.png',
+    '../images/icons/journal.png'
+  ];
+  var cameoImages = BACKGROUND_CAMEO_SRCS.map(loadImage);
+  var CAMEO_SIZE = 40;
+  var CAMEO_Y_OFFSET = 6; // sits just above the ground line
+  var CAMEO_MIN_GAP = 1800; // ms between cameo spawns
+  var CAMEO_MAX_GAP = 3600;
+  var CAMEO_PARALLAX = 0.4; // fraction of foreground speed — makes them read as "behind" the action
 
   var state = 'idle'; // 'idle' | 'playing' | 'gameover'
-  var indigoY, velocityY, obstacles, speed, elapsed, score, best, spawnTimer, lastTime;
+  var indigoY, velocityY, obstacles, cameos, speed, elapsed, score, best, spawnTimer, cameoSpawnTimer, lastTime;
 
   function loadBest() {
     var raw = localStorage.getItem(BEST_KEY);
@@ -56,10 +120,12 @@
     indigoY = GROUND_Y - INDIGO_SIZE;
     velocityY = 0;
     obstacles = [];
+    cameos = [];
     speed = START_SPEED;
     elapsed = 0;
     score = 0;
     spawnTimer = 900; // ms until first obstacle
+    cameoSpawnTimer = 1500;
     scoreEl.textContent = '0';
   }
 
@@ -80,13 +146,9 @@
     }
   }
 
-  // Obstacles alternate between a low bench (jump-over) and a taller
-  // lamppost, so it's not just the same silhouette repeating.
   function spawnObstacle() {
-    var isLamp = Math.random() < 0.4;
-    var h = isLamp ? 70 : 34;
-    var w = isLamp ? 14 : 46;
-    obstacles.push({ x: STAGE_W + w, w: w, h: h, type: isLamp ? 'lamp' : 'bench' });
+    var def = pickObstacleType();
+    obstacles.push({ x: STAGE_W + def.w, w: def.w, h: def.h, type: def.type });
   }
 
   function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
@@ -112,6 +174,17 @@
       spawnTimer = base + Math.random() * 500;
     }
 
+    cameoSpawnTimer -= dt * 1000;
+    if (cameoSpawnTimer <= 0 && cameoImages.length) {
+      var img = cameoImages[Math.floor(Math.random() * cameoImages.length)];
+      cameos.push({ x: STAGE_W + CAMEO_SIZE, img: img });
+      cameoSpawnTimer = CAMEO_MIN_GAP + Math.random() * (CAMEO_MAX_GAP - CAMEO_MIN_GAP);
+    }
+    for (var ci = cameos.length - 1; ci >= 0; ci--) {
+      cameos[ci].x -= speed * CAMEO_PARALLAX * dt;
+      if (cameos[ci].x + CAMEO_SIZE < -20) cameos.splice(ci, 1);
+    }
+
     var indigoBox = { x: INDIGO_X + 8, y: indigoY + 6, w: INDIGO_SIZE - 16, h: INDIGO_SIZE - 10 };
     for (var i = obstacles.length - 1; i >= 0; i--) {
       var o = obstacles[i];
@@ -128,8 +201,6 @@
     scoreEl.textContent = String(score);
   }
 
-  var GAME_OVER_TITLES = { lamp: 'Caught a lamppost.', bench: 'Ran into a bench.' };
-
   function endGame(obstacleType) {
     state = 'gameover';
     if (score > best) {
@@ -137,7 +208,8 @@
       localStorage.setItem(BEST_KEY, String(best));
       renderBest();
     }
-    gameOverEl.querySelector('.merge-gameover-title').textContent = GAME_OVER_TITLES[obstacleType] || 'Ouch.';
+    var def = obstacleDef(obstacleType);
+    gameOverEl.querySelector('.merge-gameover-title').textContent = (def && def.title) || 'Ouch.';
     finalScoreEl.textContent = String(score);
     gameOverEl.hidden = false;
   }
@@ -183,8 +255,26 @@
     ctx.stroke();
   }
 
+  // Purely atmospheric — drawn behind obstacles/Indigo, dimmed and
+  // scrolling slower so they read as background rather than something
+  // to dodge.
+  function drawCameos() {
+    cameos.forEach(function (c) {
+      if (c.img.complete && c.img.naturalWidth) {
+        ctx.globalAlpha = 0.55;
+        ctx.drawImage(c.img, c.x, GROUND_Y - CAMEO_SIZE - CAMEO_Y_OFFSET, CAMEO_SIZE, CAMEO_SIZE);
+        ctx.globalAlpha = 1;
+      }
+    });
+  }
+
   function drawObstacle(o) {
     var oy = GROUND_Y - o.h;
+    var img = obstacleImages[o.type];
+    if (img && img.complete && img.naturalWidth) {
+      ctx.drawImage(img, o.x, oy, o.w, o.h);
+      return;
+    }
     if (o.type === 'lamp') {
       ctx.fillStyle = '#403022';
       ctx.fillRect(o.x + o.w / 2 - 2, oy + 10, 4, o.h - 10);
@@ -197,22 +287,32 @@
       ctx.arc(o.x + o.w / 2, oy + 8, 16, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
-    } else {
+    } else if (o.type === 'bench') {
       ctx.fillStyle = '#403022';
       ctx.fillRect(o.x, oy, o.w, o.h - 10);
       ctx.fillStyle = '#251b15';
       ctx.fillRect(o.x + 4, oy + o.h - 10, 4, 10);
       ctx.fillRect(o.x + o.w - 8, oy + o.h - 10, 4, 10);
+    } else {
+      // generic fallback for a new type that doesn't have art or a
+      // hand-drawn shape yet — visible enough to notice, not a crash
+      ctx.fillStyle = '#403022';
+      ctx.fillRect(o.x, oy, o.w, o.h);
     }
   }
 
   function drawIndigo() {
+    var grounded = indigoY >= GROUND_Y - INDIGO_SIZE - 0.5;
     var squash = velocityY < -100 ? 1.08 : (velocityY > 400 ? 0.92 : 1);
+    var frame = grounded
+      ? indigoRunFrames[Math.floor(elapsed * RUN_FRAME_RATE) % indigoRunFrames.length]
+      : indigoJumpFrame;
+
     ctx.save();
     ctx.translate(INDIGO_X + INDIGO_SIZE / 2, indigoY + INDIGO_SIZE);
     ctx.scale(1, squash);
-    if (indigoImg.complete && indigoImg.naturalWidth) {
-      ctx.drawImage(indigoImg, -INDIGO_SIZE / 2, -INDIGO_SIZE, INDIGO_SIZE, INDIGO_SIZE);
+    if (frame && frame.complete && frame.naturalWidth) {
+      ctx.drawImage(frame, -INDIGO_SIZE / 2, -INDIGO_SIZE, INDIGO_SIZE, INDIGO_SIZE);
     } else {
       ctx.fillStyle = '#3b6ea5';
       ctx.fillRect(-INDIGO_SIZE / 2, -INDIGO_SIZE, INDIGO_SIZE, INDIGO_SIZE);
@@ -222,6 +322,7 @@
 
   function draw() {
     drawBackground();
+    drawCameos();
     obstacles.forEach(drawObstacle);
     drawIndigo();
   }
@@ -237,11 +338,7 @@
   }
 
   function drawIdleFrame() {
-    elapsed = 0;
-    speed = START_SPEED;
-    obstacles = [];
-    indigoY = GROUND_Y - INDIGO_SIZE;
-    velocityY = 0;
+    resetGame();
     draw();
   }
 

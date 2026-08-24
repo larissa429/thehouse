@@ -119,7 +119,7 @@
       if (o.x + o.w < -20) { obstacles.splice(i, 1); continue; }
       var oy = GROUND_Y - o.h;
       if (rectsOverlap(indigoBox.x, indigoBox.y, indigoBox.w, indigoBox.h, o.x, oy, o.w, o.h)) {
-        endGame();
+        endGame(o.type);
         return;
       }
     }
@@ -128,13 +128,16 @@
     scoreEl.textContent = String(score);
   }
 
-  function endGame() {
+  var GAME_OVER_TITLES = { lamp: 'Caught a lamppost.', bench: 'Ran into a bench.' };
+
+  function endGame(obstacleType) {
     state = 'gameover';
     if (score > best) {
       best = score;
       localStorage.setItem(BEST_KEY, String(best));
       renderBest();
     }
+    gameOverEl.querySelector('.merge-gameover-title').textContent = GAME_OVER_TITLES[obstacleType] || 'Ouch.';
     finalScoreEl.textContent = String(score);
     gameOverEl.hidden = false;
   }
@@ -253,6 +256,10 @@
     }
   });
   canvas.addEventListener('pointerdown', jump);
+  // The start overlay sits visually on top of the canvas (same
+  // .merge-gameover positioning as the game-over screen), so a tap/click
+  // there never reaches canvas's own listener — it needs its own.
+  startEl.addEventListener('pointerdown', jump);
   restartBtn.addEventListener('click', startGame);
   restartBtn2.addEventListener('click', startGame);
 })();

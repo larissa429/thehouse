@@ -942,8 +942,16 @@
 
   confettiTestBtn.addEventListener('click', function () {
     spawnConfettiBurst(true); // force, bypassing Reduce Effects — this is an on-demand "show me" click
+  });
+  // Gold while actually pressed, back to normal on release — not a timed
+  // flash, so it tracks the real press/release rather than a fixed duration.
+  confettiTestBtn.addEventListener('pointerdown', function () {
     confettiTestBtn.classList.add('is-active');
-    setTimeout(function () { confettiTestBtn.classList.remove('is-active'); }, 400);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (evt) {
+    confettiTestBtn.addEventListener(evt, function () {
+      confettiTestBtn.classList.remove('is-active');
+    });
   });
 
   // Passive income ticks 4x/second for a smooth-feeling counter, adding

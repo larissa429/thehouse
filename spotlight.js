@@ -780,60 +780,97 @@
     return svg;
   }
 
+  // Real projectile motion, computed continuously every frame instead of
+  // stitched CSS keyframes. That's the actual fix for the "hits a wall"
+  // complaint: any hand-authored waypoint (mid -> end) bakes in whatever
+  // velocity the random jitter between those two points implies, which is
+  // rarely a match for the velocity the piece arrived with — a discontinuity
+  // no timing-function can smooth over. Position as one function of time
+  // (x = x0 + vx*t, y = y0 + vy0*t + 0.5*g*t^2) has no such seam.
+  var CONFETTI_GRAVITY = 220; // vh units per second^2
+  var confettiPieces = [];
+  var confettiRafId = null;
+
+  function stepConfetti(now) {
+    var i, p, t, x, y, alpha;
+    var stillActive = false;
+    for (i = 0; i < confettiPieces.length; i++) {
+      p = confettiPieces[i];
+      if (!p.node) continue;
+      t = (now - p.start) / 1000;
+      if (t < 0) { stillActive = true; continue; } // hasn't launched yet (delay)
+
+      x = p.x0 + p.vx * t;
+      y = p.y0 + p.vy0 * t + 0.5 * CONFETTI_GRAVITY * t * t;
+      var rot = p.rot0 + p.rotSpeed * t;
+
+      var life = t / p.lifetime;
+      if (life >= 1) {
+        p.node.remove();
+        p.node = null;
+        continue;
+      }
+      stillActive = true;
+      alpha = life < 0.05 ? life / 0.05 : (life > 0.85 ? Math.max(0, (1 - life) / 0.15) : 1);
+
+      p.node.style.transform = 'translate(' + x + 'vw, ' + y + 'vh) rotate(' + rot + 'deg)';
+      p.node.style.opacity = alpha;
+    }
+    if (stillActive) {
+      confettiRafId = requestAnimationFrame(stepConfetti);
+    } else {
+      confettiRafId = null;
+      confettiPieces = [];
+    }
+  }
+
   function spawnConfettiBurst(force) {
     if (state.reducedEffects && !force) return;
 
     // One shared origin per burst, live on a random viewport edge — a
-    // confetti-cannon shot, not 36 independently-converging pieces (that
-    // was the earlier design, and it's what read as "hitting a wall":
-    // everyone aiming for the same central spot). Coordinates here are
-    // offsets from viewport CENTER (the piece's own left:50%/top:50%
-    // base), so ±50 on either axis reaches that axis's edge.
+    // confetti-cannon shot, not pieces independently converging on center.
+    // Coordinates are offsets from viewport CENTER (the piece's own
+    // left:50%/top:50% base), so ±50 on either axis reaches that edge.
     var edge = Math.floor(Math.random() * 4); // 0 left, 1 right, 2 top, 3 bottom
-    var originX, originY, outX, outY; // outX/outY: unit-ish direction the cone points
+    var originX, originY, outX, outY; // outX/outY: direction the cone points
     if (edge === 0) { originX = -50; originY = Math.random() * 100 - 50; outX = 1; outY = 0; }
     else if (edge === 1) { originX = 50; originY = Math.random() * 100 - 50; outX = -1; outY = 0; }
     else if (edge === 2) { originX = Math.random() * 100 - 50; originY = -50; outX = 0; outY = 1; }
     else { originX = Math.random() * 100 - 50; originY = 50; outX = 0; outY = -1; }
 
+    var now = performance.now();
+
     for (var i = 0; i < CONFETTI_PIECE_COUNT; i++) {
       var color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
-      var piece = makeConfettiPiece(color, Math.random() < 0.5);
+      var node = makeConfettiPiece(color, Math.random() < 0.5);
+      confettiLayerEl.appendChild(node);
 
-      // Cone: each piece travels along the shared "outward" direction
-      // plus its own random perpendicular spread, so by the end of the
-      // quick burst phase they're already fanned out — nothing left to
-      // converge on. Gravity then takes over regardless of which edge
-      // they came from, pulling everything down and off the bottom.
-      var burstDist = 20 + Math.random() * 25;
-      var spread = Math.random() * 50 - 25;
-      var midX, midY;
-      if (outX !== 0) { midX = originX + outX * burstDist; midY = originY + spread; }
-      else { midX = originX + spread; midY = originY + outY * burstDist; }
+      // Launch speed along the cone direction, plus a perpendicular
+      // spread component — this IS the initial velocity, not a
+      // waypoint to hit, so gravity blends in smoothly from t=0 instead
+      // of snapping the piece onto a fresh, unrelated vector partway
+      // through.
+      var speed = 55 + Math.random() * 45; // vw or vh per second, along the cone
+      var spreadSpeed = (Math.random() * 60 - 30); // perpendicular component
+      var vx, vy0;
+      if (outX !== 0) { vx = outX * speed; vy0 = spreadSpeed - 30; } // slight upward kick
+      else { vx = spreadSpeed; vy0 = outY * speed - 20; }
 
-      var endX = midX + (Math.random() * 20 - 10);
-      var endY = midY + 90 + Math.random() * 30; // always downward — gravity wins regardless of burst direction
-      var rot1 = Math.random() * 360;
-      var rot2 = rot1 + (Math.random() * 360 - 180);
+      confettiPieces.push({
+        node: node,
+        x0: originX,
+        y0: originY,
+        vx: vx,
+        vy0: vy0,
+        rot0: Math.random() * 360,
+        rotSpeed: (Math.random() * 240 - 120),
+        lifetime: 2.6 + Math.random() * 1.0,
+        start: now + Math.random() * 450
+      });
+    }
 
-      piece.style.setProperty('--startX', originX + 'vw');
-      piece.style.setProperty('--startY', originY + 'vh');
-      piece.style.setProperty('--midX', midX + 'vw');
-      piece.style.setProperty('--midY', midY + 'vh');
-      piece.style.setProperty('--endX', endX + 'vw');
-      piece.style.setProperty('--endY', endY + 'vh');
-      piece.style.setProperty('--rot1', rot1 + 'deg');
-      piece.style.setProperty('--rot2', rot2 + 'deg');
-      // Randomized duration + a wider delay spread desync when each
-      // piece hits its own burst-to-fall handoff — with everyone on the
-      // same fixed timeline before, all 36 pieces snapped from outward
-      // to falling at literally the same instant, which read as a wall
-      // even though their positions were already spread out.
-      piece.style.animationDuration = (2.4 + Math.random() * 0.8) + 's';
-      piece.style.animationDelay = (Math.random() * 450) + 'ms';
-
-      confettiLayerEl.appendChild(piece);
-      (function (node) { setTimeout(function () { node.remove(); }, 3900); })(piece); // covers the longest possible duration (3.2s) + delay (450ms) + a buffer
+    if (confettiRafId === null) {
+      confettiRafId = requestAnimationFrame(stepConfetti);
     }
   }
 

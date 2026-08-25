@@ -145,42 +145,16 @@
       z-index: 200;
     }
     .spotlight-confetti-piece {
+      /* Position/rotation/opacity are all driven every frame from JS via
+         requestAnimationFrame, computing real projectile motion
+         (x = x0 + vx*t, y = y0 + vy0*t + 0.5*g*t^2) — a single continuous
+         function of time, so there's no keyframe handoff for velocity to
+         discontinuously reset at. CSS just provides the base box. */
       position: absolute;
       left: 50%;
       top: 50%;
-      opacity: 0; /* stays invisible through animation-delay, before the
-        keyframes themselves take over — without this, each piece sat
-        fully visible at dead-center for its whole random delay */
-      transform: translate(var(--startX), var(--startY));
-      animation-name: spotlightConfettiBurst;
-      animation-duration: 2.8s; /* JS overrides this per piece (randomized) — fallback only */
-      animation-timing-function: linear; /* overridden per-segment inside the keyframes below */
-      animation-fill-mode: forwards;
-    }
-    @keyframes spotlightConfettiBurst {
-      0% {
-        transform: translate(var(--startX), var(--startY)) rotate(0deg);
-        opacity: 0;
-        /* governs the burst segment (this keyframe -> 18%): punchy,
-           constant-speed, no deceleration */
-        animation-timing-function: linear;
-      }
-      6% { opacity: 1; }
-      18% {
-        transform: translate(var(--midX), var(--midY)) rotate(var(--rot1));
-        /* governs the fall segment (18% -> 100%): eases IN, i.e. starts
-           slow and speeds up — natural gravity, not a decelerating
-           crawl. Combined with each piece now running its own
-           randomized duration/delay, this segment starts at a
-           different real-world moment per piece instead of everyone
-           picking up speed in lockstep. */
-        animation-timing-function: ease-in;
-      }
-      85% { opacity: 1; }
-      100% {
-        transform: translate(var(--endX), var(--endY)) rotate(var(--rot2));
-        opacity: 0;
-      }
+      opacity: 0;
+      will-change: transform, opacity;
     }
     .merge-restart.is-active {
       background: var(--lamp);

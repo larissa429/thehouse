@@ -304,9 +304,11 @@
       ctx.fillStyle = '#403022';
       ctx.fillRect(o.x, oy, o.w, o.h - 10);
 var backrestH = o.h - 10;
-var breakH = 2; // how thin each gap is
-ctx.clearRect(o.x, oy + backrestH / 3, o.w, breakH);
-ctx.clearRect(o.x, oy + backrestH * 2 / 3, o.w, breakH);
+var breakH = 1; // how thin each gap is
+ctx.fillStyle = '#3B2A1D';
+ctx.fillRect(o.x, oy + backrestH / 4, o.w, breakH);
+ctx.fillRect(o.x, oy + backrestH * 2 / 4, o.w, breakH);
+ctx.fillRect(o.x, oy + backrestH * 3 / 4, o.w, breakH);
 var seatH = backrestH / 3;
 var seatW = o.w * 1.1;
 ctx.fillStyle = '#3D2D1F';

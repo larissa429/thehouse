@@ -219,6 +219,80 @@
       text-align: right;
       white-space: nowrap;
     }
+    .spotlight-achievement-toast {
+      position: fixed;
+      top: 1.2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(-1.5rem);
+      z-index: 220;
+      background: var(--wall);
+      border: 1px solid var(--lamp);
+      color: var(--ink);
+      font-family: var(--body);
+      font-size: 0.9rem;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .spotlight-achievement-toast.is-shown {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .spotlight-achievements-panel {
+      max-height: 22rem;
+      overflow-y: auto;
+    }
+    .spotlight-achievement-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      padding: 0.35rem 0;
+    }
+    .spotlight-achievement-icon {
+      flex-shrink: 0;
+      width: 1.9rem;
+      height: 1.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      border-radius: 50%;
+      background: var(--wall-lit);
+    }
+    .spotlight-achievement-row.is-unlocked .spotlight-achievement-icon {
+      background: var(--lamp);
+    }
+    .spotlight-achievement-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .spotlight-achievement-name {
+      font-family: var(--body);
+      font-weight: bold;
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+    }
+    .spotlight-achievement-row.is-unlocked .spotlight-achievement-name {
+      color: var(--ink);
+    }
+    .spotlight-achievement-desc {
+      font-family: var(--body);
+      color: var(--ink-soft);
+      font-size: 0.78rem;
+    }
+    .spotlight-achievement-bonus {
+      font-family: var(--label);
+      color: var(--lamp);
+      font-size: 0.72rem;
+    }
+    .spotlight-achievement-row:not(.is-unlocked) .spotlight-achievement-bonus {
+      color: var(--ink-soft);
+    }
     .spotlight-offline-overlay {
       position: fixed;
       inset: 0;
@@ -485,10 +559,15 @@
         <button type="button" class="spotlight-gear-btn" id="spotlightStatsToggle" aria-label="Stats" aria-expanded="false">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M3 3v18h18" /><path d="M20 18v3" /><path d="M16 16v5" /><path d="M12 13v8" /><path d="M8 16v5" /><path d="M3 11l5 -5l4 4l6 -6" /></svg>
         </button>
+        <button type="button" class="spotlight-gear-btn" id="spotlightAchievementsToggle" aria-label="Achievements" aria-expanded="false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M8 4h8v5a4 4 0 0 1 -8 0v-5z" /><path d="M8 9a3 3 0 0 1 -3 -3v-1h3" /><path d="M16 9a3 3 0 0 0 3 -3v-1h-3" /><path d="M12 13v3" /><path d="M9 20h6" /><path d="M10 16h4v2a2 2 0 0 1 -2 2v0a2 2 0 0 1 -2 -2v-2z" /></svg>
+        </button>
         <button type="button" class="spotlight-gear-btn" id="spotlightSettingsToggle" aria-label="Settings" aria-expanded="false">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
         </button>
       </div>
+
+      <div class="spotlight-settings-panel spotlight-achievements-panel" id="spotlightAchievementsPanel" hidden></div>
 
       <div class="spotlight-settings-panel" id="spotlightStatsPanel" hidden>
         <div class="spotlight-settings-row spotlight-stat-row">
@@ -589,6 +668,8 @@
   </main>
 
   <div class="spotlight-confetti-layer" id="spotlightConfettiLayer"></div>
+
+  <div class="spotlight-achievement-toast" id="spotlightAchievementToast" hidden></div>
 
   <div class="spotlight-offline-overlay" id="spotlightOfflineOverlay" hidden>
     <div class="spotlight-offline-modal">

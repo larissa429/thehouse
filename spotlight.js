@@ -50,6 +50,9 @@
   var statCritChanceEl = document.getElementById('spotlightStatCritChance');
   var statBuildingDiscountEl = document.getElementById('spotlightStatBuildingDiscount');
   var statClickDiscountEl = document.getElementById('spotlightStatClickDiscount');
+  var achievementsToggleBtn = document.getElementById('spotlightAchievementsToggle');
+  var achievementsPanelEl = document.getElementById('spotlightAchievementsPanel');
+  var achievementToastEl = document.getElementById('spotlightAchievementToast');
 
   var SAVE_KEY = 'spotlight-save';
 
@@ -339,7 +342,108 @@
     }
   ];
 
-  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0 };
+  // Achievements are permanent once unlocked — checked against whatever
+  // the CURRENT run's state looks like, never re-evaluated after that.
+  // Each grants a small permanent multiplier (`bonusType` + `bonusValue`,
+  // applied in clickPower()/totalRatePerMinute()) on top of the badge, so
+  // completing them is a real (if minor) part of progression, not purely
+  // cosmetic. `check` reads live `state` — keep conditions cheap, they
+  // run every second.
+  var ACHIEVEMENTS = [
+    {
+      id: 'firstClick',
+      name: 'Places, Everyone',
+      desc: 'Click her once.',
+      bonusType: 'clickPower',
+      bonusValue: 0.01,
+      check: function () { return state.totalClicks >= 1; }
+    },
+    {
+      id: 'gettingNoticed',
+      name: 'Getting Noticed',
+      desc: 'Earn 1,000 total Spotlight.',
+      bonusType: 'clickPower',
+      bonusValue: 0.01,
+      check: function () { return state.totalEarned >= 1000; }
+    },
+    {
+      id: 'dedicatedFan',
+      name: 'Dedicated Fan',
+      desc: 'Click 500 times.',
+      bonusType: 'clickPower',
+      bonusValue: 0.02,
+      check: function () { return state.totalClicks >= 500; }
+    },
+    {
+      id: 'criticallyAcclaimed',
+      name: 'Critically Acclaimed',
+      desc: 'Land 50 critical clicks.',
+      bonusType: 'clickPower',
+      bonusValue: 0.02,
+      check: function () { return state.totalCrits >= 50; }
+    },
+    {
+      id: 'localCelebrity',
+      name: 'Local Celebrity',
+      desc: 'Earn 100,000 total Spotlight.',
+      bonusType: 'rate',
+      bonusValue: 0.02,
+      check: function () { return state.totalEarned >= 100000; }
+    },
+    {
+      id: 'householdName',
+      name: 'Household Name',
+      desc: 'Earn 1,000,000 total Spotlight.',
+      bonusType: 'rate',
+      bonusValue: 0.03,
+      check: function () { return state.totalEarned >= 1000000; }
+    },
+    {
+      id: 'marathon',
+      name: 'The Show Must Go On',
+      desc: 'Spend an hour actually looking at this tab.',
+      bonusType: 'rate',
+      bonusValue: 0.02,
+      check: function () { return state.playTimeMs >= 60 * 60 * 1000; }
+    },
+    {
+      id: 'awayGame',
+      name: 'Away Game',
+      desc: 'Earn 10,000 Spotlight total while offline.',
+      bonusType: 'rate',
+      bonusValue: 0.02,
+      check: function () { return state.totalOfflineEarned >= 10000; }
+    },
+    {
+      id: 'sequelMaterial',
+      name: 'Sequel Material',
+      desc: 'Prestige for the first time.',
+      bonusType: 'clickPower',
+      bonusValue: 0.03,
+      check: function () { return state.legacy >= 1; }
+    },
+    {
+      id: 'fullCast',
+      name: 'The Full Cast',
+      desc: 'Own at least one of every Production upgrade.',
+      bonusType: 'rate',
+      bonusValue: 0.05,
+      check: function () {
+        return UPGRADES.filter(function (u) { return u.kind === 'building'; })
+          .every(function (u) { return state.owned[u.id] >= 1; });
+      }
+    }
+  ];
+
+  function achievementBonusMultiplier(type) {
+    var mult = 1;
+    ACHIEVEMENTS.forEach(function (a) {
+      if (a.bonusType === type && state.unlockedAchievements[a.id]) mult *= 1 + a.bonusValue;
+    });
+    return mult;
+  }
+
+  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
   UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
 
   function loadSave() {
@@ -358,6 +462,11 @@
       if (typeof parsed.totalClicks === 'number') state.totalClicks = parsed.totalClicks;
       if (typeof parsed.totalCrits === 'number') state.totalCrits = parsed.totalCrits;
       if (typeof parsed.totalOfflineEarned === 'number') state.totalOfflineEarned = parsed.totalOfflineEarned;
+      if (parsed.unlockedAchievements) {
+        ACHIEVEMENTS.forEach(function (a) {
+          if (parsed.unlockedAchievements[a.id]) state.unlockedAchievements[a.id] = true;
+        });
+      }
       if (parsed.owned) {
         UPGRADES.forEach(function (u) {
           if (typeof parsed.owned[u.id] === 'number') state.owned[u.id] = parsed.owned[u.id];
@@ -389,15 +498,17 @@
   }
 
   function totalRatePerMinute() {
-    return UPGRADES.reduce(function (sum, u) {
+    var base = UPGRADES.reduce(function (sum, u) {
       return u.kind === 'building' ? sum + state.owned[u.id] * u.ratePerMinute : sum;
     }, 0);
+    return base * achievementBonusMultiplier('rate');
   }
 
   function clickPower() {
-    return UPGRADES.reduce(function (sum, u) {
+    var base = UPGRADES.reduce(function (sum, u) {
       return u.kind === 'click' ? sum + state.owned[u.id] * u.clickBonus : sum;
     }, 1); // base of 1 per click
+    return base * achievementBonusMultiplier('clickPower');
   }
 
   var CRIT_CHANCE_BASE = 0.05;
@@ -519,8 +630,9 @@
     var keepTotalClicks = state.totalClicks;
     var keepTotalCrits = state.totalCrits;
     var keepTotalOfflineEarned = state.totalOfflineEarned;
+    var keepUnlockedAchievements = state.unlockedAchievements;
     cancelPaparazzi();
-    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned };
+    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned, unlockedAchievements: keepUnlockedAchievements };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     save();
     lastLine = null;
@@ -656,6 +768,7 @@
     state.owned[u.id] += 1;
     if (u.id === 'paparazzi') schedulePaparazzi(); // first purchase starts the event loop
     if (Math.random() < 0.4) showLine(BUY_LINES[Math.floor(Math.random() * BUY_LINES.length)]);
+    checkAchievements();
     save();
     renderCount();
     renderShop();
@@ -777,6 +890,7 @@
     portraitEl.classList.add('is-clicked');
     var point = e.touches && e.touches[0] ? e.touches[0] : e;
     spawnFloatingPlusOne(point.clientX, point.clientY, amount, isCrit);
+    checkAchievements();
     renderCount();
     renderShop(); // a click can be what crosses an unlock threshold
     renderPrestige();
@@ -796,7 +910,7 @@
     // Unlike prestiging, the plain Reset button is a full wipe — Legacy
     // included. It's the "start completely over" button; The Sequel is
     // the one that keeps Legacy around.
-    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0 };
+    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     cancelPaparazzi();
     save();
@@ -1128,7 +1242,80 @@
   setInterval(function () {
     if (!document.hidden) state.playTimeMs += 1000;
     if (!statsPanelEl.hidden) renderStats();
+    checkAchievements();
   }, 1000);
+
+  // --- achievements -----------------------------------------------------
+  var toastTimer = null;
+  function showAchievementToast(name) {
+    clearTimeout(toastTimer);
+    achievementToastEl.textContent = '🏆 ' + name + ' unlocked!';
+    achievementToastEl.hidden = false;
+    void achievementToastEl.offsetWidth; // force layout so the transition below actually animates
+    achievementToastEl.classList.add('is-shown');
+    toastTimer = setTimeout(function () {
+      achievementToastEl.classList.remove('is-shown');
+      setTimeout(function () { achievementToastEl.hidden = true; }, 350); // matches the CSS transition duration
+    }, 3000);
+  }
+
+  // Runs every second (see the tick above) plus right after clicks/buys
+  // for snappier feedback. Only ever unlocks — never re-locks — so it's
+  // safe to call this often and cheaply.
+  function checkAchievements() {
+    var unlockedAny = false;
+    ACHIEVEMENTS.forEach(function (a) {
+      if (state.unlockedAchievements[a.id]) return;
+      if (!a.check()) return;
+      state.unlockedAchievements[a.id] = true;
+      unlockedAny = true;
+      showAchievementToast(a.name);
+    });
+    if (unlockedAny) {
+      save();
+      if (!achievementsPanelEl.hidden) renderAchievements();
+    }
+  }
+
+  function renderAchievements() {
+    achievementsPanelEl.innerHTML = '';
+    ACHIEVEMENTS.forEach(function (a) {
+      var unlocked = !!state.unlockedAchievements[a.id];
+      var row = document.createElement('div');
+      row.className = 'spotlight-achievement-row' + (unlocked ? ' is-unlocked' : '');
+
+      var icon = document.createElement('div');
+      icon.className = 'spotlight-achievement-icon';
+      icon.textContent = unlocked ? '🏆' : '🔒';
+
+      var info = document.createElement('div');
+      info.className = 'spotlight-achievement-info';
+      var name = document.createElement('span');
+      name.className = 'spotlight-achievement-name';
+      name.textContent = a.name;
+      var desc = document.createElement('span');
+      desc.className = 'spotlight-achievement-desc';
+      desc.textContent = a.desc;
+      var bonus = document.createElement('span');
+      bonus.className = 'spotlight-achievement-bonus';
+      var bonusLabel = a.bonusType === 'clickPower' ? 'click power' : 'passive rate';
+      bonus.textContent = '+' + (a.bonusValue * 100) + '% ' + bonusLabel + (unlocked ? ' (active)' : '');
+      info.appendChild(name);
+      info.appendChild(desc);
+      info.appendChild(bonus);
+
+      row.appendChild(icon);
+      row.appendChild(info);
+      achievementsPanelEl.appendChild(row);
+    });
+  }
+
+  achievementsToggleBtn.addEventListener('click', function () {
+    var open = achievementsPanelEl.hidden;
+    achievementsPanelEl.hidden = !open;
+    achievementsToggleBtn.setAttribute('aria-expanded', String(open));
+    if (open) renderAchievements();
+  });
 
   function renderEffectsToggle() {
     effectsToggleBtn.textContent = state.reducedEffects ? 'On' : 'Off';
@@ -1207,6 +1394,7 @@
 
   loadSave();
   checkOfflineGains();
+  checkAchievements();
   quoteEsEl.textContent = IDLE_LINE.es;
   quoteEnEl.textContent = IDLE_LINE.en;
   renderCount();

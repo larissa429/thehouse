@@ -24,6 +24,8 @@
   var tabProductionBtn = document.getElementById('spotlightTabProduction');
   var fxLayerEl = document.getElementById('spotlightFxLayer');
   var effectsToggleBtn = document.getElementById('spotlightEffectsToggle');
+  var paparazziBadgeEl = document.getElementById('spotlightPaparazziBadge');
+  var paparazziBadgeMultEl = document.getElementById('spotlightPaparazziMultText');
 
   var SAVE_KEY = 'spotlight-save';
 
@@ -219,6 +221,52 @@
       costMultiplier: 1.5,
       critChanceBonus: 0.01,
       maxOwned: 10
+    },
+    {
+      id: 'paparazzi',
+      kind: 'paparazzi',
+      name: 'Paparazzi',
+      desc: 'Every so often, her biggest fan shows up — manual clicks during the 5-second spotlight are worth 5x.',
+      unlockAt: 500,
+      baseCost: 1000,
+      costMultiplier: 1,
+      maxOwned: 1
+    },
+    {
+      id: 'tipline',
+      kind: 'paparazziFreq',
+      requires: 'paparazzi',
+      name: 'Tip Line',
+      desc: '-10% average wait between paparazzi visits. Stacks up to 5 times.',
+      unlockAt: 500,
+      baseCost: 800,
+      costMultiplier: 1.4,
+      freqReduction: 0.1,
+      maxOwned: 5
+    },
+    {
+      id: 'cover',
+      kind: 'paparazziMult',
+      requires: 'paparazzi',
+      name: 'Magazine Cover',
+      desc: '+1x click value during the paparazzi spotlight. Stacks up to 5 times.',
+      unlockAt: 500,
+      baseCost: 1200,
+      costMultiplier: 1.4,
+      multiplierBonus: 1,
+      maxOwned: 5
+    },
+    {
+      id: 'scandal',
+      kind: 'paparazziMult',
+      requires: 'cover',
+      name: 'Scandalous Rumor',
+      desc: '+2x click value during the paparazzi spotlight. Stacks up to 5 times.',
+      unlockAt: 5000,
+      baseCost: 6000,
+      costMultiplier: 1.4,
+      multiplierBonus: 2,
+      maxOwned: 5
     }
   ];
 
@@ -282,6 +330,70 @@
     }, CRIT_CHANCE_BASE);
   }
 
+  // --- paparazzi event ---------------------------------------------------
+  // A random ~5s window where manual clicks are worth several times
+  // normal. Dormant entirely until the base 'paparazzi' upgrade is
+  // bought; 'paparazziFreq' upgrades shorten the average wait between
+  // visits, 'paparazziMult' upgrades raise the payout multiplier.
+  var PAPARAZZI_WINDOW_MS = 5000;
+  var PAPARAZZI_BASE_MULTIPLIER = 5;
+  var PAPARAZZI_MIN_WAIT_MS = 40000;
+  var PAPARAZZI_WAIT_RANGE_MS = 40000; // baseline wait: 40-80s, before frequency upgrades shrink it
+  var PAPARAZZI_LINES = [
+    { es: '¡Los paparazzi! ¡Que no se escape la mejor foto!', en: 'The paparazzi! Get the shot while it lasts!' },
+    { es: '¡Mi fan más grande ha llegado!', en: 'My biggest fan has arrived!' },
+    { es: 'Cinco segundos. Que cuenten.', en: 'Five seconds. Make them count.' }
+  ];
+
+  var paparazziActive = false;
+  var paparazziTimer = null;
+  var paparazziWindowTimer = null;
+
+  function paparazziMultiplier() {
+    return UPGRADES.reduce(function (sum, u) {
+      return u.kind === 'paparazziMult' ? sum + state.owned[u.id] * u.multiplierBonus : sum;
+    }, PAPARAZZI_BASE_MULTIPLIER);
+  }
+
+  function paparazziFreqFactor() {
+    var factor = 1;
+    UPGRADES.forEach(function (u) {
+      if (u.kind === 'paparazziFreq') factor *= Math.pow(1 - u.freqReduction, state.owned[u.id]);
+    });
+    return factor;
+  }
+
+  function schedulePaparazzi() {
+    clearTimeout(paparazziTimer);
+    if (state.owned.paparazzi <= 0) return; // not unlocked
+    var wait = (PAPARAZZI_MIN_WAIT_MS + Math.random() * PAPARAZZI_WAIT_RANGE_MS) * paparazziFreqFactor();
+    paparazziTimer = setTimeout(triggerPaparazzi, wait);
+  }
+
+  function triggerPaparazzi() {
+    if (state.owned.paparazzi <= 0) return;
+    paparazziActive = true;
+    portraitWrapEl.classList.add('is-paparazzi');
+    paparazziBadgeMultEl.textContent = paparazziMultiplier();
+    paparazziBadgeEl.hidden = false;
+    showLine(PAPARAZZI_LINES[Math.floor(Math.random() * PAPARAZZI_LINES.length)]);
+    clearTimeout(paparazziWindowTimer);
+    paparazziWindowTimer = setTimeout(function () {
+      paparazziActive = false;
+      portraitWrapEl.classList.remove('is-paparazzi');
+      paparazziBadgeEl.hidden = true;
+      schedulePaparazzi();
+    }, PAPARAZZI_WINDOW_MS);
+  }
+
+  function cancelPaparazzi() {
+    clearTimeout(paparazziTimer);
+    clearTimeout(paparazziWindowTimer);
+    paparazziActive = false;
+    portraitWrapEl.classList.remove('is-paparazzi');
+    paparazziBadgeEl.hidden = true;
+  }
+
   // Plain comma-formatted under 10,000 (still easy to read at a glance);
   // abbreviated with a K/M/B/T suffix above that, where the full digit
   // count starts getting unwieldy — trims trailing zeros so "1.00M"
@@ -317,6 +429,7 @@
       if (kinds.indexOf(u.kind) === -1) return;
       var owned = state.owned[u.id];
       if (state.totalEarned < u.unlockAt && owned === 0) return; // not unlocked yet
+      if (u.requires && state.owned[u.requires] === 0) return; // prerequisite not owned yet
       var maxedOut = u.maxOwned && owned >= u.maxOwned;
 
       var cost = upgradeCost(u);
@@ -359,7 +472,7 @@
 
   function renderShop() {
     renderShopSection(shopEl, ['building']);
-    renderShopSection(boostShopEl, ['click', 'discount', 'critChance']);
+    renderShopSection(boostShopEl, ['click', 'discount', 'critChance', 'paparazzi', 'paparazziFreq', 'paparazziMult']);
   }
 
   function upgradeById(id) {
@@ -401,6 +514,7 @@
     if (state.spotlight < cost) return;
     state.spotlight -= cost;
     state.owned[u.id] += 1;
+    if (u.id === 'paparazzi') schedulePaparazzi(); // first purchase starts the event loop
     if (Math.random() < 0.4) showLine(BUY_LINES[Math.floor(Math.random() * BUY_LINES.length)]);
     save();
     renderCount();
@@ -442,7 +556,7 @@
 
   function handleClick(e) {
     var isCrit = Math.random() < critChance();
-    var amount = clickPower() * (isCrit ? CRIT_MULTIPLIER : 1);
+    var amount = clickPower() * (isCrit ? CRIT_MULTIPLIER : 1) * (paparazziActive ? paparazziMultiplier() : 1);
     addSpotlight(amount);
     if (isCrit) showLine(CRIT_LINES[Math.floor(Math.random() * CRIT_LINES.length)]);
     else showQuote();
@@ -462,6 +576,7 @@
     var keepReducedEffects = state.reducedEffects; // a display preference, not progress — survives Reset
     state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
+    cancelPaparazzi();
     save();
     lastLine = null;
     quoteEsEl.textContent = IDLE_LINE.es;
@@ -568,4 +683,5 @@
   renderCount();
   renderShop();
   renderEffectsToggle();
+  schedulePaparazzi(); // no-op if not owned yet
 })();

@@ -137,6 +137,43 @@
       color: var(--shadow);
     }
 
+    /* Paparazzi event — glow + camera icon only show while the portrait
+       wrap carries .is-paparazzi (toggled from JS for the ~5s window). */
+    .spotlight-paparazzi-glow {
+      position: absolute;
+      inset: -1.5rem;
+      border-radius: 50%;
+      opacity: 0;
+      background: radial-gradient(circle, rgba(255,235,150,0.55), rgba(255,235,150,0) 70%);
+      pointer-events: none;
+    }
+    .spotlight-paparazzi-camera {
+      position: absolute;
+      top: -1.2rem;
+      right: -0.8rem;
+      font-size: 1.8rem;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .spotlight-portrait-wrap.is-paparazzi .spotlight-paparazzi-glow,
+    .spotlight-portrait-wrap.is-paparazzi .spotlight-paparazzi-camera {
+      opacity: 1;
+      animation: spotlightGlowPulse 0.9s ease-in-out infinite;
+    }
+    @keyframes spotlightGlowPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .spotlight-paparazzi-badge {
+      text-align: center;
+      font-family: var(--label);
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: var(--lamp);
+      margin: -0.4rem 0 1rem;
+      animation: spotlightGlowPulse 0.9s ease-in-out infinite;
+    }
+
     /* speech bubble to the side, same paper-and-tail language as the
        Crossroads/Uno bubbles, just laid out with flexbox instead of
        absolute positioning since there's only ever one speaker here */
@@ -304,7 +341,9 @@
         <div class="spotlight-left">
           <div class="spotlight-stage">
             <div class="spotlight-portrait-wrap" id="spotlightPortraitWrap">
+              <div class="spotlight-paparazzi-glow"></div>
               <img src="../images/AP.png" alt="Abstract Painting" class="spotlight-portrait" id="spotlightPortrait" draggable="false" />
+              <span class="spotlight-paparazzi-camera">📸</span>
               <div class="spotlight-fx-layer" id="spotlightFxLayer"></div>
             </div>
             <div class="spotlight-bubble">
@@ -314,6 +353,7 @@
           </div>
 
           <p class="spotlight-rate" id="spotlightRate" hidden></p>
+          <p class="spotlight-paparazzi-badge" id="spotlightPaparazziBadge" hidden>📸 Paparazzi! Clicks worth <span id="spotlightPaparazziMultText">5</span>x!</p>
         </div>
 
         <div class="spotlight-right">

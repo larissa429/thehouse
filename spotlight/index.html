@@ -14,15 +14,20 @@
       max-width: 26rem;
     }
 
+    .spotlight-stage {
+      display: flex;
+      align-items: center;
+      gap: 1.1rem;
+      margin: 0.5rem 0 1rem;
+    }
     .spotlight-portrait-wrap {
       position: relative;
-      display: flex;
-      justify-content: center;
-      margin: 0.5rem 0 0.75rem;
+      flex-shrink: 0;
     }
     .spotlight-portrait {
-      width: 12rem;
+      width: 10rem;
       height: auto;
+      display: block;
       cursor: pointer;
       user-select: none;
       -webkit-user-select: none;
@@ -57,14 +62,49 @@
       100% { opacity: 0; transform: translateY(-2.2rem); }
     }
 
-    .spotlight-quote {
-      min-height: 2.6rem;
-      text-align: center;
+    /* speech bubble to the side, same paper-and-tail language as the
+       Crossroads/Uno bubbles, just laid out with flexbox instead of
+       absolute positioning since there's only ever one speaker here */
+    .spotlight-bubble {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      background: var(--paper);
+      color: var(--ink-on-paper);
+      border-radius: 10px;
+      padding: 0.7rem 0.9rem;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.4);
+    }
+    .spotlight-bubble::before {
+      content: '';
+      position: absolute;
+      top: 1.1rem;
+      left: -0.5rem;
+      width: 0.9rem;
+      height: 0.9rem;
+      background: var(--paper);
+      transform: rotate(45deg);
+    }
+    .spotlight-bubble-es {
       font-family: var(--hand);
       font-size: 1.25rem;
-      color: var(--paper);
-      margin: 0 0 1rem;
-      padding: 0 0.5rem;
+      line-height: 1.25;
+      margin: 0;
+    }
+    .spotlight-bubble-en {
+      font-family: var(--hand);
+      font-size: 0.9rem;
+      line-height: 1.2;
+      margin: 0.25rem 0 0;
+      opacity: 0.5;
+    }
+    @media (max-width: 520px) {
+      .spotlight-stage {
+        flex-direction: column;
+        align-items: center;
+      }
+      .spotlight-bubble::before { display: none; }
+      .spotlight-bubble { width: 100%; }
     }
 
     .spotlight-rate {
@@ -159,11 +199,16 @@
         <button type="button" class="merge-restart" id="spotlightReset">Reset</button>
       </div>
 
-      <div class="spotlight-portrait-wrap" id="spotlightPortraitWrap">
-        <img src="../images/AP.png" alt="Abstract Painting" class="spotlight-portrait" id="spotlightPortrait" draggable="false" />
+      <div class="spotlight-stage">
+        <div class="spotlight-portrait-wrap" id="spotlightPortraitWrap">
+          <img src="../images/AP.png" alt="Abstract Painting" class="spotlight-portrait" id="spotlightPortrait" draggable="false" />
+        </div>
+        <div class="spotlight-bubble">
+          <p class="spotlight-bubble-es" id="spotlightQuoteEs"></p>
+          <p class="spotlight-bubble-en" id="spotlightQuoteEn"></p>
+        </div>
       </div>
 
-      <p class="spotlight-quote" id="spotlightQuote">&nbsp;</p>
       <p class="spotlight-rate" id="spotlightRate" hidden></p>
 
       <p class="spotlight-shop-label">The Production</p>

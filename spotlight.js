@@ -15,29 +15,33 @@
   var resetBtn = document.getElementById('spotlightReset');
   var portraitEl = document.getElementById('spotlightPortrait');
   var portraitWrapEl = document.getElementById('spotlightPortraitWrap');
-  var quoteEl = document.getElementById('spotlightQuote');
+  var quoteEsEl = document.getElementById('spotlightQuoteEs');
+  var quoteEnEl = document.getElementById('spotlightQuoteEn');
   var rateEl = document.getElementById('spotlightRate');
   var shopEl = document.getElementById('spotlightShop');
 
   var SAVE_KEY = 'spotlight-save';
 
+  // She delivers every line in (Castilian) Spanish, subtitled — because
+  // of course she does. `es` is what's said, `en` is the dim subtitle.
   var CLICK_LINES = [
-    "I was born for this moment.",
-    "Did you feel that? That was character development.",
-    "No, no, don't mind me. I'll just suffer beautifully over here.",
-    "This is my defining scene.",
-    "Somewhere, an award is being engraved.",
-    "Every angle is my good angle.",
-    "The lighting simply adores me.",
-    "I didn't ask to be this compelling.",
-    "You're welcome, by the way.",
-    "Someone should really be filming this."
+    { es: 'Nací para este momento.', en: 'I was born for this moment.' },
+    { es: '¿Lo has sentido? Eso ha sido desarrollo de personaje.', en: 'Did you feel that? That was character development.' },
+    { es: 'No, no, no os preocupéis por mí. Sufriré preciosamente aquí.', en: "No, no, don't mind me. I'll just suffer beautifully over here." },
+    { es: 'Esta es mi escena decisiva.', en: 'This is my defining scene.' },
+    { es: 'En algún lugar, están grabando un premio.', en: 'Somewhere, an award is being engraved.' },
+    { es: 'Todos los ángulos son mi ángulo bueno.', en: 'Every angle is my good angle.' },
+    { es: 'La iluminación simplemente me adora.', en: 'The lighting simply adores me.' },
+    { es: 'Yo no pedí ser tan cautivadora.', en: "I didn't ask to be this compelling." },
+    { es: 'De nada, por cierto.', en: "You're welcome, by the way." },
+    { es: 'Alguien debería estar grabando esto.', en: 'Someone should really be filming this.' }
   ];
 
   // Add another tier by adding another entry here — unlockAt is measured
   // in total Spotlight ever earned, baseCost/costMultiplier control the
   // classic "each purchase costs ~15% more" idle-game curve, and
-  // ratePerMinute is per single owned copy of that upgrade.
+  // ratePerMinute is per single owned copy of that upgrade. Cost and
+  // rate both scale up roughly 6x per tier, same shape as most idle games.
   var UPGRADES = [
     {
       id: 'sigh',
@@ -47,6 +51,69 @@
       baseCost: 10,
       costMultiplier: 1.15,
       ratePerMinute: 1
+    },
+    {
+      id: 'gossip',
+      name: 'Overheard Gossip',
+      desc: "Everyone's definitely talking about her. 6 clicks / minute.",
+      unlockAt: 50,
+      baseCost: 60,
+      costMultiplier: 1.15,
+      ratePerMinute: 6
+    },
+    {
+      id: 'lighting',
+      name: 'Flattering Lighting',
+      desc: 'Rigged entirely in her favor. 36 clicks / minute.',
+      unlockAt: 300,
+      baseCost: 360,
+      costMultiplier: 1.16,
+      ratePerMinute: 36
+    },
+    {
+      id: 'monologue',
+      name: 'Uninterrupted Monologue',
+      desc: 'Nobody has interrupted her in weeks. 220 clicks / minute.',
+      unlockAt: 1800,
+      baseCost: 2100,
+      costMultiplier: 1.16,
+      ratePerMinute: 220
+    },
+    {
+      id: 'fanmail',
+      name: 'Self-Written Fan Mail',
+      desc: 'She is her own biggest admirer. 1,300 clicks / minute.',
+      unlockAt: 10000,
+      baseCost: 12000,
+      costMultiplier: 1.17,
+      ratePerMinute: 1300
+    },
+    {
+      id: 'dancers',
+      name: 'Backup Dancers',
+      desc: 'Recruited from the other paintings. 8,000 clicks / minute.',
+      unlockAt: 60000,
+      baseCost: 70000,
+      costMultiplier: 1.17,
+      ratePerMinute: 8000
+    },
+    {
+      id: 'wing',
+      name: 'Her Own Wing of The House',
+      desc: 'Renovations completed overnight. 45,000 clicks / minute.',
+      unlockAt: 350000,
+      baseCost: 400000,
+      costMultiplier: 1.18,
+      ratePerMinute: 45000
+    },
+    {
+      id: 'universe',
+      name: 'Cinematic Universe',
+      desc: 'The whole House is secretly about her. 260,000 clicks / minute.',
+      unlockAt: 2000000,
+      baseCost: 2300000,
+      costMultiplier: 1.18,
+      ratePerMinute: 260000
     }
   ];
 
@@ -148,14 +215,15 @@
     renderShop();
   }
 
-  var lastLine = '';
+  var lastLine = null;
   function showQuote() {
     var line = CLICK_LINES[Math.floor(Math.random() * CLICK_LINES.length)];
     if (line === lastLine && CLICK_LINES.length > 1) {
       line = CLICK_LINES[(CLICK_LINES.indexOf(line) + 1) % CLICK_LINES.length];
     }
     lastLine = line;
-    quoteEl.textContent = line;
+    quoteEsEl.textContent = line.es;
+    quoteEnEl.textContent = line.en;
   }
 
   function spawnFloatingPlusOne(clientX, clientY) {
@@ -193,7 +261,9 @@
     state = { spotlight: 0, totalEarned: 0, owned: {} };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     save();
-    quoteEl.textContent = ' ';
+    quoteEsEl.textContent = '';
+    quoteEnEl.textContent = '';
+    lastLine = null;
     renderCount();
     renderShop();
   });

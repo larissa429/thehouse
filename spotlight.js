@@ -63,18 +63,20 @@
   var IDLE_LINE = { es: '¿A qué esperas? No va a hacer clic solo.', en: "What are you waiting for? It's not gonna click itself." };
 
   // Shown right after prestiging, instead of IDLE_LINE.
-  var SEQUEL_LINE = { es: 'Ah, la secuela. Siempre superior al original.', en: 'Ah, the sequel. Always superior to the original.' };
+  var SEQUEL_LINE = { es: 'Ah, la secuela. Siempre es superior a la original.', en: 'Ah, the sequel. Always superior to the original.' };
 
   // She delivers every line in (Castilian) Spanish, subtitled — because
   // of course she does. `es` is what's said, `en` is the dim subtitle.
+  // Translations by an actual native speaker (AP's creator, from Spain) —
+  // reviewed and corrected from the earlier machine-ish first pass.
   var CLICK_LINES = [
     { es: 'Nací para este momento.', en: 'I was born for this moment.' },
     { es: '¿Lo has sentido? Eso ha sido desarrollo de personaje.', en: 'Did you feel that? That was character development.' },
-    { es: 'No, no, no os preocupéis por mí. Sufriré preciosamente aquí.', en: "No, no, don't mind me. I'll just suffer beautifully over here." },
+    { es: 'No, no, no os preocupéis por mí. Sufriré glamurosamente aquí.', en: "No, no, don't mind me. I'll just suffer glamurously over here." },
     { es: 'Esta es mi escena decisiva.', en: 'This is my defining scene.' },
-    { es: 'En algún lugar, están grabando un premio.', en: 'Somewhere, an award is being engraved.' },
+    { es: 'En algún lugar, están haciendo un premio para mí.', en: 'Somewhere, an award is being engraved for me.' },
     { es: 'Todos los ángulos son mi ángulo bueno.', en: 'Every angle is my good angle.' },
-    { es: 'La iluminación simplemente me adora.', en: 'The lighting simply adores me.' },
+    { es: 'Los focos simplemente me adoran.', en: 'The spotlight simply adores me.' },
     { es: 'Yo no pedí ser tan cautivadora.', en: "I didn't ask to be this compelling." },
     { es: 'De nada, por cierto.', en: "You're welcome, by the way." },
     { es: 'Alguien debería estar grabando esto.', en: 'Someone should really be filming this.' }
@@ -82,7 +84,7 @@
 
   // Rare (5% per click) — bigger payout, bigger reaction.
   var CRIT_LINES = [
-    { es: '¡Aplausos y Ovaciones a mi!', en: 'Praises and Glory to me!' },
+    { es: '¡Aplausos y ovaciones a mí!', en: 'Praises and glory to me!' },
     { es: '¡Bravo, bravo!', en: 'Bravo, bravo!' },
     { es: 'Esto merece un premio.', en: 'This deserves an award.' },
     { es: '¡El público la ama!', en: 'The audience adores her!' }
@@ -93,7 +95,7 @@
     { es: 'Por fin. Ya me cansaba de hacerlo yo misma.', en: 'Finally. I was tired of doing this myself.' },
     { es: 'Una inversión inteligente, la verdad.', en: 'A smart investment, honestly.' },
     { es: 'Esto era necesario.', en: 'This was necessary.' },
-    { es: 'Ahora sí. Empezamos de verdad.', en: 'Now, yes. Now we truly begin.' }
+    { es: 'Ahora sí. Empecemos de verdad.', en: 'Now, yes. Now we truly begin.' }
   ];
 
   // Add another tier by adding another entry here — unlockAt is measured

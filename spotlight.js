@@ -288,6 +288,7 @@
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'spotlight-upgrade';
+      btn.dataset.id = u.id;
       btn.disabled = maxedOut || state.spotlight < cost;
 
       var info = document.createElement('div');
@@ -324,6 +325,39 @@
   function renderShop() {
     renderShopSection(shopEl, ['building']);
     renderShopSection(boostShopEl, ['click', 'discount']);
+  }
+
+  function upgradeById(id) {
+    for (var i = 0; i < UPGRADES.length; i++) if (UPGRADES[i].id === id) return UPGRADES[i];
+    return null;
+  }
+
+  // How many upgrades are currently visible in the shop (unlocked, or
+  // already owned) — used to detect whether the passive-income tick
+  // needs a full rebuild (something just unlocked) or can get away
+  // with the cheaper in-place refresh below.
+  function unlockedCount() {
+    return UPGRADES.filter(function (u) { return state.totalEarned >= u.unlockAt || state.owned[u.id] > 0; }).length;
+  }
+
+  // Updates existing buttons' disabled/cost/owned text without touching
+  // the DOM nodes themselves — the full rebuild in renderShopSection
+  // was running 4x/second off the passive-income tick, which meant a
+  // rapid click could land right as its target button got torn down
+  // and replaced, silently eating the click.
+  function refreshShopAffordability() {
+    [shopEl, boostShopEl].forEach(function (container) {
+      Array.prototype.forEach.call(container.querySelectorAll('.spotlight-upgrade'), function (btn) {
+        var u = upgradeById(btn.dataset.id);
+        if (!u) return;
+        var owned = state.owned[u.id];
+        var maxedOut = u.maxOwned && owned >= u.maxOwned;
+        var cost = upgradeCost(u);
+        btn.disabled = maxedOut || state.spotlight < cost;
+        var costEl = btn.querySelector('.spotlight-upgrade-cost');
+        if (costEl) costEl.textContent = maxedOut ? 'Maxed' : formatNumber(cost);
+      });
+    });
   }
 
   function buyUpgrade(u) {
@@ -480,9 +514,14 @@
   setInterval(function () {
     var perSecond = totalRatePerMinute() / 60;
     if (perSecond <= 0) return;
+    var beforeUnlocked = unlockedCount();
     addSpotlight(perSecond / 4);
     renderCount();
-    renderShop();
+    // Rebuild only if passive income just crossed an unlock threshold —
+    // otherwise just update existing buttons in place (see comment on
+    // refreshShopAffordability for why).
+    if (unlockedCount() !== beforeUnlocked) renderShop();
+    else refreshShopAffordability();
   }, 250);
 
   // Autosave on an interval too, not just on click/buy, so passive

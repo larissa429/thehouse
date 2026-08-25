@@ -782,34 +782,49 @@
 
   function spawnConfettiBurst(force) {
     if (state.reducedEffects && !force) return;
+
+    // One shared origin per burst, live on a random viewport edge — a
+    // confetti-cannon shot, not 36 independently-converging pieces (that
+    // was the earlier design, and it's what read as "hitting a wall":
+    // everyone aiming for the same central spot). Coordinates here are
+    // offsets from viewport CENTER (the piece's own left:50%/top:50%
+    // base), so ±50 on either axis reaches that axis's edge.
+    var edge = Math.floor(Math.random() * 4); // 0 left, 1 right, 2 top, 3 bottom
+    var originX, originY, outX, outY; // outX/outY: unit-ish direction the cone points
+    if (edge === 0) { originX = -50; originY = Math.random() * 100 - 50; outX = 1; outY = 0; }
+    else if (edge === 1) { originX = 50; originY = Math.random() * 100 - 50; outX = -1; outY = 0; }
+    else if (edge === 2) { originX = Math.random() * 100 - 50; originY = -50; outX = 0; outY = 1; }
+    else { originX = Math.random() * 100 - 50; originY = 50; outX = 0; outY = -1; }
+
     for (var i = 0; i < CONFETTI_PIECE_COUNT; i++) {
       var color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
       var piece = makeConfettiPiece(color, Math.random() < 0.5);
 
-      // Start well off-screen past one of the three top/left/right
-      // edges, ease outward-in toward a point near center, then ease
-      // downward past the bottom edge to disappear.
-      var edge = Math.floor(Math.random() * 3); // 0 left, 1 right, 2 top
-      var startX, startY;
-      if (edge === 0) { startX = -60 - Math.random() * 30; startY = Math.random() * 100 - 50; }
-      else if (edge === 1) { startX = 60 + Math.random() * 30; startY = Math.random() * 100 - 50; }
-      else { startX = Math.random() * 100 - 50; startY = -60 - Math.random() * 30; }
-      var midX = Math.random() * 40 - 20;
-      var midY = Math.random() * 30 - 15;
+      // Cone: each piece travels along the shared "outward" direction
+      // plus its own random perpendicular spread, so by the end of the
+      // quick burst phase they're already fanned out — nothing left to
+      // converge on. Gravity then takes over regardless of which edge
+      // they came from, pulling everything down and off the bottom.
+      var burstDist = 20 + Math.random() * 25;
+      var spread = Math.random() * 50 - 25;
+      var midX, midY;
+      if (outX !== 0) { midX = originX + outX * burstDist; midY = originY + spread; }
+      else { midX = originX + spread; midY = originY + outY * burstDist; }
+
       var endX = midX + (Math.random() * 20 - 10);
-      var endY = midY + 70 + Math.random() * 20;
+      var endY = midY + 90 + Math.random() * 30; // always downward — gravity wins regardless of burst direction
       var rot1 = Math.random() * 360;
       var rot2 = rot1 + (Math.random() * 360 - 180);
 
-      piece.style.setProperty('--startX', startX + 'vw');
-      piece.style.setProperty('--startY', startY + 'vh');
+      piece.style.setProperty('--startX', originX + 'vw');
+      piece.style.setProperty('--startY', originY + 'vh');
       piece.style.setProperty('--midX', midX + 'vw');
       piece.style.setProperty('--midY', midY + 'vh');
       piece.style.setProperty('--endX', endX + 'vw');
       piece.style.setProperty('--endY', endY + 'vh');
       piece.style.setProperty('--rot1', rot1 + 'deg');
       piece.style.setProperty('--rot2', rot2 + 'deg');
-      piece.style.animationDelay = (Math.random() * 300) + 'ms';
+      piece.style.animationDelay = (Math.random() * 120) + 'ms'; // tight stagger — still reads as one blast, not a trickle
 
       confettiLayerEl.appendChild(piece);
       (function (node) { setTimeout(function () { node.remove(); }, 3200); })(piece);

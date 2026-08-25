@@ -153,26 +153,28 @@
         fully visible at dead-center for its whole random delay */
       transform: translate(var(--startX), var(--startY));
       animation-name: spotlightConfettiBurst;
-      animation-duration: 2.8s;
-      /* linear, not eased — an eased curve decelerates continuously
-         across the WHOLE animation, which (since the fall segment
-         covers most of the timeline) made the fall crawl in slow
-         motion and read as a dead stop at the handoff. Linear has no
-         velocity-zero point anywhere; the "burst then falls" character
-         instead comes purely from the keyframe spacing below (a short
-         chunk of timeline for the fast blast, a longer chunk for the
-         gentler fall) — a change in speed, not a stop. */
-      animation-timing-function: linear;
+      animation-duration: 2.8s; /* JS overrides this per piece (randomized) — fallback only */
+      animation-timing-function: linear; /* overridden per-segment inside the keyframes below */
       animation-fill-mode: forwards;
     }
     @keyframes spotlightConfettiBurst {
       0% {
         transform: translate(var(--startX), var(--startY)) rotate(0deg);
         opacity: 0;
+        /* governs the burst segment (this keyframe -> 18%): punchy,
+           constant-speed, no deceleration */
+        animation-timing-function: linear;
       }
       6% { opacity: 1; }
       18% {
         transform: translate(var(--midX), var(--midY)) rotate(var(--rot1));
+        /* governs the fall segment (18% -> 100%): eases IN, i.e. starts
+           slow and speeds up — natural gravity, not a decelerating
+           crawl. Combined with each piece now running its own
+           randomized duration/delay, this segment starts at a
+           different real-world moment per piece instead of everyone
+           picking up speed in lockstep. */
+        animation-timing-function: ease-in;
       }
       85% { opacity: 1; }
       100% {

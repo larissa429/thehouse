@@ -824,10 +824,16 @@
       piece.style.setProperty('--endY', endY + 'vh');
       piece.style.setProperty('--rot1', rot1 + 'deg');
       piece.style.setProperty('--rot2', rot2 + 'deg');
-      piece.style.animationDelay = (Math.random() * 120) + 'ms'; // tight stagger — still reads as one blast, not a trickle
+      // Randomized duration + a wider delay spread desync when each
+      // piece hits its own burst-to-fall handoff — with everyone on the
+      // same fixed timeline before, all 36 pieces snapped from outward
+      // to falling at literally the same instant, which read as a wall
+      // even though their positions were already spread out.
+      piece.style.animationDuration = (2.4 + Math.random() * 0.8) + 's';
+      piece.style.animationDelay = (Math.random() * 450) + 'ms';
 
       confettiLayerEl.appendChild(piece);
-      (function (node) { setTimeout(function () { node.remove(); }, 3200); })(piece);
+      (function (node) { setTimeout(function () { node.remove(); }, 3900); })(piece); // covers the longest possible duration (3.2s) + delay (450ms) + a buffer
     }
   }
 

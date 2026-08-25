@@ -148,20 +148,23 @@
       position: absolute;
       left: 50%;
       top: 50%;
+      opacity: 0; /* stays invisible through animation-delay, before the
+        keyframes themselves take over — without this, each piece sat
+        fully visible at dead-center for its whole random delay */
+      transform: translate(var(--startX), var(--startY));
       animation-name: spotlightConfettiBurst;
       animation-duration: 2.8s;
+      animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
       animation-fill-mode: forwards;
     }
     @keyframes spotlightConfettiBurst {
       0% {
         transform: translate(var(--startX), var(--startY)) rotate(0deg);
         opacity: 0;
-        animation-timing-function: ease-out;
       }
       10% { opacity: 1; }
       45% {
         transform: translate(var(--midX), var(--midY)) rotate(var(--rot1));
-        animation-timing-function: ease-in;
       }
       100% {
         transform: translate(var(--endX), var(--endY)) rotate(var(--rot2));
@@ -459,7 +462,6 @@
           <button type="button" class="merge-restart" id="spotlightNumberFormatToggle">On</button>
         </div>
         <div class="spotlight-settings-row">
-          <span class="spotlight-settings-label">Just for fun</span>
           <button type="button" class="merge-restart" id="spotlightConfettiTestBtn">🎉 Blow Confetti</button>
         </div>
         <div class="spotlight-settings-divider"></div>

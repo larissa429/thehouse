@@ -780,19 +780,27 @@
     return svg;
   }
 
-  // Real projectile motion, computed continuously every frame instead of
-  // stitched CSS keyframes. That's the actual fix for the "hits a wall"
-  // complaint: any hand-authored waypoint (mid -> end) bakes in whatever
-  // velocity the random jitter between those two points implies, which is
-  // rarely a match for the velocity the piece arrived with — a discontinuity
-  // no timing-function can smooth over. Position as one function of time
-  // (x = x0 + vx*t, y = y0 + vy0*t + 0.5*g*t^2) has no such seam.
-  var CONFETTI_GRAVITY = 220; // vh units per second^2
+  // Real physics, computed continuously every frame instead of stitched
+  // CSS keyframes — no hand-authored waypoint for velocity to
+  // discontinuously reset at. Two things layered on top of plain
+  // projectile motion to make it read as a paper-confetti *burst*
+  // instead of a steady stream shooting out of a hose:
+  //   1. Horizontal (and the initial vertical kick) velocity decays with
+  //      drag — a closed-form exponential — so pieces launch fast and
+  //      ease OUT as they slow, rather than cruising at constant speed
+  //      forever. v(t) = v0 * e^(-k*t); position is the integral of that.
+  //   2. The fall settles into a gentle terminal velocity (drag balances
+  //      gravity) instead of accelerating forever like heavy rain, plus a
+  //      slow side-to-side sine sway — that's what reads as "floaty"
+  //      paper drifting down instead of a stream of drops.
+  var CONFETTI_DRAG = 2.6; // higher = burst velocity dies out faster (per second)
+  var CONFETTI_FALL_DRAG = 1.1; // higher = reaches floaty terminal fall speed sooner
+  var CONFETTI_TERMINAL_VY = 14; // vh/s — gentle drifting-down speed, not a plummet
   var confettiPieces = [];
   var confettiRafId = null;
 
   function stepConfetti(now) {
-    var i, p, t, x, y, alpha;
+    var i, p, t, alpha;
     var stillActive = false;
     for (i = 0; i < confettiPieces.length; i++) {
       p = confettiPieces[i];
@@ -800,8 +808,17 @@
       t = (now - p.start) / 1000;
       if (t < 0) { stillActive = true; continue; } // hasn't launched yet (delay)
 
-      x = p.x0 + p.vx * t;
-      y = p.y0 + p.vy0 * t + 0.5 * CONFETTI_GRAVITY * t * t;
+      // Horizontal: pure drag decay — eases out from the launch speed
+      // toward a standstill, integral of v0*e^(-k*t).
+      var xDecay = (1 - Math.exp(-CONFETTI_DRAG * t)) / CONFETTI_DRAG;
+      var x = p.x0 + p.vx0 * xDecay + p.swayAmp * Math.sin(t * p.swayFreq + p.swayPhase);
+
+      // Vertical: eases from the launch kick toward a gentle terminal
+      // fall speed instead of accelerating without limit — the integral
+      // of vTerm + (v0 - vTerm)*e^(-k*t).
+      var yDecay = (1 - Math.exp(-CONFETTI_FALL_DRAG * t)) / CONFETTI_FALL_DRAG;
+      var y = p.y0 + p.vyTerm * t + (p.vy0 - p.vyTerm) * yDecay;
+
       var rot = p.rot0 + p.rotSpeed * t;
 
       var life = t / p.lifetime;
@@ -811,7 +828,7 @@
         continue;
       }
       stillActive = true;
-      alpha = life < 0.05 ? life / 0.05 : (life > 0.85 ? Math.max(0, (1 - life) / 0.15) : 1);
+      alpha = life < 0.06 ? life / 0.06 : (life > 0.85 ? Math.max(0, (1 - life) / 0.15) : 1);
 
       p.node.style.transform = 'translate(' + x + 'vw, ' + y + 'vh) rotate(' + rot + 'deg)';
       p.node.style.opacity = alpha;
@@ -846,26 +863,32 @@
       confettiLayerEl.appendChild(node);
 
       // Launch speed along the cone direction, plus a perpendicular
-      // spread component — this IS the initial velocity, not a
-      // waypoint to hit, so gravity blends in smoothly from t=0 instead
-      // of snapping the piece onto a fresh, unrelated vector partway
-      // through.
-      var speed = 55 + Math.random() * 45; // vw or vh per second, along the cone
-      var spreadSpeed = (Math.random() * 60 - 30); // perpendicular component
-      var vx, vy0;
-      if (outX !== 0) { vx = outX * speed; vy0 = spreadSpeed - 30; } // slight upward kick
-      else { vx = spreadSpeed; vy0 = outY * speed - 20; }
+      // spread component — this decays via drag (see stepConfetti), so
+      // it's a punchy initial burst that eases out, not a constant-speed
+      // stream.
+      var speed = 90 + Math.random() * 70;
+      var spreadSpeed = (Math.random() * 70 - 35);
+      var vx0, vy0;
+      if (outX !== 0) { vx0 = outX * speed; vy0 = spreadSpeed - 45; }
+      else { vx0 = spreadSpeed; vy0 = outY * speed - 30; }
 
       confettiPieces.push({
         node: node,
         x0: originX,
         y0: originY,
-        vx: vx,
+        vx0: vx0,
         vy0: vy0,
+        vyTerm: CONFETTI_TERMINAL_VY + Math.random() * 8, // gentle drift, slight variance so pieces don't fall in lockstep
+        swayAmp: 2 + Math.random() * 4,
+        swayFreq: 1.2 + Math.random() * 1.6,
+        swayPhase: Math.random() * Math.PI * 2,
         rot0: Math.random() * 360,
-        rotSpeed: (Math.random() * 240 - 120),
-        lifetime: 2.6 + Math.random() * 1.0,
-        start: now + Math.random() * 450
+        rotSpeed: (Math.random() * 200 - 100),
+        lifetime: 3.2 + Math.random() * 1.2,
+        // Nearly-simultaneous launch (small stagger just to avoid a
+        // perfectly robotic pop) — a real burst goes off all at once,
+        // not trickling out over half a second like a stream.
+        start: now + Math.random() * 90
       });
     }
 

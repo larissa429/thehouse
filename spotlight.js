@@ -34,6 +34,10 @@
   var legacyCountEl = document.getElementById('spotlightLegacyCount');
   var prestigeBtn = document.getElementById('spotlightPrestigeBtn');
   var prestigeHintEl = document.getElementById('spotlightPrestigeHint');
+  var offlineOverlayEl = document.getElementById('spotlightOfflineOverlay');
+  var offlineTimeEl = document.getElementById('spotlightOfflineTime');
+  var offlineAmountEl = document.getElementById('spotlightOfflineAmount');
+  var offlineClaimBtn = document.getElementById('spotlightOfflineClaim');
 
   var SAVE_KEY = 'spotlight-save';
 
@@ -281,7 +285,7 @@
     }
   ];
 
-  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, seenMillion: false };
+  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, seenMillion: false, lastSeen: Date.now() };
   UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
 
   function loadSave() {
@@ -295,6 +299,7 @@
       if (typeof parsed.legacy === 'number') state.legacy = parsed.legacy;
       if (typeof parsed.shorthandNumbers === 'boolean') state.shorthandNumbers = parsed.shorthandNumbers;
       if (typeof parsed.seenMillion === 'boolean') state.seenMillion = parsed.seenMillion;
+      if (typeof parsed.lastSeen === 'number') state.lastSeen = parsed.lastSeen;
       if (parsed.owned) {
         UPGRADES.forEach(function (u) {
           if (typeof parsed.owned[u.id] === 'number') state.owned[u.id] = parsed.owned[u.id];
@@ -304,6 +309,7 @@
   }
 
   function save() {
+    state.lastSeen = Date.now();
     localStorage.setItem(SAVE_KEY, JSON.stringify(state));
   }
 
@@ -449,7 +455,7 @@
     var keepReducedEffects = state.reducedEffects;
     var keepShorthandNumbers = state.shorthandNumbers;
     cancelPaparazzi();
-    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, seenMillion: false };
+    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now() };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     save();
     lastLine = null;
@@ -643,6 +649,44 @@
     return amount;
   }
 
+  // --- offline gains -------------------------------------------------
+  // Passive Production keeps "earning" while the tab's closed, credited
+  // in one lump sum on return. Capped so leaving it closed for a week
+  // isn't a free-money exploit, and skipped entirely below a minimum gap
+  // so a quick page refresh doesn't pop a modal for a few seconds' worth
+  // of Spotlight.
+  var OFFLINE_CAP_MS = 12 * 60 * 60 * 1000; // 12 hours max credited
+  var OFFLINE_MIN_MS = 60 * 1000; // ignore gaps under a minute
+
+  function formatDuration(ms) {
+    var totalMin = Math.floor(ms / 60000);
+    var hours = Math.floor(totalMin / 60);
+    var mins = totalMin % 60;
+    if (hours > 0) return hours + 'h ' + mins + 'm';
+    return mins + 'm';
+  }
+
+  function checkOfflineGains() {
+    var elapsedMs = Date.now() - (state.lastSeen || Date.now());
+    if (elapsedMs < OFFLINE_MIN_MS) return;
+    var rate = totalRatePerMinute();
+    if (rate <= 0) return;
+    var creditedMs = Math.min(elapsedMs, OFFLINE_CAP_MS);
+    var amount = earnSpotlight(rate * (creditedMs / 60000));
+    offlineTimeEl.textContent = 'You were away for ' + formatDuration(elapsedMs) +
+      (elapsedMs > OFFLINE_CAP_MS ? ' (capped at ' + formatDuration(OFFLINE_CAP_MS) + ')' : '') + '.';
+    offlineAmountEl.textContent = '+' + formatNumber(Math.floor(amount)) + ' Spotlight';
+    offlineOverlayEl.hidden = false;
+  }
+
+  offlineClaimBtn.addEventListener('click', function () {
+    offlineOverlayEl.hidden = true;
+    renderCount();
+    renderShop();
+    renderPrestige();
+    save();
+  });
+
   var CRIT_MULTIPLIER = 10;
 
   function handleClick(e) {
@@ -674,7 +718,7 @@
     // Unlike prestiging, the plain Reset button is a full wipe — Legacy
     // included. It's the "start completely over" button; The Sequel is
     // the one that keeps Legacy around.
-    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, seenMillion: false };
+    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now() };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     cancelPaparazzi();
     save();
@@ -1039,8 +1083,16 @@
   // Autosave on an interval too, not just on click/buy, so passive
   // income earned while idle isn't lost if the tab closes uncleanly.
   setInterval(save, 5000);
+  // Also save right as the tab goes away (close, refresh, switch tabs) so
+  // lastSeen is as fresh as possible for the next offline-gains check —
+  // the 5s interval alone could leave up to a 5s gap uncredited.
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) save();
+  });
+  window.addEventListener('beforeunload', save);
 
   loadSave();
+  checkOfflineGains();
   quoteEsEl.textContent = IDLE_LINE.es;
   quoteEnEl.textContent = IDLE_LINE.en;
   renderCount();

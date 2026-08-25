@@ -212,6 +212,44 @@
       border-top: var(--edge);
       margin: 0.1rem 0;
     }
+    .spotlight-offline-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 210;
+      padding: 1rem;
+    }
+    .spotlight-offline-modal {
+      max-width: 22rem;
+      width: 100%;
+      padding: 1.4rem 1.6rem;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .spotlight-offline-modal h3 {
+      margin: 0 0 0.6rem;
+      font-family: var(--display);
+      color: var(--ink);
+    }
+    .spotlight-offline-time {
+      font-family: var(--body);
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+      margin: 0 0 0.3rem;
+    }
+    .spotlight-offline-amount {
+      font-family: var(--display);
+      color: var(--lamp);
+      font-size: 1.4rem;
+      font-weight: bold;
+      margin: 0 0 1.1rem;
+    }
     .spotlight-danger-btn:hover {
       background: var(--urgent);
       color: white;
@@ -497,6 +535,15 @@
   </main>
 
   <div class="spotlight-confetti-layer" id="spotlightConfettiLayer"></div>
+
+  <div class="spotlight-offline-overlay" id="spotlightOfflineOverlay" hidden>
+    <div class="spotlight-offline-modal">
+      <h3>While you were away</h3>
+      <p class="spotlight-offline-time" id="spotlightOfflineTime"></p>
+      <p class="spotlight-offline-amount" id="spotlightOfflineAmount"></p>
+      <button type="button" class="merge-restart" id="spotlightOfflineClaim">Collect</button>
+    </div>
+  </div>
 
   <site-footer></site-footer>
 

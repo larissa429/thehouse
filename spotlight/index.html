@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Center Stage &middot; The House</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    #spotlightGame {
+      max-width: 26rem;
+    }
+
+    .spotlight-portrait-wrap {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      margin: 0.5rem 0 0.75rem;
+    }
+    .spotlight-portrait {
+      width: 12rem;
+      height: auto;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      filter: drop-shadow(0 10px 22px rgba(0,0,0,0.5));
+      transition: transform 0.08s ease;
+    }
+    .spotlight-portrait:active {
+      transform: scale(0.96);
+    }
+    @keyframes spotlightPop {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.06) rotate(-1.5deg); }
+      100% { transform: scale(1); }
+    }
+    .spotlight-portrait.is-clicked {
+      animation: spotlightPop 0.22s ease;
+    }
+
+    /* floating "+1" that pops up near wherever you clicked and drifts away */
+    .spotlight-float {
+      position: absolute;
+      pointer-events: none;
+      font-family: var(--display);
+      font-size: 1.1rem;
+      color: var(--lamp);
+      font-weight: bold;
+      animation: spotlightFloat 0.9s ease forwards;
+    }
+    @keyframes spotlightFloat {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-2.2rem); }
+    }
+
+    .spotlight-quote {
+      min-height: 2.6rem;
+      text-align: center;
+      font-family: var(--hand);
+      font-size: 1.25rem;
+      color: var(--paper);
+      margin: 0 0 1rem;
+      padding: 0 0.5rem;
+    }
+
+    .spotlight-rate {
+      text-align: center;
+      font-family: var(--label);
+      font-size: 0.75rem;
+      color: var(--ink-soft);
+      margin: -0.4rem 0 1rem;
+    }
+
+    .spotlight-shop-label {
+      font-family: var(--label);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      margin: 0 0 0.5rem;
+    }
+    .spotlight-shop {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .spotlight-upgrade {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.7rem 0.9rem;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: left;
+      font-family: var(--body);
+      color: var(--ink);
+    }
+    .spotlight-upgrade:hover:not(:disabled) { background: var(--wall-lit); }
+    .spotlight-upgrade:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .spotlight-upgrade-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .spotlight-upgrade-name {
+      font-family: var(--display);
+      font-size: 1.05rem;
+      color: var(--paper);
+    }
+    .spotlight-upgrade-desc {
+      font-family: var(--label);
+      font-size: 0.7rem;
+      color: var(--ink-soft);
+    }
+    .spotlight-upgrade-cost {
+      font-family: var(--label);
+      font-size: 0.85rem;
+      color: var(--lamp);
+      white-space: nowrap;
+    }
+    .spotlight-upgrade-owned {
+      font-family: var(--label);
+      font-size: 0.7rem;
+      color: var(--ink-soft);
+      white-space: nowrap;
+      min-width: 3.5rem;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+    <span class="eyebrow breadcrumb"><a href="../games/">&larr; Games</a></span>
+
+    <h1>Center Stage</h1>
+    <p>Abstract Painting is <em>utterly</em> convinced she's the main character. Click to give her the
+      attention she's certain she deserves &mdash; then automate it, because even main characters need downtime.</p>
+
+    <div class="merge-game" id="spotlightGame">
+      <div class="merge-hud">
+        <div class="merge-hud-block">
+          <span class="merge-hud-label">Spotlight</span>
+          <span class="merge-hud-value" id="spotlightCount">0</span>
+        </div>
+        <button type="button" class="merge-restart" id="spotlightReset">Reset</button>
+      </div>
+
+      <div class="spotlight-portrait-wrap" id="spotlightPortraitWrap">
+        <img src="../images/AP.png" alt="Abstract Painting" class="spotlight-portrait" id="spotlightPortrait" draggable="false" />
+      </div>
+
+      <p class="spotlight-quote" id="spotlightQuote">&nbsp;</p>
+      <p class="spotlight-rate" id="spotlightRate" hidden></p>
+
+      <p class="spotlight-shop-label">The Production</p>
+      <div class="spotlight-shop" id="spotlightShop"></div>
+    </div>
+
+  </main>
+
+  <site-footer></site-footer>
+
+  <script src="../components.js" defer></script>
+  <script src="../spotlight.js" defer></script>
+</body>
+</html>

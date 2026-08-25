@@ -38,6 +38,18 @@
   var offlineTimeEl = document.getElementById('spotlightOfflineTime');
   var offlineAmountEl = document.getElementById('spotlightOfflineAmount');
   var offlineClaimBtn = document.getElementById('spotlightOfflineClaim');
+  var statsToggleBtn = document.getElementById('spotlightStatsToggle');
+  var statsPanelEl = document.getElementById('spotlightStatsPanel');
+  var statPlayTimeEl = document.getElementById('spotlightStatPlayTime');
+  var statClicksEl = document.getElementById('spotlightStatClicks');
+  var statCritsEl = document.getElementById('spotlightStatCrits');
+  var statOfflineEl = document.getElementById('spotlightStatOffline');
+  var statLegacyMultEl = document.getElementById('spotlightStatLegacyMult');
+  var statClickPowerEl = document.getElementById('spotlightStatClickPower');
+  var statRateEl = document.getElementById('spotlightStatRate');
+  var statCritChanceEl = document.getElementById('spotlightStatCritChance');
+  var statBuildingDiscountEl = document.getElementById('spotlightStatBuildingDiscount');
+  var statClickDiscountEl = document.getElementById('spotlightStatClickDiscount');
 
   var SAVE_KEY = 'spotlight-save';
 
@@ -327,7 +339,7 @@
     }
   ];
 
-  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, seenMillion: false, lastSeen: Date.now() };
+  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0 };
   UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
 
   function loadSave() {
@@ -342,6 +354,10 @@
       if (typeof parsed.shorthandNumbers === 'boolean') state.shorthandNumbers = parsed.shorthandNumbers;
       if (typeof parsed.seenMillion === 'boolean') state.seenMillion = parsed.seenMillion;
       if (typeof parsed.lastSeen === 'number') state.lastSeen = parsed.lastSeen;
+      if (typeof parsed.playTimeMs === 'number') state.playTimeMs = parsed.playTimeMs;
+      if (typeof parsed.totalClicks === 'number') state.totalClicks = parsed.totalClicks;
+      if (typeof parsed.totalCrits === 'number') state.totalCrits = parsed.totalCrits;
+      if (typeof parsed.totalOfflineEarned === 'number') state.totalOfflineEarned = parsed.totalOfflineEarned;
       if (parsed.owned) {
         UPGRADES.forEach(function (u) {
           if (typeof parsed.owned[u.id] === 'number') state.owned[u.id] = parsed.owned[u.id];
@@ -496,8 +512,15 @@
     var newLegacy = state.legacy + gain;
     var keepReducedEffects = state.reducedEffects;
     var keepShorthandNumbers = state.shorthandNumbers;
+    // Lifetime stats (play time, clicks, offline earnings) are about the
+    // save file as a whole, not any one run — they survive a prestige the
+    // same way Legacy does, unlike Spotlight/totalEarned/owned.
+    var keepPlayTimeMs = state.playTimeMs;
+    var keepTotalClicks = state.totalClicks;
+    var keepTotalCrits = state.totalCrits;
+    var keepTotalOfflineEarned = state.totalOfflineEarned;
     cancelPaparazzi();
-    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now() };
+    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     save();
     lastLine = null;
@@ -725,6 +748,7 @@
     if (rate <= 0) return;
     var creditedMs = Math.min(elapsedMs, OFFLINE_CAP_MS);
     var amount = earnSpotlight(rate * (creditedMs / 60000));
+    state.totalOfflineEarned += amount;
     offlineTimeEl.textContent = 'You were away for ' + formatDuration(elapsedMs) +
       (elapsedMs > OFFLINE_CAP_MS ? ' (capped at ' + formatDuration(OFFLINE_CAP_MS) + ')' : '') + '.';
     offlineAmountEl.textContent = '+' + formatNumber(Math.floor(amount)) + ' Spotlight';
@@ -744,6 +768,8 @@
   function handleClick(e) {
     var isCrit = Math.random() < critChance();
     var amount = earnSpotlight(clickPower() * (isCrit ? CRIT_MULTIPLIER : 1) * (paparazziActive ? paparazziMultiplier() : 1));
+    state.totalClicks++;
+    if (isCrit) state.totalCrits++;
     if (isCrit) showLine(CRIT_LINES[Math.floor(Math.random() * CRIT_LINES.length)]);
     else showQuote();
     portraitEl.classList.remove('is-clicked');
@@ -770,7 +796,7 @@
     // Unlike prestiging, the plain Reset button is a full wipe — Legacy
     // included. It's the "start completely over" button; The Sequel is
     // the one that keeps Legacy around.
-    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now() };
+    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0 };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     cancelPaparazzi();
     save();
@@ -1067,6 +1093,42 @@
     if (Math.random() > CONFETTI_SPORADIC_CHANCE) return;
     spawnConfettiBurst();
   }, 60000);
+
+  // --- stats panel ----------------------------------------------------
+  // Pure readout, no gameplay effect — everything here is recomputed
+  // live from state/the existing modifier functions rather than tracked
+  // separately, so it can never drift out of sync with the real numbers.
+  function formatPercent(mult) {
+    return (Math.round((mult - 1) * 1000) / 10) + '%';
+  }
+
+  function renderStats() {
+    statPlayTimeEl.textContent = formatDuration(state.playTimeMs);
+    statClicksEl.textContent = state.totalClicks.toLocaleString();
+    statCritsEl.textContent = state.totalCrits.toLocaleString();
+    statOfflineEl.textContent = formatNumber(Math.floor(state.totalOfflineEarned)) + ' Spotlight';
+    statLegacyMultEl.textContent = legacyMultiplier().toFixed(2) + 'x';
+    statClickPowerEl.textContent = formatNumber(clickPower()) + ' / click';
+    statRateEl.textContent = formatNumber(totalRatePerMinute()) + ' / min';
+    statCritChanceEl.textContent = (Math.round(critChance() * 1000) / 10) + '%';
+    statBuildingDiscountEl.textContent = formatPercent(discountFactor('building'));
+    statClickDiscountEl.textContent = formatPercent(discountFactor('click'));
+  }
+
+  statsToggleBtn.addEventListener('click', function () {
+    var open = statsPanelEl.hidden;
+    statsPanelEl.hidden = !open;
+    statsToggleBtn.setAttribute('aria-expanded', String(open));
+    if (open) renderStats();
+  });
+
+  // Ticks every second the tab is actually visible — "time spent in tab"
+  // means genuinely looking at it, not just having it open in a
+  // background tab somewhere.
+  setInterval(function () {
+    if (!document.hidden) state.playTimeMs += 1000;
+    if (!statsPanelEl.hidden) renderStats();
+  }, 1000);
 
   function renderEffectsToggle() {
     effectsToggleBtn.textContent = state.reducedEffects ? 'On' : 'Off';

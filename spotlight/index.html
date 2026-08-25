@@ -212,6 +212,13 @@
       border-top: var(--edge);
       margin: 0.1rem 0;
     }
+    .spotlight-stat-value {
+      font-family: var(--display);
+      color: var(--lamp);
+      font-size: 0.92rem;
+      text-align: right;
+      white-space: nowrap;
+    }
     .spotlight-offline-overlay {
       position: fixed;
       inset: 0;
@@ -475,9 +482,56 @@
           <span class="merge-hud-label">Legacy</span>
           <span class="merge-hud-value" id="spotlightLegacyCount">0</span>
         </div>
+        <button type="button" class="spotlight-gear-btn" id="spotlightStatsToggle" aria-label="Stats" aria-expanded="false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M3 3v18h18" /><path d="M20 18v3" /><path d="M16 16v5" /><path d="M12 13v8" /><path d="M8 16v5" /><path d="M3 11l5 -5l4 4l6 -6" /></svg>
+        </button>
         <button type="button" class="spotlight-gear-btn" id="spotlightSettingsToggle" aria-label="Settings" aria-expanded="false">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
         </button>
+      </div>
+
+      <div class="spotlight-settings-panel" id="spotlightStatsPanel" hidden>
+        <div class="spotlight-settings-row spotlight-stat-row">
+          <span class="spotlight-settings-label">Time in tab</span>
+          <span class="spotlight-stat-value" id="spotlightStatPlayTime">&mdash;</span>
+        </div>
+        <div class="spotlight-settings-row spotlight-stat-row">
+          <span class="spotlight-settings-label">Total clicks</span>
+          <span class="spotlight-stat-value" id="spotlightStatClicks">&mdash;</span>
+        </div>
+        <div class="spotlight-settings-row spotlight-stat-row">
+          <span class="spotlight-settings-label">Critical clicks</span>
+          <span class="spotlight-stat-value" id="spotlightStatCrits">&mdash;</span>
+        </div>
+        <div class="spotlight-settings-row spotlight-stat-row">
+          <span class="spotlight-settings-label">Earned while offline</span>
+          <span class="spotlight-stat-value" id="spotlightStatOffline">&mdash;</span>
+        </div>
+        <div class="spotlight-settings-divider"></div>
+        <div class="spotlight-settings-row spotlight-stat-row">
+          <span class="spotlight-settings-label">Legacy multiplier</span>
+          <span class="spotlight-stat-value" id="spotlightStatLegacyMult">&mdash;</span>
+        </div>
+        <div class="spotlight-settings-row spotlight-stat-row">
+          <span class="spotlight-settings-label">Click power</span>
+          <span class="spotlight-stat-value" id="spotlightStatClickPower">&mdash;</span>
+        </div>
+        <div class="spotlight-settings-row spotlight-stat-row">
+          <span class="spotlight-settings-label">Passive rate</span>
+          <span class="spotlight-stat-value" id="spotlightStatRate">&mdash;</span>
+        </div>
+        <div class="spotlight-settings-row spotlight-stat-row">
+          <span class="spotlight-settings-label">Critical chance</span>
+          <span class="spotlight-stat-value" id="spotlightStatCritChance">&mdash;</span>
+        </div>
+        <div class="spotlight-settings-row spotlight-stat-row">
+          <span class="spotlight-settings-label">Production discount</span>
+          <span class="spotlight-stat-value" id="spotlightStatBuildingDiscount">&mdash;</span>
+        </div>
+        <div class="spotlight-settings-row spotlight-stat-row">
+          <span class="spotlight-settings-label">Preparation discount</span>
+          <span class="spotlight-stat-value" id="spotlightStatClickDiscount">&mdash;</span>
+        </div>
       </div>
 
       <div class="spotlight-settings-panel" id="spotlightSettingsPanel" hidden>

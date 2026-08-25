@@ -922,6 +922,7 @@
   // rare thing you can only stumble into by mashing the Blow Confetti
   // button — never on the real milestone/sporadic bursts.
   var CONFETTI_STREAM_GRAVITY = 220; // vh/s^2 — same value as 07ee1a9
+  var CONFETTI_STREAM_PIECE_COUNT = CONFETTI_PIECE_COUNT * 2; // twice the confetti
   function spawnConfettiStream() {
     var edge = Math.floor(Math.random() * 4);
     var originX, originY, outX, outY;
@@ -932,7 +933,7 @@
 
     var now = performance.now();
 
-    for (var i = 0; i < CONFETTI_PIECE_COUNT; i++) {
+    for (var i = 0; i < CONFETTI_STREAM_PIECE_COUNT; i++) {
       var color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
       var node = makeConfettiPiece(color, Math.random() < 0.5);
       confettiLayerEl.appendChild(node);
@@ -952,8 +953,8 @@
         vy0: vy0,
         rot0: Math.random() * 360,
         rotSpeed: (Math.random() * 240 - 120),
-        lifetime: 2.6 + Math.random() * 1.0,
-        start: now + Math.random() * 450
+        lifetime: 5.2 + Math.random() * 2.0, // twice as long as the original 2.6-3.6s
+        start: now + Math.random() * 900 // twice the launch stagger, so it trickles twice as long
       });
     }
 

@@ -26,6 +26,9 @@
   var effectsToggleBtn = document.getElementById('spotlightEffectsToggle');
   var paparazziBadgeEl = document.getElementById('spotlightPaparazziBadge');
   var paparazziBadgeMultEl = document.getElementById('spotlightPaparazziMultText');
+  var legacyCountEl = document.getElementById('spotlightLegacyCount');
+  var prestigeBtn = document.getElementById('spotlightPrestigeBtn');
+  var prestigeHintEl = document.getElementById('spotlightPrestigeHint');
 
   var SAVE_KEY = 'spotlight-save';
 
@@ -34,6 +37,9 @@
   // made its speech-bubble tail render as a stray floating square
   // instead of looking attached to anything.
   var IDLE_LINE = { es: '¿A qué esperas? No va a hacer clic solo.', en: "What are you waiting for? It's not gonna click itself." };
+
+  // Shown right after prestiging, instead of IDLE_LINE.
+  var SEQUEL_LINE = { es: 'Ah, la secuela. Siempre superior al original.', en: 'Ah, the sequel. Always superior to the original.' };
 
   // She delivers every line in (Castilian) Spanish, subtitled — because
   // of course she does. `es` is what's said, `en` is the dim subtitle.
@@ -270,7 +276,7 @@
     }
   ];
 
-  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false };
+  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false, legacy: 0 };
   UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
 
   function loadSave() {
@@ -281,6 +287,7 @@
       if (typeof parsed.spotlight === 'number') state.spotlight = parsed.spotlight;
       if (typeof parsed.totalEarned === 'number') state.totalEarned = parsed.totalEarned;
       if (typeof parsed.reducedEffects === 'boolean') state.reducedEffects = parsed.reducedEffects;
+      if (typeof parsed.legacy === 'number') state.legacy = parsed.legacy;
       if (parsed.owned) {
         UPGRADES.forEach(function (u) {
           if (typeof parsed.owned[u.id] === 'number') state.owned[u.id] = parsed.owned[u.id];
@@ -394,6 +401,58 @@
     paparazziBadgeEl.hidden = true;
   }
 
+  // --- prestige ("The Sequel") -------------------------------------------
+  // Legacy is permanent — it survives this reset (unlike the plain Reset
+  // button, which wipes everything including Legacy) and its bonus
+  // applies to every future run. Gained amount uses a square-root curve
+  // so it takes quadratically more lifetime total for each extra point,
+  // the standard shape for a prestige currency. Any upgrade added after
+  // this point should set `minPrestige: N` to require N Legacy ever
+  // earned before it's purchasable — see the check in renderShopSection.
+  var LEGACY_DIVISOR = 1000000;
+
+  function legacyGainPreview() {
+    return Math.floor(Math.sqrt(state.totalEarned / LEGACY_DIVISOR));
+  }
+
+  function renderPrestige() {
+    legacyCountEl.textContent = formatNumber(state.legacy);
+    var gain = legacyGainPreview();
+    if (gain >= 1) {
+      prestigeBtn.disabled = false;
+      prestigeBtn.textContent = 'The Sequel (+' + gain + ' Legacy)';
+      prestigeHintEl.hidden = true;
+    } else {
+      prestigeBtn.disabled = true;
+      prestigeBtn.textContent = 'The Sequel';
+      prestigeHintEl.hidden = false;
+      prestigeHintEl.textContent = 'Reach ' + formatNumber(LEGACY_DIVISOR) + ' total Spotlight to prestige.';
+    }
+  }
+
+  function doPrestige() {
+    var gain = legacyGainPreview();
+    if (gain < 1) return;
+    var confirmed = window.confirm(
+      'Prestige for +' + gain + ' Legacy?\n\nThis restarts your Production and Preparation progress from scratch. ' +
+      'Legacy is permanent — it boosts everything you earn from here on, and never resets.'
+    );
+    if (!confirmed) return;
+    var newLegacy = state.legacy + gain;
+    var keepReducedEffects = state.reducedEffects;
+    cancelPaparazzi();
+    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy };
+    UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
+    save();
+    lastLine = null;
+    showLine(SEQUEL_LINE);
+    renderCount();
+    renderShop();
+    renderPrestige();
+  }
+
+  prestigeBtn.addEventListener('click', doPrestige);
+
   // Plain comma-formatted under 10,000 (still easy to read at a glance);
   // abbreviated with a K/M/B/T suffix above that, where the full digit
   // count starts getting unwieldy — trims trailing zeros so "1.00M"
@@ -430,6 +489,7 @@
       var owned = state.owned[u.id];
       if (state.totalEarned < u.unlockAt && owned === 0) return; // not unlocked yet
       if (u.requires && state.owned[u.requires] === 0) return; // prerequisite not owned yet
+      if ((u.minPrestige || 0) > state.legacy) return; // needs Legacy from a past Sequel
       var maxedOut = u.maxOwned && owned >= u.maxOwned;
 
       var cost = upgradeCost(u);
@@ -519,6 +579,7 @@
     save();
     renderCount();
     renderShop();
+    renderPrestige();
   }
 
   var lastLine = null;
@@ -547,17 +608,31 @@
     setTimeout(function () { el.remove(); }, 900);
   }
 
-  function addSpotlight(amount) {
+  // Permanent, from past prestiges — +2% to every source of income
+  // (clicks, crits, paparazzi, passive) per Legacy point, forever.
+  var LEGACY_BONUS_PER_POINT = 0.02;
+
+  function legacyMultiplier() {
+    return 1 + state.legacy * LEGACY_BONUS_PER_POINT;
+  }
+
+  // The single place income actually lands in spotlight/totalEarned —
+  // applies the Legacy bonus once, here, so every earning path (click,
+  // crit, paparazzi, passive tick) gets it automatically instead of
+  // needing to remember to multiply it in separately. Returns the final
+  // (post-bonus) amount so callers can display the real number earned.
+  function earnSpotlight(rawAmount) {
+    var amount = rawAmount * legacyMultiplier();
     state.spotlight += amount;
     state.totalEarned += amount;
+    return amount;
   }
 
   var CRIT_MULTIPLIER = 10;
 
   function handleClick(e) {
     var isCrit = Math.random() < critChance();
-    var amount = clickPower() * (isCrit ? CRIT_MULTIPLIER : 1) * (paparazziActive ? paparazziMultiplier() : 1);
-    addSpotlight(amount);
+    var amount = earnSpotlight(clickPower() * (isCrit ? CRIT_MULTIPLIER : 1) * (paparazziActive ? paparazziMultiplier() : 1));
     if (isCrit) showLine(CRIT_LINES[Math.floor(Math.random() * CRIT_LINES.length)]);
     else showQuote();
     portraitEl.classList.remove('is-clicked');
@@ -567,6 +642,7 @@
     spawnFloatingPlusOne(point.clientX, point.clientY, amount, isCrit);
     renderCount();
     renderShop(); // a click can be what crosses an unlock threshold
+    renderPrestige();
     save();
   }
 
@@ -574,7 +650,10 @@
 
   resetBtn.addEventListener('click', function () {
     var keepReducedEffects = state.reducedEffects; // a display preference, not progress — survives Reset
-    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects };
+    // Unlike prestiging, the plain Reset button is a full wipe — Legacy
+    // included. It's the "start completely over" button; The Sequel is
+    // the one that keeps Legacy around.
+    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0 };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     cancelPaparazzi();
     save();
@@ -583,6 +662,7 @@
     quoteEnEl.textContent = IDLE_LINE.en;
     renderCount();
     renderShop();
+    renderPrestige();
   });
 
   function setTab(tab) {
@@ -664,8 +744,9 @@
     var perSecond = totalRatePerMinute() / 60;
     if (perSecond <= 0) return;
     var beforeUnlocked = unlockedCount();
-    addSpotlight(perSecond / 4);
+    earnSpotlight(perSecond / 4);
     renderCount();
+    renderPrestige();
     // Rebuild only if passive income just crossed an unlock threshold —
     // otherwise just update existing buttons in place (see comment on
     // refreshShopAffordability for why).
@@ -683,5 +764,6 @@
   renderCount();
   renderShop();
   renderEffectsToggle();
+  renderPrestige();
   schedulePaparazzi(); // no-op if not owned yet
 })();

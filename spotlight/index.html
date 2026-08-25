@@ -137,6 +137,31 @@
       color: var(--shadow);
     }
 
+    .spotlight-prestige-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin: -0.4rem 0 1.2rem;
+    }
+    .spotlight-prestige-btn:not(:disabled) {
+      background: var(--lamp);
+      color: var(--shadow);
+      border-color: var(--lamp);
+      font-weight: bold;
+    }
+    .spotlight-prestige-btn:not(:disabled):hover {
+      filter: brightness(1.1);
+    }
+    .spotlight-prestige-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .spotlight-prestige-hint {
+      font-family: var(--label);
+      font-size: 0.7rem;
+      color: var(--ink-soft);
+    }
+
     /* Paparazzi event — glow + camera icon only show while the portrait
        wrap carries .is-paparazzi (toggled from JS for the ~5s window). */
     .spotlight-paparazzi-glow {
@@ -333,8 +358,17 @@
           <span class="merge-hud-label">Spotlight</span>
           <span class="merge-hud-value" id="spotlightCount">0</span>
         </div>
+        <div class="merge-hud-block">
+          <span class="merge-hud-label">Legacy</span>
+          <span class="merge-hud-value" id="spotlightLegacyCount">0</span>
+        </div>
         <button type="button" class="merge-restart" id="spotlightEffectsToggle">Reduce Effects</button>
         <button type="button" class="merge-restart" id="spotlightReset">Reset</button>
+      </div>
+
+      <div class="spotlight-prestige-row">
+        <button type="button" class="merge-restart spotlight-prestige-btn" id="spotlightPrestigeBtn" disabled>The Sequel</button>
+        <span class="spotlight-prestige-hint" id="spotlightPrestigeHint"></span>
       </div>
 
       <div class="spotlight-columns">

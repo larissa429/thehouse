@@ -936,8 +936,8 @@
         vx0: vx0,
         vy0: vy0,
         drag: 0.05, // near-zero: stays at roughly constant speed instead of easing out
-        fallDrag: 0.05,
-        vyTerm: vy0, // no gravity-driven fall — it just keeps going, that's the joke
+        fallDrag: 0.6, // gravity still pulls it down and off screen eventually — just delayed
+        vyTerm: CONFETTI_TERMINAL_VY + Math.random() * 8,
         swayAmp: 0,
         swayFreq: 1,
         swayPhase: 0,

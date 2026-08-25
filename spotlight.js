@@ -28,6 +28,7 @@
   var numberFormatToggleBtn = document.getElementById('spotlightNumberFormatToggle');
   var settingsToggleBtn = document.getElementById('spotlightSettingsToggle');
   var settingsPanelEl = document.getElementById('spotlightSettingsPanel');
+  var confettiTestBtn = document.getElementById('spotlightConfettiTestBtn');
   var paparazziBadgeEl = document.getElementById('spotlightPaparazziBadge');
   var paparazziBadgeMultEl = document.getElementById('spotlightPaparazziMultText');
   var legacyCountEl = document.getElementById('spotlightLegacyCount');
@@ -779,8 +780,8 @@
     return svg;
   }
 
-  function spawnConfettiBurst() {
-    if (state.reducedEffects) return;
+  function spawnConfettiBurst(force) {
+    if (state.reducedEffects && !force) return;
     for (var i = 0; i < CONFETTI_PIECE_COUNT; i++) {
       var color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
       var piece = makeConfettiPiece(color, Math.random() < 0.5);
@@ -850,6 +851,10 @@
     var open = settingsPanelEl.hidden;
     settingsPanelEl.hidden = !open;
     settingsToggleBtn.setAttribute('aria-expanded', String(open));
+  });
+
+  confettiTestBtn.addEventListener('click', function () {
+    spawnConfettiBurst(true); // force, bypassing Reduce Effects — this is an on-demand "show me" click
   });
 
   // Passive income ticks 4x/second for a smooth-feeling counter, adding

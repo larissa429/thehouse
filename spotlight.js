@@ -388,6 +388,20 @@
       costMultiplier: 1.5,
       capBonusHours: 6,
       maxOwned: 6
+    },
+    // A flat multiplier on top of everything else clickPower() already
+    // adds up (base + every clickBonus upgrade) — unlike those, this
+    // doesn't have its own number, it just makes the total hit harder.
+    {
+      id: 'starPower',
+      kind: 'clickPowerMult',
+      name: 'Star Power',
+      desc: '+5% to your total click power. Stacks up to 10 times.',
+      unlockAt: 8000,
+      baseCost: 12000,
+      costMultiplier: 1.45,
+      multBonus: 0.05,
+      maxOwned: 10
     }
   ];
 
@@ -553,11 +567,19 @@
     return base * achievementBonusMultiplier('rate');
   }
 
+  function starPowerMultiplier() {
+    var mult = 1;
+    UPGRADES.forEach(function (u) {
+      if (u.kind === 'clickPowerMult') mult += state.owned[u.id] * u.multBonus;
+    });
+    return mult;
+  }
+
   function clickPower() {
     var base = UPGRADES.reduce(function (sum, u) {
       return u.kind === 'click' ? sum + state.owned[u.id] * u.clickBonus : sum;
     }, 1); // base of 1 per click
-    return base * achievementBonusMultiplier('clickPower');
+    return base * starPowerMultiplier() * achievementBonusMultiplier('clickPower');
   }
 
   var CRIT_CHANCE_BASE = 0.05;
@@ -773,7 +795,7 @@
 
   function renderShop() {
     renderShopSection(shopEl, ['building']);
-    renderShopSection(boostShopEl, ['click', 'discount', 'critChance', 'paparazzi', 'paparazziFreq', 'paparazziMult', 'legacyMult', 'offlineCap']);
+    renderShopSection(boostShopEl, ['click', 'clickPowerMult', 'discount', 'critChance', 'paparazzi', 'paparazziFreq', 'paparazziMult', 'legacyMult', 'offlineCap']);
   }
 
   function upgradeById(id) {

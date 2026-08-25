@@ -188,12 +188,36 @@
     {
       id: 'connections',
       kind: 'discount',
+      target: 'building',
       name: 'Producer Connections',
       desc: '-5% cost on future Production upgrades. Stacks up to 10 times.',
       unlockAt: 100,
       baseCost: 200,
       costMultiplier: 1.6,
       discountPerOwn: 0.05,
+      maxOwned: 10
+    },
+    {
+      id: 'coach',
+      kind: 'discount',
+      target: 'click',
+      name: 'Acting Coach',
+      desc: '-5% cost on future Preparation upgrades. Stacks up to 10 times.',
+      unlockAt: 300,
+      baseCost: 400,
+      costMultiplier: 1.6,
+      discountPerOwn: 0.05,
+      maxOwned: 10
+    },
+    {
+      id: 'timing',
+      kind: 'critChance',
+      name: 'Dramatic Instinct',
+      desc: '+1% critical chance. Stacks up to 10 times.',
+      unlockAt: 250,
+      baseCost: 350,
+      costMultiplier: 1.5,
+      critChanceBonus: 0.01,
       maxOwned: 10
     }
   ];
@@ -221,17 +245,20 @@
     localStorage.setItem(SAVE_KEY, JSON.stringify(state));
   }
 
-  function discountFactor() {
+  // `target` picks which upgrade kind a discount applies to — 'building'
+  // for Producer Connections, 'click' for Acting Coach. Each is computed
+  // independently so they never affect each other's costs.
+  function discountFactor(target) {
     var factor = 1;
     UPGRADES.forEach(function (u) {
-      if (u.kind === 'discount') factor *= Math.pow(1 - u.discountPerOwn, state.owned[u.id]);
+      if (u.kind === 'discount' && u.target === target) factor *= Math.pow(1 - u.discountPerOwn, state.owned[u.id]);
     });
     return factor;
   }
 
   function upgradeCost(u) {
     var raw = u.baseCost * Math.pow(u.costMultiplier, state.owned[u.id]);
-    if (u.kind === 'building') raw *= discountFactor(); // only Production costs get discounted
+    if (u.kind === 'building' || u.kind === 'click') raw *= discountFactor(u.kind);
     return Math.max(1, Math.ceil(raw));
   }
 
@@ -245,6 +272,14 @@
     return UPGRADES.reduce(function (sum, u) {
       return u.kind === 'click' ? sum + state.owned[u.id] * u.clickBonus : sum;
     }, 1); // base of 1 per click
+  }
+
+  var CRIT_CHANCE_BASE = 0.05;
+
+  function critChance() {
+    return UPGRADES.reduce(function (sum, u) {
+      return u.kind === 'critChance' ? sum + state.owned[u.id] * u.critChanceBonus : sum;
+    }, CRIT_CHANCE_BASE);
   }
 
   // Plain comma-formatted under 10,000 (still easy to read at a glance);
@@ -324,7 +359,7 @@
 
   function renderShop() {
     renderShopSection(shopEl, ['building']);
-    renderShopSection(boostShopEl, ['click', 'discount']);
+    renderShopSection(boostShopEl, ['click', 'discount', 'critChance']);
   }
 
   function upgradeById(id) {
@@ -403,11 +438,10 @@
     state.totalEarned += amount;
   }
 
-  var CRIT_CHANCE = 0.05;
   var CRIT_MULTIPLIER = 10;
 
   function handleClick(e) {
-    var isCrit = Math.random() < CRIT_CHANCE;
+    var isCrit = Math.random() < critChance();
     var amount = clickPower() * (isCrit ? CRIT_MULTIPLIER : 1);
     addSpotlight(amount);
     if (isCrit) showLine(CRIT_LINES[Math.floor(Math.random() * CRIT_LINES.length)]);

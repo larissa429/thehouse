@@ -72,7 +72,7 @@
   var CLICK_LINES = [
     { es: 'Nací para este momento.', en: 'I was born for this moment.' },
     { es: '¿Lo has sentido? Eso ha sido desarrollo de personaje.', en: 'Did you feel that? That was character development.' },
-    { es: 'No, no, no os preocupéis por mí. Sufriré glamurosamente aquí.', en: "No, no, don't mind me. I'll just suffer glamurously over here." },
+    { es: 'No, no, no os preocupéis por mí. Sufriré glamurosamente aquí.', en: "No, no, don't mind me. I'll just suffer glamorously over here." },
     { es: 'Esta es mi escena decisiva.', en: 'This is my defining scene.' },
     { es: 'En algún lugar, están haciendo un premio para mí.', en: 'Somewhere, an award is being engraved for me.' },
     { es: 'Todos los ángulos son mi ángulo bueno.', en: 'Every angle is my good angle.' },

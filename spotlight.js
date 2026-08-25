@@ -20,8 +20,16 @@
   var rateEl = document.getElementById('spotlightRate');
   var shopEl = document.getElementById('spotlightShop');
   var boostShopEl = document.getElementById('spotlightBoostShop');
+  var tabBoostBtn = document.getElementById('spotlightTabBoost');
+  var tabProductionBtn = document.getElementById('spotlightTabProduction');
 
   var SAVE_KEY = 'spotlight-save';
+
+  // Shown before the first click (and after Reset) so the bubble is
+  // never empty — an empty bubble collapses to almost no height, which
+  // made its speech-bubble tail render as a stray floating square
+  // instead of looking attached to anything.
+  var IDLE_LINE = { es: '¿A qué esperas? No va a hacer clic solo.', en: "What are you waiting for? It's not gonna click itself." };
 
   // She delivers every line in (Castilian) Spanish, subtitled — because
   // of course she does. `es` is what's said, `en` is the dim subtitle.
@@ -343,12 +351,22 @@
     state = { spotlight: 0, totalEarned: 0, owned: {} };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     save();
-    quoteEsEl.textContent = '';
-    quoteEnEl.textContent = '';
     lastLine = null;
+    quoteEsEl.textContent = IDLE_LINE.es;
+    quoteEnEl.textContent = IDLE_LINE.en;
     renderCount();
     renderShop();
   });
+
+  function setTab(tab) {
+    var showBoost = tab === 'boost';
+    boostShopEl.hidden = !showBoost;
+    shopEl.hidden = showBoost;
+    tabBoostBtn.classList.toggle('is-active', showBoost);
+    tabProductionBtn.classList.toggle('is-active', !showBoost);
+  }
+  tabBoostBtn.addEventListener('click', function () { setTab('boost'); });
+  tabProductionBtn.addEventListener('click', function () { setTab('production'); });
 
   // Passive income ticks 4x/second for a smooth-feeling counter, adding
   // a quarter of the per-second rate each time rather than waiting a
@@ -366,6 +384,8 @@
   setInterval(save, 5000);
 
   loadSave();
+  quoteEsEl.textContent = IDLE_LINE.es;
+  quoteEnEl.textContent = IDLE_LINE.en;
   renderCount();
   renderShop();
 })();

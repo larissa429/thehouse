@@ -11,7 +11,25 @@
   <link rel="stylesheet" href="../styles.css" />
   <style>
     #spotlightGame {
-      max-width: 26rem;
+      max-width: 44rem;
+    }
+
+    .spotlight-columns {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+    }
+    .spotlight-left {
+      flex: 1 1 18rem;
+      min-width: 0;
+    }
+    .spotlight-right {
+      flex: 1 1 16rem;
+      min-width: 0;
+    }
+    @media (max-width: 640px) {
+      .spotlight-columns { flex-direction: column; }
+      .spotlight-left, .spotlight-right { flex: 1 1 auto; width: 100%; }
     }
 
     .spotlight-stage {
@@ -69,6 +87,10 @@
       position: relative;
       flex: 1;
       min-width: 0;
+      min-height: 2.6rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       background: var(--paper);
       color: var(--ink-on-paper);
       border-radius: 10px;
@@ -122,6 +144,27 @@
       text-transform: uppercase;
       color: var(--ink-soft);
       margin: 0 0 0.5rem;
+    }
+    .spotlight-tab-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.7rem;
+    }
+    .spotlight-tab-btn {
+      font-family: var(--label);
+      font-size: 0.75rem;
+      background: transparent;
+      border: var(--edge);
+      color: var(--ink-soft);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .spotlight-tab-btn:hover { background: var(--wall-lit); }
+    .spotlight-tab-btn.is-active {
+      background: var(--lamp);
+      color: var(--shadow);
+      border-color: var(--lamp);
     }
     .spotlight-shop {
       display: flex;
@@ -199,23 +242,30 @@
         <button type="button" class="merge-restart" id="spotlightReset">Reset</button>
       </div>
 
-      <div class="spotlight-stage">
-        <div class="spotlight-portrait-wrap" id="spotlightPortraitWrap">
-          <img src="../images/AP.png" alt="Abstract Painting" class="spotlight-portrait" id="spotlightPortrait" draggable="false" />
+      <div class="spotlight-columns">
+        <div class="spotlight-left">
+          <div class="spotlight-stage">
+            <div class="spotlight-portrait-wrap" id="spotlightPortraitWrap">
+              <img src="../images/AP.png" alt="Abstract Painting" class="spotlight-portrait" id="spotlightPortrait" draggable="false" />
+            </div>
+            <div class="spotlight-bubble">
+              <p class="spotlight-bubble-es" id="spotlightQuoteEs"></p>
+              <p class="spotlight-bubble-en" id="spotlightQuoteEn"></p>
+            </div>
+          </div>
+
+          <p class="spotlight-rate" id="spotlightRate" hidden></p>
         </div>
-        <div class="spotlight-bubble">
-          <p class="spotlight-bubble-es" id="spotlightQuoteEs"></p>
-          <p class="spotlight-bubble-en" id="spotlightQuoteEn"></p>
+
+        <div class="spotlight-right">
+          <div class="spotlight-tab-row">
+            <button type="button" class="spotlight-tab-btn is-active" id="spotlightTabBoost" data-tab="boost">Preparation</button>
+            <button type="button" class="spotlight-tab-btn" id="spotlightTabProduction" data-tab="production">Production</button>
+          </div>
+          <div class="spotlight-shop" id="spotlightBoostShop"></div>
+          <div class="spotlight-shop" id="spotlightShop" hidden></div>
         </div>
       </div>
-
-      <p class="spotlight-rate" id="spotlightRate" hidden></p>
-
-      <p class="spotlight-shop-label">Preparation</p>
-      <div class="spotlight-shop" id="spotlightBoostShop"></div>
-
-      <p class="spotlight-shop-label" style="margin-top: 1.1rem;">The Production</p>
-      <div class="spotlight-shop" id="spotlightShop"></div>
     </div>
 
   </main>

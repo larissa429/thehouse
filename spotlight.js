@@ -282,6 +282,48 @@
       costMultiplier: 1.4,
       multiplierBonus: 2,
       maxOwned: 5
+    },
+    // --- post-Sequel tier: requires at least 1 Legacy point to even see.
+    // Picks up right where the pre-prestige tiers left off in both cost
+    // and rate, so a fresh Sequel run still has somewhere to grow past
+    // Cinematic Universe once it's earned enough again.
+    {
+      id: 'worldTour',
+      kind: 'building',
+      name: 'World Tour',
+      desc: "She's a global phenomenon now. 1,600,000 clicks / minute.",
+      unlockAt: 4000000,
+      baseCost: 4500000,
+      costMultiplier: 1.19,
+      ratePerMinute: 1600000,
+      minPrestige: 1
+    },
+    {
+      id: 'legendStatus',
+      kind: 'click',
+      name: 'Legend Status',
+      desc: '+400 Spotlight per click.',
+      unlockAt: 20000,
+      baseCost: 40000,
+      costMultiplier: 1.22,
+      clickBonus: 400,
+      minPrestige: 1
+    },
+    // Spends Spotlight (not Legacy) to permanently boost the per-point
+    // Legacy bonus itself — a multiplier on the multiplier, so it's most
+    // valuable the more Legacy is already banked. Requires having
+    // prestiged at least once, same as the rest of this tier.
+    {
+      id: 'directorsCut',
+      kind: 'legacyMult',
+      name: "Director's Cut",
+      desc: '+10% to your Legacy bonus per point. Stacks up to 10 times.',
+      unlockAt: 4000000,
+      baseCost: 8000000,
+      costMultiplier: 1.7,
+      legacyMultBonus: 0.1,
+      maxOwned: 10,
+      minPrestige: 1
     }
   ];
 
@@ -547,7 +589,7 @@
 
   function renderShop() {
     renderShopSection(shopEl, ['building']);
-    renderShopSection(boostShopEl, ['click', 'discount', 'critChance', 'paparazzi', 'paparazziFreq', 'paparazziMult']);
+    renderShopSection(boostShopEl, ['click', 'discount', 'critChance', 'paparazzi', 'paparazziFreq', 'paparazziMult', 'legacyMult']);
   }
 
   function upgradeById(id) {
@@ -624,11 +666,21 @@
   }
 
   // Permanent, from past prestiges — +2% to every source of income
-  // (clicks, crits, paparazzi, passive) per Legacy point, forever.
+  // (clicks, crits, paparazzi, passive) per Legacy point, forever. The
+  // per-point rate itself can be boosted further by 'legacyMult' upgrades
+  // (Director's Cut), each a post-Sequel-only multiplier on this rate.
   var LEGACY_BONUS_PER_POINT = 0.02;
 
+  function legacyBonusRate() {
+    var rate = LEGACY_BONUS_PER_POINT;
+    UPGRADES.forEach(function (u) {
+      if (u.kind === 'legacyMult') rate *= 1 + u.legacyMultBonus * state.owned[u.id];
+    });
+    return rate;
+  }
+
   function legacyMultiplier() {
-    return 1 + state.legacy * LEGACY_BONUS_PER_POINT;
+    return 1 + state.legacy * legacyBonusRate();
   }
 
   // The single place income actually lands in spotlight/totalEarned —

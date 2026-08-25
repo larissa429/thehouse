@@ -793,8 +793,6 @@
   //      gravity) instead of accelerating forever like heavy rain, plus a
   //      slow side-to-side sine sway — that's what reads as "floaty"
   //      paper drifting down instead of a stream of drops.
-  var CONFETTI_DRAG = 2.6; // higher = burst velocity dies out faster (per second)
-  var CONFETTI_FALL_DRAG = 1.1; // higher = reaches floaty terminal fall speed sooner
   var CONFETTI_TERMINAL_VY = 14; // vh/s — gentle drifting-down speed, not a plummet
   var confettiPieces = [];
   var confettiRafId = null;
@@ -809,8 +807,12 @@
       if (t < 0) { stillActive = true; continue; } // hasn't launched yet (delay)
 
       // Horizontal: pure drag decay — eases out from the launch speed
-      // toward a standstill, integral of v0*e^(-k*t).
-      var xDecay = (1 - Math.exp(-CONFETTI_DRAG * t)) / CONFETTI_DRAG;
+      // toward a standstill, integral of v0*e^(-k*t). Each piece carries
+      // its own drag constant (see spawnConfettiBurst) instead of one
+      // shared value, so 36 pieces don't all finish slowing down at the
+      // same instant — that synchronized stop was what read as "one
+      // condensed batch" no matter how the single constant was tuned.
+      var xDecay = (1 - Math.exp(-p.drag * t)) / p.drag;
       var x = p.x0 + p.vx0 * xDecay + p.swayAmp * Math.sin(t * p.swayFreq + p.swayPhase);
 
       // Vertical: eases from the launch kick toward a gentle terminal
@@ -862,12 +864,14 @@
       var node = makeConfettiPiece(color, Math.random() < 0.5);
       confettiLayerEl.appendChild(node);
 
-      // Launch speed along the cone direction, plus a perpendicular
-      // spread component — this decays via drag (see stepConfetti), so
-      // it's a punchy initial burst that eases out, not a constant-speed
-      // stream.
-      var speed = 90 + Math.random() * 70;
-      var spreadSpeed = (Math.random() * 70 - 35);
+      // Launch speed along the cone direction, plus a much wider
+      // perpendicular spread component — this decays via each piece's
+      // own drag (see stepConfetti), so it's a punchy initial burst that
+      // eases out, not a constant-speed stream, and the wide spread
+      // fans pieces out across most of the screen instead of a narrow
+      // clump.
+      var speed = 80 + Math.random() * 90;
+      var spreadSpeed = (Math.random() * 140 - 70);
       var vx0, vy0;
       if (outX !== 0) { vx0 = outX * speed; vy0 = spreadSpeed - 45; }
       else { vx0 = spreadSpeed; vy0 = outY * speed - 30; }
@@ -878,8 +882,9 @@
         y0: originY,
         vx0: vx0,
         vy0: vy0,
+        drag: 1.2 + Math.random() * 2.2, // per-piece, so decel isn't synchronized across the batch
         vyTerm: CONFETTI_TERMINAL_VY + Math.random() * 8, // gentle drift, slight variance so pieces don't fall in lockstep
-        swayAmp: 2 + Math.random() * 4,
+        swayAmp: 2 + Math.random() * 5,
         swayFreq: 1.2 + Math.random() * 1.6,
         swayPhase: Math.random() * Math.PI * 2,
         rot0: Math.random() * 360,

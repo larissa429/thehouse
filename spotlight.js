@@ -19,6 +19,7 @@
   var quoteEnEl = document.getElementById('spotlightQuoteEn');
   var rateEl = document.getElementById('spotlightRate');
   var shopEl = document.getElementById('spotlightShop');
+  var boostShopEl = document.getElementById('spotlightBoostShop');
 
   var SAVE_KEY = 'spotlight-save';
 
@@ -42,9 +43,15 @@
   // classic "each purchase costs ~15% more" idle-game curve, and
   // ratePerMinute is per single owned copy of that upgrade. Cost and
   // rate both scale up roughly 6x per tier, same shape as most idle games.
+  // `kind` decides which shop section an upgrade renders in and which
+  // effect it has: 'building' adds passive ratePerMinute, 'click' adds
+  // flat clickBonus to every manual click, 'discount' multiplies the
+  // cost of every 'building' purchase by (1 - discountPerOwn) per copy
+  // owned, capped at maxOwned so it can't approach free.
   var UPGRADES = [
     {
       id: 'sigh',
+      kind: 'building',
       name: 'Dramatic Sigh',
       desc: 'Barely counts as effort. 1 click / minute.',
       unlockAt: 10,
@@ -54,6 +61,7 @@
     },
     {
       id: 'gossip',
+      kind: 'building',
       name: 'Overheard Gossip',
       desc: "Everyone's definitely talking about her. 6 clicks / minute.",
       unlockAt: 50,
@@ -63,6 +71,7 @@
     },
     {
       id: 'lighting',
+      kind: 'building',
       name: 'Flattering Lighting',
       desc: 'Rigged entirely in her favor. 36 clicks / minute.',
       unlockAt: 300,
@@ -72,6 +81,7 @@
     },
     {
       id: 'monologue',
+      kind: 'building',
       name: 'Uninterrupted Monologue',
       desc: 'Nobody has interrupted her in weeks. 220 clicks / minute.',
       unlockAt: 1800,
@@ -81,6 +91,7 @@
     },
     {
       id: 'fanmail',
+      kind: 'building',
       name: 'Self-Written Fan Mail',
       desc: 'She is her own biggest admirer. 1,300 clicks / minute.',
       unlockAt: 10000,
@@ -90,6 +101,7 @@
     },
     {
       id: 'dancers',
+      kind: 'building',
       name: 'Backup Dancers',
       desc: 'Recruited from the other paintings. 8,000 clicks / minute.',
       unlockAt: 60000,
@@ -99,6 +111,7 @@
     },
     {
       id: 'wing',
+      kind: 'building',
       name: 'Her Own Wing of The House',
       desc: 'Renovations completed overnight. 45,000 clicks / minute.',
       unlockAt: 350000,
@@ -108,12 +121,54 @@
     },
     {
       id: 'universe',
+      kind: 'building',
       name: 'Cinematic Universe',
       desc: 'The whole House is secretly about her. 260,000 clicks / minute.',
       unlockAt: 2000000,
       baseCost: 2300000,
       costMultiplier: 1.18,
       ratePerMinute: 260000
+    },
+    {
+      id: 'confidence',
+      kind: 'click',
+      name: 'Confidence Boost',
+      desc: '+5 Spotlight per click.',
+      unlockAt: 5,
+      baseCost: 25,
+      costMultiplier: 1.2,
+      clickBonus: 5
+    },
+    {
+      id: 'poses',
+      kind: 'click',
+      name: 'Rehearsed Poses',
+      desc: '+15 Spotlight per click.',
+      unlockAt: 150,
+      baseCost: 500,
+      costMultiplier: 1.2,
+      clickBonus: 15
+    },
+    {
+      id: 'entrance',
+      kind: 'click',
+      name: 'Signature Entrance',
+      desc: '+60 Spotlight per click.',
+      unlockAt: 5000,
+      baseCost: 8000,
+      costMultiplier: 1.2,
+      clickBonus: 60
+    },
+    {
+      id: 'connections',
+      kind: 'discount',
+      name: 'Producer Connections',
+      desc: '-5% cost on future Production upgrades. Stacks up to 10 times.',
+      unlockAt: 100,
+      baseCost: 200,
+      costMultiplier: 1.6,
+      discountPerOwn: 0.05,
+      maxOwned: 10
     }
   ];
 
@@ -139,12 +194,30 @@
     localStorage.setItem(SAVE_KEY, JSON.stringify(state));
   }
 
+  function discountFactor() {
+    var factor = 1;
+    UPGRADES.forEach(function (u) {
+      if (u.kind === 'discount') factor *= Math.pow(1 - u.discountPerOwn, state.owned[u.id]);
+    });
+    return factor;
+  }
+
   function upgradeCost(u) {
-    return Math.ceil(u.baseCost * Math.pow(u.costMultiplier, state.owned[u.id]));
+    var raw = u.baseCost * Math.pow(u.costMultiplier, state.owned[u.id]);
+    if (u.kind === 'building') raw *= discountFactor(); // only Production costs get discounted
+    return Math.max(1, Math.ceil(raw));
   }
 
   function totalRatePerMinute() {
-    return UPGRADES.reduce(function (sum, u) { return sum + state.owned[u.id] * u.ratePerMinute; }, 0);
+    return UPGRADES.reduce(function (sum, u) {
+      return u.kind === 'building' ? sum + state.owned[u.id] * u.ratePerMinute : sum;
+    }, 0);
+  }
+
+  function clickPower() {
+    return UPGRADES.reduce(function (sum, u) {
+      return u.kind === 'click' ? sum + state.owned[u.id] * u.clickBonus : sum;
+    }, 1); // base of 1 per click
   }
 
   function formatNumber(n) {
@@ -162,17 +235,19 @@
     }
   }
 
-  function renderShop() {
-    shopEl.innerHTML = '';
+  function renderShopSection(containerEl, kinds) {
+    containerEl.innerHTML = '';
     UPGRADES.forEach(function (u) {
+      if (kinds.indexOf(u.kind) === -1) return;
       var owned = state.owned[u.id];
       if (state.totalEarned < u.unlockAt && owned === 0) return; // not unlocked yet
+      var maxedOut = u.maxOwned && owned >= u.maxOwned;
 
       var cost = upgradeCost(u);
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'spotlight-upgrade';
-      btn.disabled = state.spotlight < cost;
+      btn.disabled = maxedOut || state.spotlight < cost;
 
       var info = document.createElement('div');
       info.className = 'spotlight-upgrade-info';
@@ -187,7 +262,7 @@
 
       var costEl = document.createElement('span');
       costEl.className = 'spotlight-upgrade-cost';
-      costEl.textContent = cost.toLocaleString();
+      costEl.textContent = maxedOut ? 'Maxed' : cost.toLocaleString();
 
       var ownedEl = document.createElement('span');
       ownedEl.className = 'spotlight-upgrade-owned';
@@ -201,11 +276,17 @@
         buyUpgrade(u);
       });
 
-      shopEl.appendChild(btn);
+      containerEl.appendChild(btn);
     });
   }
 
+  function renderShop() {
+    renderShopSection(shopEl, ['building']);
+    renderShopSection(boostShopEl, ['click', 'discount']);
+  }
+
   function buyUpgrade(u) {
+    if (u.maxOwned && state.owned[u.id] >= u.maxOwned) return;
     var cost = upgradeCost(u);
     if (state.spotlight < cost) return;
     state.spotlight -= cost;
@@ -226,11 +307,11 @@
     quoteEnEl.textContent = line.en;
   }
 
-  function spawnFloatingPlusOne(clientX, clientY) {
+  function spawnFloatingPlusOne(clientX, clientY, amount) {
     var rect = portraitWrapEl.getBoundingClientRect();
     var el = document.createElement('span');
     el.className = 'spotlight-float';
-    el.textContent = '+1';
+    el.textContent = '+' + amount;
     el.style.left = (clientX - rect.left) + 'px';
     el.style.top = (clientY - rect.top) + 'px';
     portraitWrapEl.appendChild(el);
@@ -243,13 +324,14 @@
   }
 
   function handleClick(e) {
-    addSpotlight(1);
+    var amount = clickPower();
+    addSpotlight(amount);
     showQuote();
     portraitEl.classList.remove('is-clicked');
     void portraitEl.offsetWidth; // restart the pop animation if it's mid-run
     portraitEl.classList.add('is-clicked');
     var point = e.touches && e.touches[0] ? e.touches[0] : e;
-    spawnFloatingPlusOne(point.clientX, point.clientY);
+    spawnFloatingPlusOne(point.clientX, point.clientY, amount);
     renderCount();
     renderShop(); // a click can be what crosses an unlock threshold
     save();

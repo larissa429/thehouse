@@ -85,6 +85,57 @@
       0% { opacity: 1; transform: translateY(0); }
       100% { opacity: 0; transform: translateY(-2.2rem); }
     }
+    .spotlight-float.is-crit {
+      font-size: 1.6rem;
+      color: var(--urgent);
+    }
+
+    /* Ambient fame effects — confetti/flowers/camera flashes, more
+       frequent the higher her lifetime total climbs. Extends past the
+       portrait's own box (negative inset) so falling pieces have room
+       to read as coming from above/beside her, not just inside her. */
+    .spotlight-fx-layer {
+      position: absolute;
+      inset: -3rem -2rem -1rem;
+      pointer-events: none;
+      overflow: visible;
+    }
+    .spotlight-fx {
+      position: absolute;
+      top: -1rem;
+      font-size: 1.6rem;
+      animation: spotlightFxFall 1.8s ease-in forwards;
+    }
+    @keyframes spotlightFxFall {
+      0% { opacity: 0; transform: translateY(0) rotate(0deg); }
+      12% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(14rem) rotate(var(--rot)); }
+    }
+    .spotlight-fx-camera {
+      top: 10%;
+      animation: spotlightFxPop 1.1s ease forwards;
+    }
+    @keyframes spotlightFxPop {
+      0% { opacity: 0; transform: scale(0.5); }
+      30% { opacity: 1; transform: scale(1.15); }
+      100% { opacity: 0; transform: scale(1); }
+    }
+    .spotlight-fx-flash {
+      position: absolute;
+      inset: 0;
+      border-radius: 10px;
+      background: radial-gradient(circle, rgba(255,255,255,0.95), rgba(255,255,255,0) 70%);
+      animation: spotlightFxFlash 0.35s ease;
+    }
+    @keyframes spotlightFxFlash {
+      0% { opacity: 0; }
+      15% { opacity: 0.85; }
+      100% { opacity: 0; }
+    }
+    .merge-restart.is-active {
+      background: var(--lamp);
+      color: var(--shadow);
+    }
 
     /* speech bubble to the side, same paper-and-tail language as the
        Crossroads/Uno bubbles, just laid out with flexbox instead of
@@ -245,6 +296,7 @@
           <span class="merge-hud-label">Spotlight</span>
           <span class="merge-hud-value" id="spotlightCount">0</span>
         </div>
+        <button type="button" class="merge-restart" id="spotlightEffectsToggle">Reduce Effects</button>
         <button type="button" class="merge-restart" id="spotlightReset">Reset</button>
       </div>
 
@@ -253,6 +305,7 @@
           <div class="spotlight-stage">
             <div class="spotlight-portrait-wrap" id="spotlightPortraitWrap">
               <img src="../images/AP.png" alt="Abstract Painting" class="spotlight-portrait" id="spotlightPortrait" draggable="false" />
+              <div class="spotlight-fx-layer" id="spotlightFxLayer"></div>
             </div>
             <div class="spotlight-bubble">
               <p class="spotlight-bubble-es" id="spotlightQuoteEs"></p>

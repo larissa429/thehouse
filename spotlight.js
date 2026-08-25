@@ -22,6 +22,8 @@
   var boostShopEl = document.getElementById('spotlightBoostShop');
   var tabBoostBtn = document.getElementById('spotlightTabBoost');
   var tabProductionBtn = document.getElementById('spotlightTabProduction');
+  var fxLayerEl = document.getElementById('spotlightFxLayer');
+  var effectsToggleBtn = document.getElementById('spotlightEffectsToggle');
 
   var SAVE_KEY = 'spotlight-save';
 
@@ -44,6 +46,22 @@
     { es: 'Yo no pedí ser tan cautivadora.', en: "I didn't ask to be this compelling." },
     { es: 'De nada, por cierto.', en: "You're welcome, by the way." },
     { es: 'Alguien debería estar grabando esto.', en: 'Someone should really be filming this.' }
+  ];
+
+  // Rare (5% per click) — bigger payout, bigger reaction.
+  var CRIT_LINES = [
+    { es: '¡Ovación de pie!', en: 'A standing ovation!' },
+    { es: '¡Bravo, bravo!', en: 'Bravo, bravo!' },
+    { es: 'Esto merece un premio.', en: 'This deserves an award.' },
+    { es: '¡El público la ama!', en: 'The audience adores her!' }
+  ];
+
+  // Shown sometimes (40% chance) right after buying an upgrade.
+  var BUY_LINES = [
+    { es: 'Por fin. Ya me cansaba de hacerlo yo misma.', en: 'Finally. I was tired of doing this myself.' },
+    { es: 'Una inversión inteligente, la verdad.', en: 'A smart investment, honestly.' },
+    { es: 'Esto era necesario.', en: 'This was necessary.' },
+    { es: 'Ahora sí. Ahora empezamos de verdad.', en: 'Now, yes. Now we truly begin.' }
   ];
 
   // Add another tier by adding another entry here — unlockAt is measured
@@ -180,7 +198,7 @@
     }
   ];
 
-  var state = { spotlight: 0, totalEarned: 0, owned: {} };
+  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false };
   UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
 
   function loadSave() {
@@ -190,6 +208,7 @@
       var parsed = JSON.parse(raw);
       if (typeof parsed.spotlight === 'number') state.spotlight = parsed.spotlight;
       if (typeof parsed.totalEarned === 'number') state.totalEarned = parsed.totalEarned;
+      if (typeof parsed.reducedEffects === 'boolean') state.reducedEffects = parsed.reducedEffects;
       if (parsed.owned) {
         UPGRADES.forEach(function (u) {
           if (typeof parsed.owned[u.id] === 'number') state.owned[u.id] = parsed.owned[u.id];
@@ -228,8 +247,22 @@
     }, 1); // base of 1 per click
   }
 
+  // Plain comma-formatted under 10,000 (still easy to read at a glance);
+  // abbreviated with a K/M/B/T suffix above that, where the full digit
+  // count starts getting unwieldy — trims trailing zeros so "1.00M"
+  // shows as "1M" but "1.25M" keeps its precision.
   function formatNumber(n) {
-    return Math.floor(n).toLocaleString();
+    n = Math.floor(n);
+    var abs = Math.abs(n);
+    if (abs < 10000) return n.toLocaleString();
+    var units = [[1e12, 'T'], [1e9, 'B'], [1e6, 'M'], [1e3, 'K']];
+    for (var i = 0; i < units.length; i++) {
+      if (abs >= units[i][0]) {
+        var str = (n / units[i][0]).toFixed(2).replace(/\.?0+$/, '');
+        return str + units[i][1];
+      }
+    }
+    return n.toLocaleString();
   }
 
   function renderCount() {
@@ -237,7 +270,7 @@
     var rate = totalRatePerMinute();
     if (rate > 0) {
       rateEl.hidden = false;
-      rateEl.textContent = '+' + rate + ' / min, passively';
+      rateEl.textContent = '+' + formatNumber(rate) + ' / min, passively';
     } else {
       rateEl.hidden = true;
     }
@@ -270,7 +303,7 @@
 
       var costEl = document.createElement('span');
       costEl.className = 'spotlight-upgrade-cost';
-      costEl.textContent = maxedOut ? 'Maxed' : cost.toLocaleString();
+      costEl.textContent = maxedOut ? 'Maxed' : formatNumber(cost);
 
       var ownedEl = document.createElement('span');
       ownedEl.className = 'spotlight-upgrade-owned';
@@ -299,27 +332,32 @@
     if (state.spotlight < cost) return;
     state.spotlight -= cost;
     state.owned[u.id] += 1;
+    if (Math.random() < 0.4) showLine(BUY_LINES[Math.floor(Math.random() * BUY_LINES.length)]);
     save();
     renderCount();
     renderShop();
   }
 
   var lastLine = null;
-  function showQuote() {
-    var line = CLICK_LINES[Math.floor(Math.random() * CLICK_LINES.length)];
-    if (line === lastLine && CLICK_LINES.length > 1) {
-      line = CLICK_LINES[(CLICK_LINES.indexOf(line) + 1) % CLICK_LINES.length];
-    }
+  function showLine(line) {
     lastLine = line;
     quoteEsEl.textContent = line.es;
     quoteEnEl.textContent = line.en;
   }
 
-  function spawnFloatingPlusOne(clientX, clientY, amount) {
+  function showQuote() {
+    var line = CLICK_LINES[Math.floor(Math.random() * CLICK_LINES.length)];
+    if (line === lastLine && CLICK_LINES.length > 1) {
+      line = CLICK_LINES[(CLICK_LINES.indexOf(line) + 1) % CLICK_LINES.length];
+    }
+    showLine(line);
+  }
+
+  function spawnFloatingPlusOne(clientX, clientY, amount, isCrit) {
     var rect = portraitWrapEl.getBoundingClientRect();
     var el = document.createElement('span');
-    el.className = 'spotlight-float';
-    el.textContent = '+' + amount;
+    el.className = 'spotlight-float' + (isCrit ? ' is-crit' : '');
+    el.textContent = '+' + formatNumber(amount) + (isCrit ? '!' : '');
     el.style.left = (clientX - rect.left) + 'px';
     el.style.top = (clientY - rect.top) + 'px';
     portraitWrapEl.appendChild(el);
@@ -331,15 +369,20 @@
     state.totalEarned += amount;
   }
 
+  var CRIT_CHANCE = 0.05;
+  var CRIT_MULTIPLIER = 10;
+
   function handleClick(e) {
-    var amount = clickPower();
+    var isCrit = Math.random() < CRIT_CHANCE;
+    var amount = clickPower() * (isCrit ? CRIT_MULTIPLIER : 1);
     addSpotlight(amount);
-    showQuote();
+    if (isCrit) showLine(CRIT_LINES[Math.floor(Math.random() * CRIT_LINES.length)]);
+    else showQuote();
     portraitEl.classList.remove('is-clicked');
     void portraitEl.offsetWidth; // restart the pop animation if it's mid-run
     portraitEl.classList.add('is-clicked');
     var point = e.touches && e.touches[0] ? e.touches[0] : e;
-    spawnFloatingPlusOne(point.clientX, point.clientY, amount);
+    spawnFloatingPlusOne(point.clientX, point.clientY, amount, isCrit);
     renderCount();
     renderShop(); // a click can be what crosses an unlock threshold
     save();
@@ -348,7 +391,8 @@
   portraitEl.addEventListener('click', handleClick);
 
   resetBtn.addEventListener('click', function () {
-    state = { spotlight: 0, totalEarned: 0, owned: {} };
+    var keepReducedEffects = state.reducedEffects; // a display preference, not progress — survives Reset
+    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     save();
     lastLine = null;
@@ -367,6 +411,68 @@
   }
   tabBoostBtn.addEventListener('click', function () { setTab('boost'); });
   tabProductionBtn.addEventListener('click', function () { setTab('production'); });
+
+  // --- ambient fame effects ---------------------------------------------
+  // Purely decorative — confetti and bouquets get more frequent as her
+  // lifetime total climbs, plus camera flashes at the highest tier.
+  // Camera flashes are the one effect the "Reduce Effects" toggle
+  // suppresses entirely — they're the only flashing effect here, so
+  // that's the actual photosensitivity concern; confetti/flowers keep
+  // going either way since they don't strobe.
+  var FX_TYPES = {
+    confetti: { emojis: ['🎉', '🎊', '✨'] },
+    flower: { emojis: ['💐', '🌹', '🌸'] },
+    camera: { emojis: ['📷', '📸'] }
+  };
+  var FX_TIER_CHANCE = [0, 0.15, 0.25, 0.35, 0.5]; // indexed by fameTier()
+
+  function fameTier() {
+    if (state.totalEarned >= 100000) return 4;
+    if (state.totalEarned >= 10000) return 3;
+    if (state.totalEarned >= 1000) return 2;
+    if (state.totalEarned >= 100) return 1;
+    return 0;
+  }
+
+  function spawnFx(type) {
+    var def = FX_TYPES[type];
+    var el = document.createElement('span');
+    el.className = 'spotlight-fx spotlight-fx-' + type;
+    el.textContent = def.emojis[Math.floor(Math.random() * def.emojis.length)];
+    el.style.left = (10 + Math.random() * 80) + '%';
+    el.style.setProperty('--rot', (Math.random() * 40 - 20) + 'deg');
+    fxLayerEl.appendChild(el);
+    setTimeout(function () { el.remove(); }, 1800);
+
+    if (type === 'camera') {
+      var flash = document.createElement('span');
+      flash.className = 'spotlight-fx-flash';
+      fxLayerEl.appendChild(flash);
+      setTimeout(function () { flash.remove(); }, 350);
+    }
+  }
+
+  function maybeSpawnFx() {
+    var tier = fameTier();
+    if (tier === 0) return;
+    if (Math.random() > FX_TIER_CHANCE[tier]) return;
+    var eligible = ['confetti'];
+    if (tier >= 2) eligible.push('flower');
+    if (tier >= 3 && !state.reducedEffects) eligible.push('camera');
+    spawnFx(eligible[Math.floor(Math.random() * eligible.length)]);
+  }
+
+  setInterval(maybeSpawnFx, 1200);
+
+  function renderEffectsToggle() {
+    effectsToggleBtn.textContent = state.reducedEffects ? 'Full Effects' : 'Reduce Effects';
+    effectsToggleBtn.classList.toggle('is-active', state.reducedEffects);
+  }
+  effectsToggleBtn.addEventListener('click', function () {
+    state.reducedEffects = !state.reducedEffects;
+    save();
+    renderEffectsToggle();
+  });
 
   // Passive income ticks 4x/second for a smooth-feeling counter, adding
   // a quarter of the per-second rate each time rather than waiting a
@@ -388,4 +494,5 @@
   quoteEnEl.textContent = IDLE_LINE.en;
   renderCount();
   renderShop();
+  renderEffectsToggle();
 })();

@@ -179,6 +179,15 @@
       border-radius: 6px;
       color: var(--ink);
       cursor: pointer;
+      flex-shrink: 0;
+      touch-action: manipulation;
+    }
+    /* Only the first icon button in the group should actually push the
+       group to the right — margin-left:auto on every .spotlight-gear-btn
+       sibling still resolves correctly in most browsers, but scoping it
+       explicitly avoids relying on that. */
+    .spotlight-gear-btn + .spotlight-gear-btn {
+      margin-left: 0;
     }
     .spotlight-gear-btn:hover { background: var(--wall-lit); }
     .spotlight-gear-btn[aria-expanded="true"] {

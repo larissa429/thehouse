@@ -23,6 +23,7 @@
   var tabBoostBtn = document.getElementById('spotlightTabBoost');
   var tabProductionBtn = document.getElementById('spotlightTabProduction');
   var fxLayerEl = document.getElementById('spotlightFxLayer');
+  var confettiLayerEl = document.getElementById('spotlightConfettiLayer');
   var effectsToggleBtn = document.getElementById('spotlightEffectsToggle');
   var numberFormatToggleBtn = document.getElementById('spotlightNumberFormatToggle');
   var settingsToggleBtn = document.getElementById('spotlightSettingsToggle');
@@ -279,7 +280,7 @@
     }
   ];
 
-  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true };
+  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, seenMillion: false };
   UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
 
   function loadSave() {
@@ -292,6 +293,7 @@
       if (typeof parsed.reducedEffects === 'boolean') state.reducedEffects = parsed.reducedEffects;
       if (typeof parsed.legacy === 'number') state.legacy = parsed.legacy;
       if (typeof parsed.shorthandNumbers === 'boolean') state.shorthandNumbers = parsed.shorthandNumbers;
+      if (typeof parsed.seenMillion === 'boolean') state.seenMillion = parsed.seenMillion;
       if (parsed.owned) {
         UPGRADES.forEach(function (u) {
           if (typeof parsed.owned[u.id] === 'number') state.owned[u.id] = parsed.owned[u.id];
@@ -444,8 +446,9 @@
     if (!confirmed) return;
     var newLegacy = state.legacy + gain;
     var keepReducedEffects = state.reducedEffects;
+    var keepShorthandNumbers = state.shorthandNumbers;
     cancelPaparazzi();
-    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy };
+    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, seenMillion: false };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     save();
     lastLine = null;
@@ -626,10 +629,16 @@
   // crit, paparazzi, passive tick) gets it automatically instead of
   // needing to remember to multiply it in separately. Returns the final
   // (post-bonus) amount so callers can display the real number earned.
+  var MILLION_MILESTONE = 1000000;
+
   function earnSpotlight(rawAmount) {
     var amount = rawAmount * legacyMultiplier();
     state.spotlight += amount;
     state.totalEarned += amount;
+    if (!state.seenMillion && state.totalEarned >= MILLION_MILESTONE) {
+      state.seenMillion = true; // marks the moment as "happened" even if Reduce Effects hides the visual
+      spawnConfettiBurst();
+    }
     return amount;
   }
 
@@ -664,7 +673,7 @@
     // Unlike prestiging, the plain Reset button is a full wipe — Legacy
     // included. It's the "start completely over" button; The Sequel is
     // the one that keeps Legacy around.
-    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers };
+    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, seenMillion: false };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     cancelPaparazzi();
     save();
@@ -737,6 +746,83 @@
   }
 
   setInterval(maybeSpawnFx, 1200);
+
+  // --- million-Spotlight confetti burst -----------------------------
+  // A bigger, viewport-wide moment distinct from the small ambient FX
+  // above — real SVG confetti scraps blasting in from off-screen edges,
+  // easing toward center, then drifting down and off the bottom.
+  // Fires once guaranteed at the 1,000,000 milestone (see earnSpotlight),
+  // then only very rarely afterward. Fully suppressed by Reduce Effects.
+  var CONFETTI_COLORS = ['#e74c3c', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#e67e22', '#ff6fae', '#1abc9c'];
+  var CONFETTI_PIECE_COUNT = 36;
+  var CONFETTI_SVG_NS = 'http://www.w3.org/2000/svg';
+
+  function makeConfettiPiece(color, isTriangle) {
+    var svg = document.createElementNS(CONFETTI_SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 10 10');
+    svg.setAttribute('width', '10');
+    svg.setAttribute('height', '10');
+    svg.classList.add('spotlight-confetti-piece');
+    if (isTriangle) {
+      var poly = document.createElementNS(CONFETTI_SVG_NS, 'polygon');
+      poly.setAttribute('points', '5,0 10,10 0,10');
+      poly.setAttribute('fill', color);
+      svg.appendChild(poly);
+    } else {
+      var rect = document.createElementNS(CONFETTI_SVG_NS, 'rect');
+      rect.setAttribute('width', '10');
+      rect.setAttribute('height', '6');
+      rect.setAttribute('y', '2');
+      rect.setAttribute('fill', color);
+      svg.appendChild(rect);
+    }
+    return svg;
+  }
+
+  function spawnConfettiBurst() {
+    if (state.reducedEffects) return;
+    for (var i = 0; i < CONFETTI_PIECE_COUNT; i++) {
+      var color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      var piece = makeConfettiPiece(color, Math.random() < 0.5);
+
+      // Start well off-screen past one of the three top/left/right
+      // edges, ease outward-in toward a point near center, then ease
+      // downward past the bottom edge to disappear.
+      var edge = Math.floor(Math.random() * 3); // 0 left, 1 right, 2 top
+      var startX, startY;
+      if (edge === 0) { startX = -60 - Math.random() * 30; startY = Math.random() * 100 - 50; }
+      else if (edge === 1) { startX = 60 + Math.random() * 30; startY = Math.random() * 100 - 50; }
+      else { startX = Math.random() * 100 - 50; startY = -60 - Math.random() * 30; }
+      var midX = Math.random() * 40 - 20;
+      var midY = Math.random() * 30 - 15;
+      var endX = midX + (Math.random() * 20 - 10);
+      var endY = midY + 70 + Math.random() * 20;
+      var rot1 = Math.random() * 360;
+      var rot2 = rot1 + (Math.random() * 360 - 180);
+
+      piece.style.setProperty('--startX', startX + 'vw');
+      piece.style.setProperty('--startY', startY + 'vh');
+      piece.style.setProperty('--midX', midX + 'vw');
+      piece.style.setProperty('--midY', midY + 'vh');
+      piece.style.setProperty('--endX', endX + 'vw');
+      piece.style.setProperty('--endY', endY + 'vh');
+      piece.style.setProperty('--rot1', rot1 + 'deg');
+      piece.style.setProperty('--rot2', rot2 + 'deg');
+      piece.style.animationDelay = (Math.random() * 300) + 'ms';
+
+      confettiLayerEl.appendChild(piece);
+      (function (node) { setTimeout(function () { node.remove(); }, 3200); })(piece);
+    }
+  }
+
+  // Very sporadic after the first guaranteed burst — low chance, checked
+  // infrequently, so it reads as a rare treat rather than a repeating cycle.
+  var CONFETTI_SPORADIC_CHANCE = 0.03;
+  setInterval(function () {
+    if (state.totalEarned < MILLION_MILESTONE) return;
+    if (Math.random() > CONFETTI_SPORADIC_CHANCE) return;
+    spawnConfettiBurst();
+  }, 60000);
 
   function renderEffectsToggle() {
     effectsToggleBtn.textContent = state.reducedEffects ? 'On' : 'Off';

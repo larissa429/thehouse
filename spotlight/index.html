@@ -132,6 +132,42 @@
       15% { opacity: 0.85; }
       100% { opacity: 0; }
     }
+
+    /* Million-Spotlight confetti burst — viewport-wide, independent of
+       the game panel's own layout/scroll position. Fixed on <body>
+       directly (not nested under #spotlightGame) so no ancestor filter/
+       transform can ever confine it to a smaller box. */
+    .spotlight-confetti-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 200;
+    }
+    .spotlight-confetti-piece {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      animation-name: spotlightConfettiBurst;
+      animation-duration: 2.8s;
+      animation-fill-mode: forwards;
+    }
+    @keyframes spotlightConfettiBurst {
+      0% {
+        transform: translate(var(--startX), var(--startY)) rotate(0deg);
+        opacity: 0;
+        animation-timing-function: ease-out;
+      }
+      10% { opacity: 1; }
+      45% {
+        transform: translate(var(--midX), var(--midY)) rotate(var(--rot1));
+        animation-timing-function: ease-in;
+      }
+      100% {
+        transform: translate(var(--endX), var(--endY)) rotate(var(--rot2));
+        opacity: 0;
+      }
+    }
     .merge-restart.is-active {
       background: var(--lamp);
       color: var(--shadow);
@@ -463,6 +499,8 @@
     </div>
 
   </main>
+
+  <div class="spotlight-confetti-layer" id="spotlightConfettiLayer"></div>
 
   <site-footer></site-footer>
 

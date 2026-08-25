@@ -818,7 +818,7 @@
       // Vertical: eases from the launch kick toward a gentle terminal
       // fall speed instead of accelerating without limit — the integral
       // of vTerm + (v0 - vTerm)*e^(-k*t).
-      var yDecay = (1 - Math.exp(-CONFETTI_FALL_DRAG * t)) / CONFETTI_FALL_DRAG;
+      var yDecay = (1 - Math.exp(-p.fallDrag * t)) / p.fallDrag;
       var y = p.y0 + p.vyTerm * t + (p.vy0 - p.vyTerm) * yDecay;
 
       var rot = p.rot0 + p.rotSpeed * t;
@@ -883,6 +883,7 @@
         vx0: vx0,
         vy0: vy0,
         drag: 1.2 + Math.random() * 2.2, // per-piece, so decel isn't synchronized across the batch
+        fallDrag: 0.7 + Math.random() * 1.0,
         vyTerm: CONFETTI_TERMINAL_VY + Math.random() * 8, // gentle drift, slight variance so pieces don't fall in lockstep
         swayAmp: 2 + Math.random() * 5,
         swayFreq: 1.2 + Math.random() * 1.6,

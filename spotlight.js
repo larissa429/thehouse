@@ -903,6 +903,57 @@
     }
   }
 
+  // A little Easter egg: an old, unintentionally goofy build of this
+  // effect launched pieces in a slow, narrow, constant-speed stream
+  // instead of a burst — a friend found it hilarious, so it's kept
+  // around as a rare thing you can only stumble into by mashing the
+  // Blow Confetti button, never on the real milestone/sporadic bursts.
+  function spawnConfettiStream() {
+    var edge = Math.floor(Math.random() * 4);
+    var originX, originY, outX, outY;
+    if (edge === 0) { originX = -50; originY = Math.random() * 100 - 50; outX = 1; outY = 0; }
+    else if (edge === 1) { originX = 50; originY = Math.random() * 100 - 50; outX = -1; outY = 0; }
+    else if (edge === 2) { originX = Math.random() * 100 - 50; originY = -50; outX = 0; outY = 1; }
+    else { originX = Math.random() * 100 - 50; originY = 50; outX = 0; outY = -1; }
+
+    var now = performance.now();
+
+    for (var i = 0; i < CONFETTI_PIECE_COUNT; i++) {
+      var color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      var node = makeConfettiPiece(color, Math.random() < 0.5);
+      confettiLayerEl.appendChild(node);
+
+      var speed = 30 + Math.random() * 12; // slow, steady, narrow — the "stream"
+      var spreadSpeed = (Math.random() * 14 - 7);
+      var vx0, vy0;
+      if (outX !== 0) { vx0 = outX * speed; vy0 = spreadSpeed; }
+      else { vx0 = spreadSpeed; vy0 = outY * speed; }
+
+      confettiPieces.push({
+        node: node,
+        x0: originX,
+        y0: originY,
+        vx0: vx0,
+        vy0: vy0,
+        drag: 0.05, // near-zero: stays at roughly constant speed instead of easing out
+        fallDrag: 0.05,
+        vyTerm: vy0, // no gravity-driven fall — it just keeps going, that's the joke
+        swayAmp: 0,
+        swayFreq: 1,
+        swayPhase: 0,
+        rot0: Math.random() * 360,
+        rotSpeed: (Math.random() * 120 - 60),
+        lifetime: 3,
+        // spread out over ~1.2s so it trickles rather than pops
+        start: now + i * (1200 / CONFETTI_PIECE_COUNT) + Math.random() * 40
+      });
+    }
+
+    if (confettiRafId === null) {
+      confettiRafId = requestAnimationFrame(stepConfetti);
+    }
+  }
+
   // Very sporadic after the first guaranteed burst — low chance, checked
   // infrequently, so it reads as a rare treat rather than a repeating cycle.
   var CONFETTI_SPORADIC_CHANCE = 0.03;
@@ -940,8 +991,13 @@
     settingsToggleBtn.setAttribute('aria-expanded', String(open));
   });
 
+  var CONFETTI_STREAM_CHANCE = 0.05; // easter egg, only reachable via this button
   confettiTestBtn.addEventListener('click', function () {
-    spawnConfettiBurst(true); // force, bypassing Reduce Effects — this is an on-demand "show me" click
+    if (Math.random() < CONFETTI_STREAM_CHANCE) {
+      spawnConfettiStream();
+    } else {
+      spawnConfettiBurst(true); // force, bypassing Reduce Effects — this is an on-demand "show me" click
+    }
   });
   // Gold while actually pressed, back to normal on release — not a timed
   // flash, so it tracks the real press/release rather than a fixed duration.

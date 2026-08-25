@@ -303,6 +303,14 @@
     } else if (o.type === 'bench') {
       ctx.fillStyle = '#403022';
       ctx.fillRect(o.x, oy, o.w, o.h - 10);
+var backrestH = o.h - 10;
+var breakH = 2; // how thin each gap is
+ctx.clearRect(o.x, oy + backrestH / 3, o.w, breakH);
+ctx.clearRect(o.x, oy + backrestH * 2 / 3, o.w, breakH);
+var seatH = backrestH / 3;
+var seatW = o.w * 1.1;
+ctx.fillStyle = '#3D2D1F';
+ctx.fillRect(o.x - (seatW - o.w) / 2, oy + backrestH - seatH, seatW, seatH);
       ctx.fillStyle = '#251b15';
       ctx.fillRect(o.x + 4, oy + o.h - 10, 4, 10);
       ctx.fillRect(o.x + o.w - 8, oy + o.h - 10, 4, 10);

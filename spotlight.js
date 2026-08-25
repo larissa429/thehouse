@@ -339,6 +339,20 @@
       legacyMultBonus: 0.1,
       maxOwned: 10,
       minPrestige: 1
+    },
+    // Extends how long an absence can be credited for offline gains (see
+    // OFFLINE_CAP_MS) — the 12h base cap is a deliberate anti-exploit
+    // limit, not a technical one, so it's fair game to buy past.
+    {
+      id: 'standingArrangement',
+      kind: 'offlineCap',
+      name: 'Standing Arrangement',
+      desc: '+6 hours credited toward offline gains. Stacks up to 6 times.',
+      unlockAt: 50000,
+      baseCost: 80000,
+      costMultiplier: 1.5,
+      capBonusHours: 6,
+      maxOwned: 6
     }
   ];
 
@@ -724,7 +738,7 @@
 
   function renderShop() {
     renderShopSection(shopEl, ['building']);
-    renderShopSection(boostShopEl, ['click', 'discount', 'critChance', 'paparazzi', 'paparazziFreq', 'paparazziMult', 'legacyMult']);
+    renderShopSection(boostShopEl, ['click', 'discount', 'critChance', 'paparazzi', 'paparazziFreq', 'paparazziMult', 'legacyMult', 'offlineCap']);
   }
 
   function upgradeById(id) {
@@ -843,8 +857,15 @@
   // isn't a free-money exploit, and skipped entirely below a minimum gap
   // so a quick page refresh doesn't pop a modal for a few seconds' worth
   // of Spotlight.
-  var OFFLINE_CAP_MS = 12 * 60 * 60 * 1000; // 12 hours max credited
+  var OFFLINE_CAP_BASE_MS = 12 * 60 * 60 * 1000; // 12 hours max credited, before Standing Arrangement
   var OFFLINE_MIN_MS = 60 * 1000; // ignore gaps under a minute
+
+  function offlineCapMs() {
+    var bonusHours = UPGRADES.reduce(function (sum, u) {
+      return u.kind === 'offlineCap' ? sum + state.owned[u.id] * u.capBonusHours : sum;
+    }, 0);
+    return OFFLINE_CAP_BASE_MS + bonusHours * 60 * 60 * 1000;
+  }
 
   function formatDuration(ms) {
     var totalMin = Math.floor(ms / 60000);
@@ -859,11 +880,12 @@
     if (elapsedMs < OFFLINE_MIN_MS) return;
     var rate = totalRatePerMinute();
     if (rate <= 0) return;
-    var creditedMs = Math.min(elapsedMs, OFFLINE_CAP_MS);
+    var cap = offlineCapMs();
+    var creditedMs = Math.min(elapsedMs, cap);
     var amount = earnSpotlight(rate * (creditedMs / 60000));
     state.totalOfflineEarned += amount;
     offlineTimeEl.textContent = 'You were away for ' + formatDuration(elapsedMs) +
-      (elapsedMs > OFFLINE_CAP_MS ? ' (capped at ' + formatDuration(OFFLINE_CAP_MS) + ')' : '') + '.';
+      (elapsedMs > cap ? ' (capped at ' + formatDuration(cap) + ')' : '') + '.';
     offlineAmountEl.textContent = '+' + formatNumber(Math.floor(amount)) + ' Spotlight';
     offlineOverlayEl.hidden = false;
   }

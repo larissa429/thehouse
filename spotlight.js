@@ -63,7 +63,7 @@
 
   // Rare (5% per click) — bigger payout, bigger reaction.
   var CRIT_LINES = [
-    { es: '¡Ovación de pie!', en: 'A standing ovation!' },
+    { es: '¡Aplausos y Ovaciones a mi!', en: 'Praises and Glory to me!' },
     { es: '¡Bravo, bravo!', en: 'Bravo, bravo!' },
     { es: 'Esto merece un premio.', en: 'This deserves an award.' },
     { es: '¡El público la ama!', en: 'The audience adores her!' }
@@ -806,20 +806,31 @@
       t = (now - p.start) / 1000;
       if (t < 0) { stillActive = true; continue; } // hasn't launched yet (delay)
 
-      // Horizontal: pure drag decay — eases out from the launch speed
-      // toward a standstill, integral of v0*e^(-k*t). Each piece carries
-      // its own drag constant (see spawnConfettiBurst) instead of one
-      // shared value, so 36 pieces don't all finish slowing down at the
-      // same instant — that synchronized stop was what read as "one
-      // condensed batch" no matter how the single constant was tuned.
-      var xDecay = (1 - Math.exp(-p.drag * t)) / p.drag;
-      var x = p.x0 + p.vx0 * xDecay + p.swayAmp * Math.sin(t * p.swayFreq + p.swayPhase);
+      var x, y;
+      if (p.gravity) {
+        // Original plain-projectile-motion easter-egg pieces: constant
+        // horizontal velocity, real constant downward acceleration.
+        // x = x0 + vx*t, y = y0 + vy0*t + 0.5*g*t^2 — the exact formula
+        // from the first rAF rewrite (commit 07ee1a9), kept byte-for-byte
+        // since that's specifically the version that got a laugh.
+        x = p.x0 + p.vx * t;
+        y = p.y0 + p.vy0 * t + 0.5 * CONFETTI_STREAM_GRAVITY * t * t;
+      } else {
+        // Horizontal: pure drag decay — eases out from the launch speed
+        // toward a standstill, integral of v0*e^(-k*t). Each piece carries
+        // its own drag constant (see spawnConfettiBurst) instead of one
+        // shared value, so 36 pieces don't all finish slowing down at the
+        // same instant — that synchronized stop was what read as "one
+        // condensed batch" no matter how the single constant was tuned.
+        var xDecay = (1 - Math.exp(-p.drag * t)) / p.drag;
+        x = p.x0 + p.vx0 * xDecay + p.swayAmp * Math.sin(t * p.swayFreq + p.swayPhase);
 
-      // Vertical: eases from the launch kick toward a gentle terminal
-      // fall speed instead of accelerating without limit — the integral
-      // of vTerm + (v0 - vTerm)*e^(-k*t).
-      var yDecay = (1 - Math.exp(-p.fallDrag * t)) / p.fallDrag;
-      var y = p.y0 + p.vyTerm * t + (p.vy0 - p.vyTerm) * yDecay;
+        // Vertical: eases from the launch kick toward a gentle terminal
+        // fall speed instead of accelerating without limit — the integral
+        // of vTerm + (v0 - vTerm)*e^(-k*t).
+        var yDecay = (1 - Math.exp(-p.fallDrag * t)) / p.fallDrag;
+        y = p.y0 + p.vyTerm * t + (p.vy0 - p.vyTerm) * yDecay;
+      }
 
       var rot = p.rot0 + p.rotSpeed * t;
 
@@ -903,11 +914,14 @@
     }
   }
 
-  // A little Easter egg: an old, unintentionally goofy build of this
-  // effect launched pieces in a slow, narrow, constant-speed stream
-  // instead of a burst — a friend found it hilarious, so it's kept
-  // around as a rare thing you can only stumble into by mashing the
-  // Blow Confetti button, never on the real milestone/sporadic bursts.
+  // A little Easter egg: the exact confetti physics from the first rAF
+  // rewrite (commit 07ee1a9) — plain constant-velocity-plus-gravity
+  // projectile motion with a wide random launch delay, which in
+  // practice reads as a slow, narrow, continuous stream rather than a
+  // punchy burst. A friend found it hilarious, so it's kept around as a
+  // rare thing you can only stumble into by mashing the Blow Confetti
+  // button — never on the real milestone/sporadic bursts.
+  var CONFETTI_STREAM_GRAVITY = 220; // vh/s^2 — same value as 07ee1a9
   function spawnConfettiStream() {
     var edge = Math.floor(Math.random() * 4);
     var originX, originY, outX, outY;
@@ -923,29 +937,23 @@
       var node = makeConfettiPiece(color, Math.random() < 0.5);
       confettiLayerEl.appendChild(node);
 
-      var speed = 30 + Math.random() * 12; // slow, steady, narrow — the "stream"
-      var spreadSpeed = (Math.random() * 14 - 7);
-      var vx0, vy0;
-      if (outX !== 0) { vx0 = outX * speed; vy0 = spreadSpeed; }
-      else { vx0 = spreadSpeed; vy0 = outY * speed; }
+      var speed = 55 + Math.random() * 45;
+      var spreadSpeed = (Math.random() * 60 - 30);
+      var vx, vy0;
+      if (outX !== 0) { vx = outX * speed; vy0 = spreadSpeed - 30; }
+      else { vx = spreadSpeed; vy0 = outY * speed - 20; }
 
       confettiPieces.push({
         node: node,
+        gravity: true,
         x0: originX,
         y0: originY,
-        vx0: vx0,
+        vx: vx,
         vy0: vy0,
-        drag: 0.05, // near-zero: stays at roughly constant speed instead of easing out
-        fallDrag: 0.6, // gravity still pulls it down and off screen eventually — just delayed
-        vyTerm: CONFETTI_TERMINAL_VY + Math.random() * 8,
-        swayAmp: 0,
-        swayFreq: 1,
-        swayPhase: 0,
         rot0: Math.random() * 360,
-        rotSpeed: (Math.random() * 120 - 60),
-        lifetime: 3,
-        // spread out over ~1.2s so it trickles rather than pops
-        start: now + i * (1200 / CONFETTI_PIECE_COUNT) + Math.random() * 40
+        rotSpeed: (Math.random() * 240 - 120),
+        lifetime: 2.6 + Math.random() * 1.0,
+        start: now + Math.random() * 450
       });
     }
 

@@ -74,7 +74,7 @@
     { es: 'Por fin. Ya me cansaba de hacerlo yo misma.', en: 'Finally. I was tired of doing this myself.' },
     { es: 'Una inversión inteligente, la verdad.', en: 'A smart investment, honestly.' },
     { es: 'Esto era necesario.', en: 'This was necessary.' },
-    { es: 'Ahora sí. Ahora empezamos de verdad.', en: 'Now, yes. Now we truly begin.' }
+    { es: 'Ahora sí. Empezamos de verdad.', en: 'Now, yes. Now we truly begin.' }
   ];
 
   // Add another tier by adding another entry here — unlockAt is measured
@@ -942,6 +942,8 @@
 
   confettiTestBtn.addEventListener('click', function () {
     spawnConfettiBurst(true); // force, bypassing Reduce Effects — this is an on-demand "show me" click
+    confettiTestBtn.classList.add('is-active');
+    setTimeout(function () { confettiTestBtn.classList.remove('is-active'); }, 400);
   });
 
   // Passive income ticks 4x/second for a smooth-feeling counter, adding

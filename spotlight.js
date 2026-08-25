@@ -217,6 +217,41 @@
       costMultiplier: 1.2,
       clickBonus: 60
     },
+    // Preparation had a big pacing gap here — three tiers covering
+    // unlockAt 5 to 5,000, then nothing pre-prestige until Legend Status
+    // at 20,000 — while Production has 8 tiers spread across the same
+    // range. These three fill it in, roughly matching Production's ~6x
+    // cost/value jump per tier.
+    {
+      id: 'methodActing',
+      kind: 'click',
+      name: 'Method Acting',
+      desc: "+150 Spotlight per click. She hasn't broken character since Tuesday.",
+      unlockAt: 15000,
+      baseCost: 22000,
+      costMultiplier: 1.21,
+      clickBonus: 150
+    },
+    {
+      id: 'closeUp',
+      kind: 'click',
+      name: 'Contractual Close-Up',
+      desc: "+550 Spotlight per click. It's in her contract now — every scene, her face, three seconds minimum.",
+      unlockAt: 100000,
+      baseCost: 140000,
+      costMultiplier: 1.21,
+      clickBonus: 550
+    },
+    {
+      id: 'monologue2',
+      kind: 'click',
+      name: 'Career-Defining Monologue',
+      desc: "+2,200 Spotlight per click. They'll show this scene at the retrospective.",
+      unlockAt: 700000,
+      baseCost: 900000,
+      costMultiplier: 1.21,
+      clickBonus: 2200
+    },
     {
       id: 'connections',
       kind: 'discount',

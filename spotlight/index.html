@@ -137,12 +137,58 @@
       color: var(--shadow);
     }
 
-    .spotlight-prestige-row {
+    .spotlight-gear-btn {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.1rem;
+      height: 2.1rem;
+      padding: 0;
+      background: transparent;
+      border: var(--edge);
+      border-radius: 6px;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .spotlight-gear-btn:hover { background: var(--wall-lit); }
+    .spotlight-gear-btn[aria-expanded="true"] {
+      background: var(--lamp);
+      color: var(--shadow);
+      border-color: var(--lamp);
+    }
+
+    .spotlight-settings-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      padding: 0.9rem 1rem;
+      margin: -0.3rem 0 1.2rem;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 8px;
+    }
+    .spotlight-settings-row {
       display: flex;
       align-items: center;
       gap: 0.8rem;
-      margin: -0.4rem 0 1.2rem;
     }
+    .spotlight-settings-label {
+      flex: 1;
+      font-family: var(--body);
+      color: var(--ink);
+      font-size: 0.95rem;
+    }
+    .spotlight-settings-divider {
+      border-top: var(--edge);
+      margin: 0.1rem 0;
+    }
+    .spotlight-danger-btn:hover {
+      background: var(--urgent);
+      color: white;
+      border-color: var(--urgent);
+    }
+
     .spotlight-prestige-btn:not(:disabled) {
       background: var(--lamp);
       color: var(--shadow);
@@ -362,13 +408,28 @@
           <span class="merge-hud-label">Legacy</span>
           <span class="merge-hud-value" id="spotlightLegacyCount">0</span>
         </div>
-        <button type="button" class="merge-restart" id="spotlightEffectsToggle">Reduce Effects</button>
-        <button type="button" class="merge-restart" id="spotlightReset">Reset</button>
+        <button type="button" class="spotlight-gear-btn" id="spotlightSettingsToggle" aria-label="Settings" aria-expanded="false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
+        </button>
       </div>
 
-      <div class="spotlight-prestige-row">
-        <button type="button" class="merge-restart spotlight-prestige-btn" id="spotlightPrestigeBtn" disabled>The Sequel</button>
-        <span class="spotlight-prestige-hint" id="spotlightPrestigeHint"></span>
+      <div class="spotlight-settings-panel" id="spotlightSettingsPanel" hidden>
+        <div class="spotlight-settings-row">
+          <span class="spotlight-settings-label">Reduce Effects</span>
+          <button type="button" class="merge-restart" id="spotlightEffectsToggle">Off</button>
+        </div>
+        <div class="spotlight-settings-row">
+          <span class="spotlight-settings-label">Shorthand Numbers</span>
+          <button type="button" class="merge-restart" id="spotlightNumberFormatToggle">On</button>
+        </div>
+        <div class="spotlight-settings-divider"></div>
+        <div class="spotlight-settings-row">
+          <button type="button" class="merge-restart spotlight-prestige-btn" id="spotlightPrestigeBtn" disabled>The Sequel</button>
+          <span class="spotlight-prestige-hint" id="spotlightPrestigeHint"></span>
+        </div>
+        <div class="spotlight-settings-row">
+          <button type="button" class="merge-restart spotlight-danger-btn" id="spotlightReset">Reset</button>
+        </div>
       </div>
 
       <div class="spotlight-columns">

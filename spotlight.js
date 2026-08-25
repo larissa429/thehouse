@@ -24,6 +24,9 @@
   var tabProductionBtn = document.getElementById('spotlightTabProduction');
   var fxLayerEl = document.getElementById('spotlightFxLayer');
   var effectsToggleBtn = document.getElementById('spotlightEffectsToggle');
+  var numberFormatToggleBtn = document.getElementById('spotlightNumberFormatToggle');
+  var settingsToggleBtn = document.getElementById('spotlightSettingsToggle');
+  var settingsPanelEl = document.getElementById('spotlightSettingsPanel');
   var paparazziBadgeEl = document.getElementById('spotlightPaparazziBadge');
   var paparazziBadgeMultEl = document.getElementById('spotlightPaparazziMultText');
   var legacyCountEl = document.getElementById('spotlightLegacyCount');
@@ -276,7 +279,7 @@
     }
   ];
 
-  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false, legacy: 0 };
+  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true };
   UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
 
   function loadSave() {
@@ -288,6 +291,7 @@
       if (typeof parsed.totalEarned === 'number') state.totalEarned = parsed.totalEarned;
       if (typeof parsed.reducedEffects === 'boolean') state.reducedEffects = parsed.reducedEffects;
       if (typeof parsed.legacy === 'number') state.legacy = parsed.legacy;
+      if (typeof parsed.shorthandNumbers === 'boolean') state.shorthandNumbers = parsed.shorthandNumbers;
       if (parsed.owned) {
         UPGRADES.forEach(function (u) {
           if (typeof parsed.owned[u.id] === 'number') state.owned[u.id] = parsed.owned[u.id];
@@ -456,11 +460,12 @@
   // Plain comma-formatted under 10,000 (still easy to read at a glance);
   // abbreviated with a K/M/B/T suffix above that, where the full digit
   // count starts getting unwieldy — trims trailing zeros so "1.00M"
-  // shows as "1M" but "1.25M" keeps its precision.
+  // shows as "1M" but "1.25M" keeps its precision. The Shorthand
+  // Numbers setting can turn the abbreviation off entirely.
   function formatNumber(n) {
     n = Math.floor(n);
     var abs = Math.abs(n);
-    if (abs < 10000) return n.toLocaleString();
+    if (abs < 10000 || !state.shorthandNumbers) return n.toLocaleString();
     var units = [[1e12, 'T'], [1e9, 'B'], [1e6, 'M'], [1e3, 'K']];
     for (var i = 0; i < units.length; i++) {
       if (abs >= units[i][0]) {
@@ -649,11 +654,17 @@
   portraitEl.addEventListener('click', handleClick);
 
   resetBtn.addEventListener('click', function () {
+    var confirmed = window.confirm(
+      'Reset everything?\n\nThis wipes your Spotlight, every Production and Preparation upgrade, AND your Legacy ' +
+      '(Reset does not keep Legacy — The Sequel does, if that\'s what you meant to do instead).'
+    );
+    if (!confirmed) return;
     var keepReducedEffects = state.reducedEffects; // a display preference, not progress — survives Reset
+    var keepShorthandNumbers = state.shorthandNumbers;
     // Unlike prestiging, the plain Reset button is a full wipe — Legacy
     // included. It's the "start completely over" button; The Sequel is
     // the one that keeps Legacy around.
-    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0 };
+    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     cancelPaparazzi();
     save();
@@ -728,13 +739,31 @@
   setInterval(maybeSpawnFx, 1200);
 
   function renderEffectsToggle() {
-    effectsToggleBtn.textContent = state.reducedEffects ? 'Full Effects' : 'Reduce Effects';
+    effectsToggleBtn.textContent = state.reducedEffects ? 'On' : 'Off';
     effectsToggleBtn.classList.toggle('is-active', state.reducedEffects);
   }
   effectsToggleBtn.addEventListener('click', function () {
     state.reducedEffects = !state.reducedEffects;
     save();
     renderEffectsToggle();
+  });
+
+  function renderNumberFormatToggle() {
+    numberFormatToggleBtn.textContent = state.shorthandNumbers ? 'On' : 'Off';
+    numberFormatToggleBtn.classList.toggle('is-active', state.shorthandNumbers);
+  }
+  numberFormatToggleBtn.addEventListener('click', function () {
+    state.shorthandNumbers = !state.shorthandNumbers;
+    save();
+    renderNumberFormatToggle();
+    renderCount();
+    refreshShopAffordability(); // re-formats every visible cost immediately
+  });
+
+  settingsToggleBtn.addEventListener('click', function () {
+    var open = settingsPanelEl.hidden;
+    settingsPanelEl.hidden = !open;
+    settingsToggleBtn.setAttribute('aria-expanded', String(open));
   });
 
   // Passive income ticks 4x/second for a smooth-feeling counter, adding
@@ -764,6 +793,7 @@
   renderCount();
   renderShop();
   renderEffectsToggle();
+  renderNumberFormatToggle();
   renderPrestige();
   schedulePaparazzi(); // no-op if not owned yet
 })();

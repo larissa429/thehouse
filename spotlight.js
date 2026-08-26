@@ -41,6 +41,7 @@
   var statsToggleBtn = document.getElementById('spotlightStatsToggle');
   var statsPanelEl = document.getElementById('spotlightStatsPanel');
   var statTotalEarnedEl = document.getElementById('spotlightStatTotalEarned');
+  var statLifetimeEarnedEl = document.getElementById('spotlightStatLifetimeEarned');
   var statPlayTimeEl = document.getElementById('spotlightStatPlayTime');
   var statClicksEl = document.getElementById('spotlightStatClicks');
   var statCritsEl = document.getElementById('spotlightStatCrits');
@@ -509,7 +510,7 @@
     return mult;
   }
 
-  var state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
+  var state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
   UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
 
   function loadSave() {
@@ -519,6 +520,11 @@
       var parsed = JSON.parse(raw);
       if (typeof parsed.spotlight === 'number') state.spotlight = parsed.spotlight;
       if (typeof parsed.totalEarned === 'number') state.totalEarned = parsed.totalEarned;
+      // Backfill for saves from before lifetimeEarned existed: best
+      // guess is at least this run's total (can't recover prior runs'
+      // totals, but it should never show less than what's visibly true).
+      state.lifetimeEarned = state.totalEarned;
+      if (typeof parsed.lifetimeEarned === 'number') state.lifetimeEarned = parsed.lifetimeEarned;
       if (typeof parsed.reducedEffects === 'boolean') state.reducedEffects = parsed.reducedEffects;
       if (typeof parsed.legacy === 'number') state.legacy = parsed.legacy;
       if (typeof parsed.shorthandNumbers === 'boolean') state.shorthandNumbers = parsed.shorthandNumbers;
@@ -704,9 +710,10 @@
     var keepTotalClicks = state.totalClicks;
     var keepTotalCrits = state.totalCrits;
     var keepTotalOfflineEarned = state.totalOfflineEarned;
+    var keepLifetimeEarned = state.lifetimeEarned;
     var keepUnlockedAchievements = state.unlockedAchievements;
     cancelPaparazzi();
-    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned, unlockedAchievements: keepUnlockedAchievements };
+    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: keepLifetimeEarned, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned, unlockedAchievements: keepUnlockedAchievements };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     save();
     lastLine = null;
@@ -903,7 +910,8 @@
   function earnSpotlight(rawAmount) {
     var amount = rawAmount * legacyMultiplier();
     state.spotlight += amount;
-    state.totalEarned += amount;
+    state.totalEarned += amount; // this run only — resets on prestige, feeds the Legacy gain calc
+    state.lifetimeEarned += amount; // never resets on prestige, only on a full Reset
     if (!state.seenMillion && state.totalEarned >= MILLION_MILESTONE) {
       state.seenMillion = true; // marks the moment as "happened" even if Reduce Effects hides the visual
       spawnConfettiBurst();
@@ -992,7 +1000,7 @@
     // Unlike prestiging, the plain Reset button is a full wipe — Legacy
     // included. It's the "start completely over" button; The Sequel is
     // the one that keeps Legacy around.
-    state = { spotlight: 0, totalEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
+    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     cancelPaparazzi();
     save();
@@ -1300,6 +1308,7 @@
 
   function renderStats() {
     statTotalEarnedEl.textContent = formatNumber(Math.floor(state.totalEarned)) + ' Spotlight';
+    statLifetimeEarnedEl.textContent = formatNumber(Math.floor(state.lifetimeEarned)) + ' Spotlight';
     statPlayTimeEl.textContent = formatDuration(state.playTimeMs);
     statClicksEl.textContent = state.totalClicks.toLocaleString();
     statCritsEl.textContent = state.totalCrits.toLocaleString();

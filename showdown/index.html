@@ -16,54 +16,17 @@
        before, cheaper to fix it globally here from the start. */
     [hidden] { display: none !important; }
 
+    /* Wide FNF-style playfield instead of Household's narrow portrait
+       board — needs real room for two side-by-side 4-lane highways plus
+       the characters standing in them. */
     #showdownGame {
-      max-width: 40rem;
-    }
-
-    .showdown-vs {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      margin: 0.5rem 0 1rem;
-    }
-    .showdown-fighter {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.3rem;
-      flex: 1 1 0;
-      min-width: 0;
-    }
-    .showdown-fighter img {
-      max-width: 6.5rem;
-      max-height: 6.5rem;
-      width: auto;
-      height: auto;
-      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5));
-      transition: transform 0.09s ease;
-    }
-    .showdown-fighter.is-bobbing img {
-      transform: scale(1.08) translateY(-0.2rem);
-    }
-    .showdown-fighter-name {
-      font-family: var(--label);
-      font-size: 0.75rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
-    }
-    .showdown-vs-label {
-      font-family: var(--display);
-      font-size: 1.3rem;
-      color: var(--lamp);
-      flex: 0 0 auto;
+      max-width: 62rem;
     }
 
     .showdown-stage {
       position: relative;
       width: 100%;
-      aspect-ratio: 3 / 4;
+      aspect-ratio: 16 / 9;
       background: var(--wall);
       border: var(--edge);
       border-radius: 10px;
@@ -73,6 +36,63 @@
       display: block;
       width: 100%;
       height: 100%;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Characters stand IN the playfield now, not in a row above it —
+       positioned absolutely under the (mostly-transparent) canvas so
+       the note highway visibly scrolls in front of them, then bop in
+       place on the beat via .is-bobbing. */
+    .showdown-fighter {
+      position: absolute;
+      top: 8%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      z-index: 1;
+      pointer-events: none;
+    }
+    #showdownOpponentFighter { left: 6%; }
+    #showdownPlayerFighter { right: 6%; }
+    .showdown-fighter img {
+      max-width: 8rem;
+      max-height: 8rem;
+      width: auto;
+      height: auto;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5));
+      transition: transform 0.09s ease;
+    }
+    .showdown-fighter.is-bobbing img {
+      transform: scale(1.08) translateY(-0.2rem);
+    }
+    /* Punchier one-off pop when a note actually lands, vs. the steady
+       ambient bop above — placed after it so it wins when both classes
+       are on the element at once (same specificity, source order). */
+    .showdown-fighter.is-hit img {
+      transform: scale(1.18) translateY(-0.4rem);
+    }
+    .showdown-fighter-name {
+      font-family: var(--label);
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      background: rgba(0,0,0,0.45);
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+    }
+    .showdown-vs-label {
+      position: absolute;
+      top: 4%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--display);
+      font-size: 1.1rem;
+      color: var(--lamp);
+      z-index: 1;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.6);
     }
 
     .showdown-lane-buttons {
@@ -152,24 +172,22 @@
         <button type="button" class="merge-restart" id="showdownRestart">Restart</button>
       </div>
 
-      <div class="showdown-vs">
-        <div class="showdown-fighter" id="showdownPlayerFighter">
-          <img src="../images/lp.png" alt="LP" id="showdownPlayerImg" draggable="false" />
-          <img src="../images/cassette.png" alt="Cassette" id="showdownPlayerImg2" draggable="false" style="max-width:5rem;max-height:5rem;" />
-          <span class="showdown-fighter-name">LP &amp; Cassette</span>
-        </div>
-        <span class="showdown-vs-label">VS</span>
+      <div class="showdown-stage" id="showdownStage">
         <div class="showdown-fighter" id="showdownOpponentFighter">
           <img src="../images/indigo.png" alt="Indigo" id="showdownOpponentImg" draggable="false" />
           <span class="showdown-fighter-name" id="showdownOpponentName">Indigo</span>
         </div>
-      </div>
-
-      <div class="showdown-stage" id="showdownStage">
+        <div class="showdown-fighter" id="showdownPlayerFighter">
+          <img src="../images/lp.png" alt="LP" id="showdownPlayerImg" draggable="false" style="max-width:6rem;max-height:6rem;" />
+          <img src="../images/cassette.png" alt="Cassette" id="showdownPlayerImg2" draggable="false" style="max-width:4rem;max-height:4rem;" />
+          <span class="showdown-fighter-name">LP &amp; Cassette</span>
+        </div>
+        <span class="showdown-vs-label">VS</span>
         <canvas id="showdownCanvas"></canvas>
         <div class="showdown-overlay" id="showdownStart">
           <h2>At The End Of The Line&hellip;</h2>
-          <p>4 lanes, arrow keys (or tap below on mobile). Hit each note as it reaches the bar. Round ends at the beat drop (~55s).</p>
+          <p>Indigo sings first &mdash; watch. Then it's your turn: arrow keys (or tap below on mobile), hit each note
+            as it reaches the bar. Round ends at the beat drop (~55s).</p>
           <button type="button" class="merge-restart" id="showdownStartBtn">Start</button>
         </div>
         <div class="showdown-overlay" id="showdownEnd" hidden>

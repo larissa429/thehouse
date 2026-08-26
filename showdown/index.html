@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Track Record &middot; The House</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    #showdownGame {
+      max-width: 40rem;
+    }
+
+    .showdown-vs {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin: 0.5rem 0 1rem;
+    }
+    .showdown-fighter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .showdown-fighter img {
+      max-width: 6.5rem;
+      max-height: 6.5rem;
+      width: auto;
+      height: auto;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5));
+      transition: transform 0.09s ease;
+    }
+    .showdown-fighter.is-bobbing img {
+      transform: scale(1.08) translateY(-0.2rem);
+    }
+    .showdown-fighter-name {
+      font-family: var(--label);
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .showdown-vs-label {
+      font-family: var(--display);
+      font-size: 1.3rem;
+      color: var(--lamp);
+      flex: 0 0 auto;
+    }
+
+    .showdown-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #showdownCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .showdown-lane-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.6rem;
+      margin-top: 0.8rem;
+    }
+    .showdown-lane-btn {
+      padding: 0.7rem 0;
+      font-family: var(--display);
+      font-size: 1.3rem;
+      text-align: center;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 8px;
+      color: var(--ink);
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .showdown-lane-btn.is-pressed {
+      background: var(--lamp);
+      color: var(--shadow);
+    }
+
+    .showdown-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      background: rgba(0,0,0,0.72);
+      text-align: center;
+      padding: 1rem;
+    }
+    .showdown-overlay p {
+      margin: 0;
+      font-family: var(--body);
+      color: var(--ink-soft);
+      max-width: 24rem;
+    }
+    .showdown-overlay h2 {
+      margin: 0;
+      font-family: var(--display);
+      color: var(--paper);
+    }
+  </style>
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+    <span class="eyebrow breadcrumb"><a href="../games/">&larr; Games</a></span>
+
+    <h1>Track Record</h1>
+    <p>LP &amp; Cassette step up to the mic. Hit the arrows in time with the beat &mdash; miss too many and the crowd
+      notices. <strong>Playtest note:</strong> this is running on a generated placeholder beat, not a real track yet.</p>
+
+    <div class="merge-game" id="showdownGame">
+      <div class="merge-hud">
+        <div class="merge-hud-block">
+          <span class="merge-hud-label">Score</span>
+          <span class="merge-hud-value" id="showdownScore">0</span>
+        </div>
+        <div class="merge-hud-block">
+          <span class="merge-hud-label">Combo</span>
+          <span class="merge-hud-value" id="showdownCombo">0</span>
+        </div>
+        <button type="button" class="merge-restart" id="showdownRestart">Restart</button>
+      </div>
+
+      <div class="showdown-vs">
+        <div class="showdown-fighter" id="showdownPlayerFighter">
+          <img src="../images/lp.png" alt="LP" id="showdownPlayerImg" draggable="false" />
+          <img src="../images/cassette.png" alt="Cassette" id="showdownPlayerImg2" draggable="false" style="max-width:5rem;max-height:5rem;" />
+          <span class="showdown-fighter-name">LP &amp; Cassette</span>
+        </div>
+        <span class="showdown-vs-label">VS</span>
+        <div class="showdown-fighter" id="showdownOpponentFighter">
+          <img src="../images/indigo.png" alt="Indigo" id="showdownOpponentImg" draggable="false" />
+          <span class="showdown-fighter-name" id="showdownOpponentName">Indigo</span>
+        </div>
+      </div>
+
+      <div class="showdown-stage" id="showdownStage">
+        <canvas id="showdownCanvas"></canvas>
+        <div class="showdown-overlay" id="showdownStart">
+          <h2>Warm-Up</h2>
+          <p>4 lanes, arrow keys (or tap below on mobile). Hit each note as it reaches the bar.</p>
+          <button type="button" class="merge-restart" id="showdownStartBtn">Start</button>
+        </div>
+        <div class="showdown-overlay" id="showdownEnd" hidden>
+          <h2 id="showdownEndTitle">Round Complete</h2>
+          <p id="showdownEndStats"></p>
+          <button type="button" class="merge-restart" id="showdownRestart2">Play Again</button>
+        </div>
+      </div>
+
+      <div class="showdown-lane-buttons">
+        <button type="button" class="showdown-lane-btn" data-lane="0">&larr;</button>
+        <button type="button" class="showdown-lane-btn" data-lane="1">&darr;</button>
+        <button type="button" class="showdown-lane-btn" data-lane="2">&uarr;</button>
+        <button type="button" class="showdown-lane-btn" data-lane="3">&rarr;</button>
+      </div>
+    </div>
+
+  </main>
+
+  <site-footer></site-footer>
+
+  <script src="../components.js" defer></script>
+  <script src="../showdown.js" defer></script>
+</body>
+</html>

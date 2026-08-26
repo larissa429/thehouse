@@ -2022,7 +2022,26 @@
     computePinnedTop();
   }
 
-  window.addEventListener('resize', updatePinnedLayout);
+  // Mobile browsers fire 'resize' when the address bar collapses/expands
+  // during an ordinary scroll — window.innerHeight changes, innerWidth
+  // doesn't. A naive resize handler doing the full unpin/remeasure/
+  // repin cycle (which briefly zeroes marginTop before reapplying it)
+  // then fires mid-scroll, right when that's most likely: scrolled all
+  // the way down, address bar re-expands as you start scrolling back up
+  // — and the transient zeroed margin yanks the page's scroll position
+  // with it. Only the real thing (a width change — rotation, browser
+  // window resize, crossing the mobile/desktop breakpoint) needs the
+  // full rebuild; a height-only change just needs computePinnedTop()
+  // re-run with the current height, which doesn't touch the DOM at all.
+  var lastPinnedWidth = window.innerWidth;
+  window.addEventListener('resize', function () {
+    if (window.innerWidth !== lastPinnedWidth) {
+      lastPinnedWidth = window.innerWidth;
+      updatePinnedLayout();
+    } else {
+      computePinnedTop();
+    }
+  });
   window.addEventListener('scroll', queuePinnedScrollUpdate);
   if (PIN_BREAKPOINT.addEventListener) PIN_BREAKPOINT.addEventListener('change', updatePinnedLayout);
   // The very first updatePinnedLayout() call (at the bottom of this file)

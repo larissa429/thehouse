@@ -327,6 +327,34 @@
       multiplierBonus: 1,
       maxOwned: 5
     },
+    // Passive income normally ignores the paparazzi window entirely (it's
+    // built around manual clicks) — this makes it benefit too, automatically,
+    // no clicking required. See the passive-tick interval below.
+    {
+      id: 'publicist',
+      kind: 'paparazziPassive',
+      requires: 'paparazzi',
+      name: 'Personal Publicist',
+      desc: "Your passive income gets the paparazzi's multiplier too — no clicking required.",
+      unlockAt: 5000,
+      baseCost: 15000,
+      costMultiplier: 1,
+      maxOwned: 1
+    },
+    // Stretches the 5-second window itself rather than the payout —
+    // more time to actually land clicks during it.
+    {
+      id: 'extendedCut',
+      kind: 'paparazziDuration',
+      requires: 'paparazzi',
+      name: 'Extended Cut',
+      desc: '+1 second to the paparazzi spotlight window. Stacks up to 5 times.',
+      unlockAt: 2000,
+      baseCost: 3000,
+      costMultiplier: 1.5,
+      durationBonusMs: 1000,
+      maxOwned: 5
+    },
     {
       id: 'scandal',
       kind: 'paparazziMult',
@@ -358,11 +386,93 @@
       id: 'legendStatus',
       kind: 'click',
       name: 'Legend Status',
-      desc: '+400 Spotlight per click.',
+      desc: '+10,000 Spotlight per click.',
       unlockAt: 20000,
       baseCost: 40000,
       costMultiplier: 1.22,
-      clickBonus: 400,
+      clickBonus: 10000,
+      minPrestige: 1
+    },
+    // Click power kept going stale by mid-late game (100M+ Spotlight
+    // makes +400/click a rounding error) — these three keep the curve
+    // meaningful well past that, each roughly 8x the last.
+    {
+      id: 'worldPremiere',
+      kind: 'click',
+      name: 'World Premiere',
+      desc: '+60,000 Spotlight per click.',
+      unlockAt: 250000,
+      baseCost: 400000,
+      costMultiplier: 1.22,
+      clickBonus: 60000,
+      minPrestige: 1
+    },
+    {
+      id: 'waxFigure',
+      kind: 'click',
+      name: 'Immortalized in Wax',
+      desc: '+400,000 Spotlight per click.',
+      unlockAt: 3000000,
+      baseCost: 4500000,
+      costMultiplier: 1.22,
+      clickBonus: 400000,
+      minPrestige: 1
+    },
+    {
+      id: 'livingLegend',
+      kind: 'click',
+      name: 'Living Legend',
+      desc: '+3,000,000 Spotlight per click.',
+      unlockAt: 40000000,
+      baseCost: 60000000,
+      costMultiplier: 1.22,
+      clickBonus: 3000000,
+      minPrestige: 1
+    },
+    {
+      id: 'legacyContract',
+      kind: 'click',
+      name: 'Legacy Contract',
+      desc: '+25,000,000 Spotlight per click.',
+      unlockAt: 500000000,
+      baseCost: 750000000,
+      costMultiplier: 1.22,
+      clickBonus: 25000000,
+      minPrestige: 1
+    },
+    // Same idea for passive income — World Tour was the last stop before
+    // things went stale too.
+    {
+      id: 'franchiseDeal',
+      kind: 'building',
+      name: 'Franchise Deal',
+      desc: 'Spin-offs, merchandise, a theme park attraction. 12,000,000 clicks / minute.',
+      unlockAt: 30000000,
+      baseCost: 35000000,
+      costMultiplier: 1.19,
+      ratePerMinute: 12000000,
+      minPrestige: 1
+    },
+    {
+      id: 'culturalIcon',
+      kind: 'building',
+      name: 'Cultural Icon Status',
+      desc: "She's taught in schools now. 90,000,000 clicks / minute.",
+      unlockAt: 300000000,
+      baseCost: 350000000,
+      costMultiplier: 1.19,
+      ratePerMinute: 90000000,
+      minPrestige: 1
+    },
+    {
+      id: 'permanentWing',
+      kind: 'building',
+      name: 'A Museum Wing, Permanently',
+      desc: 'Not on loan. Not rotating. Hers, forever. 700,000,000 clicks / minute.',
+      unlockAt: 3000000000,
+      baseCost: 3500000000,
+      costMultiplier: 1.19,
+      ratePerMinute: 700000000,
       minPrestige: 1
     },
     // Spends Spotlight (not Legacy) to permanently boost the per-point
@@ -635,6 +745,12 @@
     return factor;
   }
 
+  function paparazziWindowMs() {
+    return UPGRADES.reduce(function (sum, u) {
+      return u.kind === 'paparazziDuration' ? sum + state.owned[u.id] * u.durationBonusMs : sum;
+    }, PAPARAZZI_WINDOW_MS);
+  }
+
   function schedulePaparazzi() {
     clearTimeout(paparazziTimer);
     if (state.owned.paparazzi <= 0) return; // not unlocked
@@ -655,7 +771,7 @@
       portraitWrapEl.classList.remove('is-paparazzi');
       paparazziBadgeEl.hidden = true;
       schedulePaparazzi();
-    }, PAPARAZZI_WINDOW_MS);
+    }, paparazziWindowMs());
   }
 
   function cancelPaparazzi() {
@@ -811,7 +927,7 @@
 
   function renderShop() {
     renderShopSection(shopEl, ['building']);
-    renderShopSection(boostShopEl, ['click', 'clickPowerMult', 'discount', 'critChance', 'paparazzi', 'paparazziFreq', 'paparazziMult', 'legacyMult', 'offlineCap']);
+    renderShopSection(boostShopEl, ['click', 'clickPowerMult', 'discount', 'critChance', 'paparazzi', 'paparazziFreq', 'paparazziMult', 'paparazziPassive', 'paparazziDuration', 'legacyMult', 'offlineCap']);
     // The shop's height just potentially changed (an upgrade unlocked,
     // maxed out, etc.) — the pinned column's floor depends on where the
     // shop column's bottom edge actually is, so re-measure it. No-op
@@ -1520,7 +1636,8 @@
     var perSecond = totalRatePerMinute() / 60;
     if (perSecond <= 0) return;
     var beforeUnlocked = unlockedCount();
-    earnSpotlight(perSecond / 4);
+    var passivePaparazziBonus = (paparazziActive && state.owned.publicist > 0) ? paparazziMultiplier() : 1;
+    earnSpotlight((perSecond / 4) * passivePaparazziBonus);
     renderCount();
     renderPrestige();
     // Rebuild only if passive income just crossed an unlock threshold —

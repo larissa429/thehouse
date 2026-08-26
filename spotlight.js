@@ -1569,14 +1569,16 @@
     var ceiling = PIN_BREAKPOINT.matches ? (window.innerHeight - elH) / 2 : 0;
     var naturalTopNow = pinnedNaturalDocTop - window.scrollY; // where she'd be on screen if still in flow
     var floorTopNow = pinnedContainerDocBottom - elH - window.scrollY; // lowest she's allowed to sit
-    // Floor wins if it conflicts with the ceiling (shop shorter than her
-    // own box, e.g. right after a Reset/Sequel with a settings panel
-    // still open) — not covering the footer matters more than sitting
-    // exactly at the ceiling/natural position. An earlier version of
-    // this had an "exception" that reverted to naturalTopNow whenever
-    // the shop was short, which defeated the floor clamp almost any
-    // time the shop was shorter than her box — exactly backwards, and
-    // the actual cause of her clipping down past the footer.
+    // Floor wins if it conflicts with the ceiling — not covering the
+    // footer matters more than sitting exactly at the ideal centered
+    // position. (An earlier version had an exception that reverted to
+    // naturalTopNow instead whenever the shop was short, which defeated
+    // the floor almost any time the shop was shorter than her box.) The
+    // real fix for "floor clamps her before there's any real reason to"
+    // is in updatePinnedLayout() below — reserving real vertical space
+    // for her on desktop, not patching the clamp math here, since the
+    // floor is only ever wrong when the page itself doesn't actually
+    // have room for her, and that's a layout problem, not a clamping one.
     var top = Math.min(Math.max(ceiling, naturalTopNow), floorTopNow);
     spotlightLeftEl.style.top = top + 'px';
   }
@@ -1598,6 +1600,7 @@
     spotlightLeftEl.style.top = '';
     spotlightRightEl.style.marginLeft = '';
     spotlightRightEl.style.marginTop = '';
+    spotlightRightEl.parentElement.style.minHeight = '';
 
     var rect = spotlightLeftEl.getBoundingClientRect();
     pinnedNaturalDocTop = rect.top + window.scrollY;
@@ -1615,6 +1618,17 @@
     if (PIN_BREAKPOINT.matches) {
       var gapPx = parseFloat(getComputedStyle(spotlightRightEl.parentElement).gap) || 0;
       spotlightRightEl.style.marginLeft = (rect.width + gapPx) + 'px';
+      // Being position:fixed, she no longer contributes any height to
+      // the row — normally fine (the shop naturally grows taller than
+      // her), but when the shop is short (freshly unlocked, or right
+      // after Reset/Sequel) the row — and everything below it,
+      // including the footer — collapses down to the shop's height
+      // alone. Her fixed box then geometrically overlaps the footer
+      // regardless of scroll position, since nothing ever reserved
+      // room for her. Giving the row a min-height matching her real
+      // size fixes that at the source instead of trying to clamp
+      // around it after the fact.
+      spotlightRightEl.parentElement.style.minHeight = spotlightLeftEl.offsetHeight + 'px';
     } else {
       // +13px (~0.8rem) of actual breathing room below the pinned
       // header's own border-bottom, matching the gap below the tabs —
@@ -1622,13 +1636,17 @@
       // the tabs visibly touch the border line.
       spotlightRightEl.style.marginTop = (spotlightLeftEl.offsetHeight + 13) + 'px';
     }
-    // Measured last, after marginTop/marginLeft actually landed — doing
-    // this earlier (before the reserved space was applied) captured the
-    // shop's bottom edge at its old, un-pushed-down position, making the
-    // floor think the shop ended much higher than it really does. With a
-    // short shop list that let her genuinely clip down past the real
-    // bottom of the page instead of stopping there.
-    pinnedContainerDocBottom = spotlightRightEl.getBoundingClientRect().bottom + window.scrollY;
+    // Measured off .spotlight-columns itself, not spotlightRightEl — on
+    // desktop the row has align-items:flex-start, so giving the ROW a
+    // min-height (above) doesn't stretch the shop ITEM to fill it; the
+    // shop's own getBoundingClientRect().bottom stays at its short
+    // natural content height regardless, which would silently undo the
+    // min-height reservation for this measurement's purposes. Also
+    // measured last, after marginTop/marginLeft/minHeight actually
+    // landed — doing this earlier captured the row's bottom edge at its
+    // old, un-reserved position, which is what let her genuinely clip
+    // down past the real bottom of the page with a short shop list.
+    pinnedContainerDocBottom = spotlightRightEl.parentElement.getBoundingClientRect().bottom + window.scrollY;
     computePinnedTop();
   }
 

@@ -7,7 +7,7 @@
   <meta name="description" content="The House &middot; an object show" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&family=Joti+One&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
   <style>
     /* Guards every [hidden] element in this page against being overridden
@@ -70,6 +70,17 @@
         background: var(--wall);
         border-bottom: var(--edge);
         padding: 0.6rem 1.5rem 0.8rem;
+      }
+      /* .spotlight-rate's own margin-bottom (meant for desktop, where
+         there's no padding-bottom on the box already doing that job)
+         was stacking on top of is-pinned's padding-bottom above,
+         roughly doubling the gap above the tabs compared to the gap
+         below them. The box's padding is the only thing that should
+         set that space here. */
+      .spotlight-left.is-pinned #spotlightRate,
+      .spotlight-left.is-pinned #spotlightClickRate,
+      .spotlight-left.is-pinned #spotlightPaparazziBadge {
+        margin-bottom: 0;
       }
     }
 
@@ -466,16 +477,16 @@
       transform: rotate(45deg);
     }
     .spotlight-bubble-es {
-      font-family: var(--hand);
-      font-size: 1.25rem;
-      line-height: 1.25;
+      font-family: 'Joti One', var(--hand);
+      font-size: 1.15rem;
+      line-height: 1.35;
       margin: 0;
     }
     .spotlight-bubble-en {
-      font-family: var(--hand);
-      font-size: 0.9rem;
-      line-height: 1.2;
-      margin: 0.25rem 0 0;
+      font-family: 'Joti One', var(--hand);
+      font-size: 0.85rem;
+      line-height: 1.3;
+      margin: 0.3rem 0 0;
       opacity: 0.5;
     }
     @media (max-width: 520px) {
@@ -505,7 +516,10 @@
     .spotlight-tab-row {
       display: flex;
       gap: 0.5rem;
-      margin-bottom: 0.7rem;
+      /* Matches .spotlight-left.is-pinned's padding-bottom (mobile) so
+         the gap above the tabs (below AP) and below the tabs (above the
+         first upgrade card) read as the same spacing. */
+      margin-bottom: 0.8rem;
     }
     .spotlight-tab-btn {
       font-family: var(--label);

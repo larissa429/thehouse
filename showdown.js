@@ -2,10 +2,11 @@
    showdown.js — "Track Record", an FNF-style rhythm battle.
    LP & Cassette (player side) vs a rotating cast of opponents.
 
-   MVP scope: one song ("Warm-Up"), 4 lanes, generated placeholder
-   beat + procedurally-generated chart (no real audio file yet — the
-   scheduling below is built so a real track + hand-authored chart can
-   drop in later via the SONGS array without touching the engine).
+   MVP scope: one song ("At The End Of The Line..."), 4 lanes, a real
+   audio track driving the clock, and a procedurally-generated chart
+   (no hand-authored chart yet — the note pattern is a seeded random
+   walk over the track's BPM grid, not actually written to match its
+   real melody/hits, just its tempo).
    ============================================================ */
 (function () {
   var root = document.getElementById('showdownGame');
@@ -41,10 +42,14 @@
   var HIT_WINDOW = 0.18; // seconds — outside this, a press does nothing and a note auto-misses
   var SICK_WINDOW = 0.07;
 
-  var BPM = 100;
+  var BPM = 106;
   var BEAT_SEC = 60 / BPM;
-  var SONG_LENGTH_SEC = 40;
+  var SONG_LENGTH_SEC = 55; // the beat drop makes for a clean cutoff — not the full 4:13 track
   var LEAD_IN_SEC = 1.6; // silence before the first note so the player isn't caught off guard
+
+  var SONG_SRC = 'at-the-end-of-the-line.mp3';
+  var songAudio = new Audio(SONG_SRC);
+  songAudio.preload = 'auto';
 
   // Deterministic pseudo-random (mulberry32) so the same "chart" plays
   // every run — replayable, and swappable later for a hand-authored one.
@@ -73,8 +78,6 @@
     return notes;
   }
 
-  var audioCtx = null;
-  var songStartCtxTime = 0;
   var chart = [];
   var running = false;
   var score = 0;
@@ -83,40 +86,29 @@
   var hits = 0;
   var judgments = []; // {text, lane, time} — brief on-screen feedback
 
+  // The <audio> element's own playback position IS the song clock — chart
+  // times, note-scroll, and judging all read off this, so they can never
+  // drift out of sync with what's actually playing.
   function now() {
-    return audioCtx ? audioCtx.currentTime - songStartCtxTime : 0;
+    return songAudio.currentTime;
   }
 
-  // --- placeholder beat -------------------------------------------------
-  // A simple synthesized kick/hat pattern, scheduled once at song start
-  // against the same AudioContext clock the chart/visuals use — so audio
-  // and notes can never drift apart. Swap for a real <audio> track later
-  // (drive `now()` off audioEl.currentTime instead) without touching the
-  // scrolling/judging logic below.
-  function scheduleBeat() {
-    var beats = Math.floor(SONG_LENGTH_SEC / BEAT_SEC);
-    for (var i = 0; i < beats; i++) {
-      var t = songStartCtxTime + i * BEAT_SEC;
-      playBlip(t, i % 2 === 0 ? 110 : 220, i % 2 === 0 ? 0.09 : 0.05, i % 2 === 0 ? 0.5 : 0.18);
-    }
-  }
-
-  function playBlip(atTime, freq, duration, gainAmt) {
-    var osc = audioCtx.createOscillator();
-    var gain = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(gainAmt, atTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, atTime + duration);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(atTime);
-    osc.stop(atTime + duration + 0.02);
-  }
-
+  // Tiny separate context just for the on-hit "ding" — not used for
+  // timing anything, purely a feedback sound layered on top of the song.
+  var sfxCtx = null;
   function playHitBlip() {
-    if (!audioCtx) return;
-    playBlip(audioCtx.currentTime, 660, 0.06, 0.25);
+    if (!sfxCtx) sfxCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = sfxCtx.createOscillator();
+    var gain = sfxCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 660;
+    var t = sfxCtx.currentTime;
+    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    osc.connect(gain);
+    gain.connect(sfxCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.08);
   }
 
   // --- input --------------------------------------------------------
@@ -250,6 +242,7 @@
 
   function endRound() {
     running = false;
+    songAudio.pause();
     var total = chart.length;
     var accuracy = total > 0 ? Math.round((hits / total) * 100) : 0;
     endTitleEl.textContent = accuracy >= 80 ? 'Showstopper!' : accuracy >= 50 ? 'Round Complete' : 'Tough Crowd';
@@ -263,10 +256,9 @@
     score = 0; combo = 0; maxCombo = 0; hits = 0; judgments = [];
     updateHud();
     chart = generateChart();
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    songStartCtxTime = audioCtx.currentTime + 0.15;
-    scheduleBeat();
+    songAudio.pause();
+    songAudio.currentTime = 0;
+    songAudio.play();
     running = true;
     requestAnimationFrame(tick);
   }

@@ -806,6 +806,11 @@
   function renderShop() {
     renderShopSection(shopEl, ['building']);
     renderShopSection(boostShopEl, ['click', 'clickPowerMult', 'discount', 'critChance', 'paparazzi', 'paparazziFreq', 'paparazziMult', 'legacyMult', 'offlineCap']);
+    // The shop's height just potentially changed (an upgrade unlocked,
+    // maxed out, etc.) — the pinned column's floor depends on where the
+    // shop column's bottom edge actually is, so re-measure it. No-op
+    // before the pin machinery further down the file has initialized.
+    if (typeof updatePinnedLayout === 'function' && spotlightLeftEl) updatePinnedLayout();
   }
 
   function upgradeById(id) {
@@ -1018,6 +1023,9 @@
     shopEl.hidden = showBoost;
     tabBoostBtn.classList.toggle('is-active', showBoost);
     tabProductionBtn.classList.toggle('is-active', !showBoost);
+    // Preparation/Production can be very different lengths — the pinned
+    // column's floor needs to know the newly-visible list's real height.
+    if (typeof updatePinnedLayout === 'function' && spotlightLeftEl) updatePinnedLayout();
   }
   tabBoostBtn.addEventListener('click', function () { setTab('boost'); });
   tabProductionBtn.addEventListener('click', function () { setTab('production'); });
@@ -1487,15 +1495,41 @@
   // --- pin the portrait/bubble column while the shop list scrolls -----
   // Desktop only: keeps her vertically centered in the viewport, still
   // to the left of the upgrade list, while the (often long) shop
-  // scrolls past. position:sticky with a percentage `top` turned out to
-  // be unreliable (percentage sticky offsets need an explicitly-sized
-  // scroll container to resolve against — the page body isn't one), so
-  // this measures the column's natural, in-flow position/width and
-  // applies true position:fixed instead, re-measuring on every resize
-  // so it stays lined up if the layout reflows.
+  // scrolls past — but clamped between a ceiling (never above where she
+  // naturally starts, so she can't float up over the page heading on a
+  // short or freshly-loaded page) and a floor (never below the bottom
+  // of the shop list). position:sticky with a percentage `top` turned
+  // out to be unreliable (percentage sticky offsets need an
+  // explicitly-sized scroll container to resolve against — the page
+  // body isn't one), so this measures the column's natural, in-flow
+  // position and the shop column's bottom edge, then applies true
+  // position:fixed with `top` computed and clamped on every scroll.
   var spotlightLeftEl = document.querySelector('.spotlight-left');
   var spotlightRightEl = document.querySelector('.spotlight-right');
   var PIN_BREAKPOINT = window.matchMedia('(min-width: 641px)');
+  var pinnedNaturalDocTop = 0; // her un-pinned top, in absolute document coordinates
+  var pinnedContainerDocBottom = 0; // the shop column's bottom, in absolute document coordinates
+
+  function computePinnedTop() {
+    if (!spotlightLeftEl.classList.contains('is-pinned')) return;
+    var elH = spotlightLeftEl.offsetHeight;
+    var centerTop = (window.innerHeight - elH) / 2;
+    var naturalTopNow = pinnedNaturalDocTop - window.scrollY; // where she'd be on screen if still in flow
+    var floorTopNow = pinnedContainerDocBottom - elH - window.scrollY; // lowest she's allowed to sit
+    var top = Math.min(Math.max(centerTop, naturalTopNow), floorTopNow);
+    // If the ceiling and floor cross (the shop is shorter than her own
+    // box), just hold her at the ceiling rather than let the floor push
+    // her above it.
+    if (top < naturalTopNow && naturalTopNow > floorTopNow) top = naturalTopNow;
+    spotlightLeftEl.style.top = top + 'px';
+  }
+
+  var pinScrollQueued = false;
+  function queuePinnedScrollUpdate() {
+    if (pinScrollQueued) return;
+    pinScrollQueued = true;
+    requestAnimationFrame(function () { pinScrollQueued = false; computePinnedTop(); });
+  }
 
   function updatePinnedLayout() {
     if (!spotlightLeftEl || !spotlightRightEl) return;
@@ -1504,11 +1538,15 @@
     spotlightLeftEl.classList.remove('is-pinned');
     spotlightLeftEl.style.left = '';
     spotlightLeftEl.style.width = '';
+    spotlightLeftEl.style.top = '';
     spotlightRightEl.style.marginLeft = '';
 
     if (!PIN_BREAKPOINT.matches) return; // mobile: stays in normal flow, on top
 
     var rect = spotlightLeftEl.getBoundingClientRect();
+    var rightRect = spotlightRightEl.getBoundingClientRect();
+    pinnedNaturalDocTop = rect.top + window.scrollY;
+    pinnedContainerDocBottom = rightRect.bottom + window.scrollY;
     spotlightLeftEl.style.left = rect.left + 'px';
     spotlightLeftEl.style.width = rect.width + 'px';
     spotlightLeftEl.classList.add('is-pinned');
@@ -1516,9 +1554,11 @@
     // doesn't jump left into where it was.
     var gapPx = parseFloat(getComputedStyle(spotlightRightEl.parentElement).gap) || 0;
     spotlightRightEl.style.marginLeft = (rect.width + gapPx) + 'px';
+    computePinnedTop();
   }
 
   window.addEventListener('resize', updatePinnedLayout);
+  window.addEventListener('scroll', queuePinnedScrollUpdate);
   if (PIN_BREAKPOINT.addEventListener) PIN_BREAKPOINT.addEventListener('change', updatePinnedLayout);
 
   loadSave();

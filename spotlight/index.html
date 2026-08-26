@@ -42,8 +42,11 @@
        kept lined up horizontally via JS instead of CSS alone. */
     .spotlight-left.is-pinned {
       position: fixed;
-      top: 50%;
-      transform: translateY(-50%);
+      /* `top` is set in px by JS each scroll/resize (clamped between a
+         ceiling — never above where it naturally started — and a floor
+         — never below the bottom of the shop list), not a fixed 50%,
+         so it can't float up over the page heading on a short/fresh
+         page or drift down past the end of the upgrade list. */
       z-index: 5;
     }
     @media (max-width: 640px) {

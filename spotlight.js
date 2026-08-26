@@ -1526,11 +1526,15 @@
     var ceiling = PIN_BREAKPOINT.matches ? (window.innerHeight - elH) / 2 : 0;
     var naturalTopNow = pinnedNaturalDocTop - window.scrollY; // where she'd be on screen if still in flow
     var floorTopNow = pinnedContainerDocBottom - elH - window.scrollY; // lowest she's allowed to sit
+    // Floor wins if it conflicts with the ceiling (shop shorter than her
+    // own box, e.g. right after a Reset/Sequel with a settings panel
+    // still open) — not covering the footer matters more than sitting
+    // exactly at the ceiling/natural position. An earlier version of
+    // this had an "exception" that reverted to naturalTopNow whenever
+    // the shop was short, which defeated the floor clamp almost any
+    // time the shop was shorter than her box — exactly backwards, and
+    // the actual cause of her clipping down past the footer.
     var top = Math.min(Math.max(ceiling, naturalTopNow), floorTopNow);
-    // If the ceiling and floor cross (the shop is shorter than her own
-    // box), just hold her at the ceiling rather than let the floor push
-    // her above it.
-    if (top < naturalTopNow && naturalTopNow > floorTopNow) top = naturalTopNow;
     spotlightLeftEl.style.top = top + 'px';
   }
 

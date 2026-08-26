@@ -1484,6 +1484,43 @@
   });
   window.addEventListener('beforeunload', save);
 
+  // --- pin the portrait/bubble column while the shop list scrolls -----
+  // Desktop only: keeps her vertically centered in the viewport, still
+  // to the left of the upgrade list, while the (often long) shop
+  // scrolls past. position:sticky with a percentage `top` turned out to
+  // be unreliable (percentage sticky offsets need an explicitly-sized
+  // scroll container to resolve against — the page body isn't one), so
+  // this measures the column's natural, in-flow position/width and
+  // applies true position:fixed instead, re-measuring on every resize
+  // so it stays lined up if the layout reflows.
+  var spotlightLeftEl = document.querySelector('.spotlight-left');
+  var spotlightRightEl = document.querySelector('.spotlight-right');
+  var PIN_BREAKPOINT = window.matchMedia('(min-width: 641px)');
+
+  function updatePinnedLayout() {
+    if (!spotlightLeftEl || !spotlightRightEl) return;
+    // Unpin first so the measurement below reflects normal flow, not
+    // whatever fixed position was set last time.
+    spotlightLeftEl.classList.remove('is-pinned');
+    spotlightLeftEl.style.left = '';
+    spotlightLeftEl.style.width = '';
+    spotlightRightEl.style.marginLeft = '';
+
+    if (!PIN_BREAKPOINT.matches) return; // mobile: stays in normal flow, on top
+
+    var rect = spotlightLeftEl.getBoundingClientRect();
+    spotlightLeftEl.style.left = rect.left + 'px';
+    spotlightLeftEl.style.width = rect.width + 'px';
+    spotlightLeftEl.classList.add('is-pinned');
+    // Reserve the space it used to occupy in flow so the shop column
+    // doesn't jump left into where it was.
+    var gapPx = parseFloat(getComputedStyle(spotlightRightEl.parentElement).gap) || 0;
+    spotlightRightEl.style.marginLeft = (rect.width + gapPx) + 'px';
+  }
+
+  window.addEventListener('resize', updatePinnedLayout);
+  if (PIN_BREAKPOINT.addEventListener) PIN_BREAKPOINT.addEventListener('change', updatePinnedLayout);
+
   loadSave();
   checkOfflineGains();
   checkAchievements();
@@ -1495,4 +1532,5 @@
   renderNumberFormatToggle();
   renderPrestige();
   schedulePaparazzi(); // no-op if not owned yet
+  updatePinnedLayout();
 })();

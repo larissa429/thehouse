@@ -33,6 +33,19 @@
       flex: 1 1 18rem;
       min-width: 0;
     }
+    /* Desktop only: JS measures the column's natural position/width once
+       it's laid out, then adds this class and sets left/width/margin
+       inline — position:sticky with a percentage `top` turned out to be
+       unreliable here (percentage offsets on sticky need an explicitly
+       sized scroll container to resolve against, which the page body
+       isn't), so this is true position:fixed, centered in the viewport,
+       kept lined up horizontally via JS instead of CSS alone. */
+    .spotlight-left.is-pinned {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 5;
+    }
     @media (max-width: 640px) {
       .spotlight-columns { flex-direction: column; }
       .spotlight-left, .spotlight-right { flex: 1 1 auto; width: 100%; }

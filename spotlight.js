@@ -27,6 +27,7 @@
   var confettiLayerEl = document.getElementById('spotlightConfettiLayer');
   var effectsToggleBtn = document.getElementById('spotlightEffectsToggle');
   var numberFormatToggleBtn = document.getElementById('spotlightNumberFormatToggle');
+  var colorfulTextToggleBtn = document.getElementById('spotlightColorfulTextToggle');
   var settingsToggleBtn = document.getElementById('spotlightSettingsToggle');
   var settingsPanelEl = document.getElementById('spotlightSettingsPanel');
   var confettiTestBtn = document.getElementById('spotlightConfettiTestBtn');
@@ -511,7 +512,7 @@
     return mult;
   }
 
-  var state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
+  var state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, colorfulText: true, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
   UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
 
   function loadSave() {
@@ -529,6 +530,7 @@
       if (typeof parsed.reducedEffects === 'boolean') state.reducedEffects = parsed.reducedEffects;
       if (typeof parsed.legacy === 'number') state.legacy = parsed.legacy;
       if (typeof parsed.shorthandNumbers === 'boolean') state.shorthandNumbers = parsed.shorthandNumbers;
+      if (typeof parsed.colorfulText === 'boolean') state.colorfulText = parsed.colorfulText;
       if (typeof parsed.seenMillion === 'boolean') state.seenMillion = parsed.seenMillion;
       if (typeof parsed.lastSeen === 'number') state.lastSeen = parsed.lastSeen;
       if (typeof parsed.playTimeMs === 'number') state.playTimeMs = parsed.playTimeMs;
@@ -704,6 +706,7 @@
     var newLegacy = state.legacy + gain;
     var keepReducedEffects = state.reducedEffects;
     var keepShorthandNumbers = state.shorthandNumbers;
+    var keepColorfulText = state.colorfulText;
     // Lifetime stats (play time, clicks, offline earnings) are about the
     // save file as a whole, not any one run — they survive a prestige the
     // same way Legacy does, unlike Spotlight/totalEarned/owned.
@@ -714,7 +717,7 @@
     var keepLifetimeEarned = state.lifetimeEarned;
     var keepUnlockedAchievements = state.unlockedAchievements;
     cancelPaparazzi();
-    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: keepLifetimeEarned, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned, unlockedAchievements: keepUnlockedAchievements };
+    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: keepLifetimeEarned, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned, unlockedAchievements: keepUnlockedAchievements };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     save();
     lastLine = null;
@@ -864,11 +867,34 @@
     renderPrestige();
   }
 
+  // Her four face colors (the portrait's red circle, blue rectangle,
+  // gold accent, green triangle) — each word of her dialogue gets one
+  // at random, reassigned fresh whenever the line changes (not on every
+  // render, or it'd flicker/reshuffle constantly while the same line
+  // sits on screen).
+  var AP_WORD_COLORS = ['#e05a4e', '#5fa8e0', '#e3a94e', '#6fbf73'];
+
+  function renderBubbleLine(el, text) {
+    el.innerHTML = '';
+    if (!state.colorfulText) { el.textContent = text; return; }
+    var words = text.split(' ');
+    words.forEach(function (word, i) {
+      var span = document.createElement('span');
+      span.textContent = word + (i < words.length - 1 ? ' ' : '');
+      span.style.color = AP_WORD_COLORS[Math.floor(Math.random() * AP_WORD_COLORS.length)];
+      el.appendChild(span);
+    });
+  }
+
+  function renderQuote(line) {
+    renderBubbleLine(quoteEsEl, line.es);
+    renderBubbleLine(quoteEnEl, line.en);
+  }
+
   var lastLine = null;
   function showLine(line) {
     lastLine = line;
-    quoteEsEl.textContent = line.es;
-    quoteEnEl.textContent = line.en;
+    renderQuote(line);
   }
 
   function showQuote() {
@@ -1005,16 +1031,16 @@
     if (!confirmed) return;
     var keepReducedEffects = state.reducedEffects; // a display preference, not progress — survives Reset
     var keepShorthandNumbers = state.shorthandNumbers;
+    var keepColorfulText = state.colorfulText;
     // Unlike prestiging, the plain Reset button is a full wipe — Legacy
     // included. It's the "start completely over" button; The Sequel is
     // the one that keeps Legacy around.
-    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
+    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     cancelPaparazzi();
     save();
     lastLine = null;
-    quoteEsEl.textContent = IDLE_LINE.es;
-    quoteEnEl.textContent = IDLE_LINE.en;
+    renderQuote(IDLE_LINE);
     renderCount();
     renderShop();
     renderPrestige();
@@ -1444,6 +1470,17 @@
     refreshShopAffordability(); // re-formats every visible cost immediately
   });
 
+  function renderColorfulTextToggle() {
+    colorfulTextToggleBtn.textContent = state.colorfulText ? 'On' : 'Off';
+    colorfulTextToggleBtn.classList.toggle('is-active', state.colorfulText);
+  }
+  colorfulTextToggleBtn.addEventListener('click', function () {
+    state.colorfulText = !state.colorfulText;
+    save();
+    renderColorfulTextToggle();
+    renderQuote(lastLine || IDLE_LINE); // re-render whatever's currently on screen with the new setting
+  });
+
   settingsToggleBtn.addEventListener('click', function () {
     var open = settingsPanelEl.hidden;
     settingsPanelEl.hidden = !open;
@@ -1606,12 +1643,12 @@
   loadSave();
   checkOfflineGains();
   checkAchievements();
-  quoteEsEl.textContent = IDLE_LINE.es;
-  quoteEnEl.textContent = IDLE_LINE.en;
+  renderQuote(IDLE_LINE);
   renderCount();
   renderShop();
   renderEffectsToggle();
   renderNumberFormatToggle();
+  renderColorfulTextToggle();
   renderPrestige();
   schedulePaparazzi(); // no-op if not owned yet
   updatePinnedLayout();

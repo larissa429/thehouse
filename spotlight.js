@@ -695,6 +695,24 @@
   var state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, legacySkills: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, colorfulText: true, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
   UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
   LEGACY_SKILLS.forEach(function (s) { state.legacySkills[s.id] = 0; });
+  loadSave();
+  // Loading real save data happens THIS early — immediately, right after
+  // `state` exists — on purpose, before any of the hundred-plus
+  // .addEventListener/DOM-wiring calls later in this file get a chance
+  // to run. This function is a hoisted declaration, so calling it before
+  // its own text appears below is fine. The reason: if a future deploy
+  // ever serves a stale cached copy of this script against a newer
+  // index.html (a real, repeatedly-observed failure mode with this
+  // site's hosting — element IDs get renamed/removed across commits),
+  // some later line here WILL throw a null-reference error and halt the
+  // rest of this script's execution. Previously that meant loadSave()
+  // (called at the very bottom) never ran at all — `state` stayed at
+  // its all-zero defaults, and the very next autosave (the 5s interval,
+  // a click, backgrounding the tab) permanently overwrote the player's
+  // real save with those zeros. Loading first means a later crash can
+  // still break some feature's wiring, but it can no longer destroy
+  // anyone's progress — whatever `state` holds in memory by the time
+  // anything gets saved is already their real data, correct or not.
 
   function loadSave() {
     try {
@@ -1178,6 +1196,8 @@
         btn.disabled = maxedOut || state.spotlight < cost;
         var costEl = btn.querySelector('.spotlight-upgrade-cost');
         if (costEl) costEl.textContent = maxedOut ? 'Maxed' : formatNumber(cost);
+        var ownedEl = btn.querySelector('.spotlight-upgrade-owned');
+        if (ownedEl) ownedEl.textContent = owned > 0 ? 'Owned: ' + owned : '';
       });
     });
   }
@@ -1186,6 +1206,7 @@
     if (u.maxOwned && state.owned[u.id] >= u.maxOwned) return;
     var cost = upgradeCost(u);
     if (state.spotlight < cost) return;
+    var beforeUnlocked = unlockedCount();
     state.spotlight -= cost;
     state.owned[u.id] += 1;
     if (u.id === 'paparazzi') schedulePaparazzi(); // first purchase starts the event loop
@@ -1193,7 +1214,17 @@
     checkAchievements();
     save();
     renderCount();
-    renderShop();
+    // Rebuild only if this purchase crossed an unlock threshold — a full
+    // rebuild (innerHTML='') tears down and recreates every button,
+    // including the one just tapped. On mobile that mid-tap DOM swap
+    // makes the browser lose track of what was focused and auto-scroll
+    // the list back toward the middle of the viewport — exactly the
+    // "scrolls to the middle after buying" report. In-place updates
+    // (already used for the passive-income tick, same reasoning) don't
+    // touch the DOM nodes at all, so there's nothing for the browser to
+    // lose its place over.
+    if (unlockedCount() !== beforeUnlocked) renderShop();
+    else refreshShopAffordability();
     renderPrestige();
   }
 
@@ -1995,7 +2026,8 @@
   window.addEventListener('load', updatePinnedLayout);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(updatePinnedLayout);
 
-  loadSave();
+  // loadSave() already ran, way up near where `state` is declared — see
+  // the comment there for why.
   checkOfflineGains();
   checkAchievements();
   renderQuote(IDLE_LINE);

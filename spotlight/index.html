@@ -212,6 +212,37 @@
       border-color: var(--lamp);
       color: var(--shadow);
     }
+    /* Every button on this page, gone over the same way: no default
+       mobile blue tap-highlight rectangle, and a gold flash while
+       actually pressed (CSS :active — covers every button here
+       including ones the shop generates dynamically, no per-button JS
+       wiring needed) instead, matching the confetti button's look.
+       Reset keeps its own red press color instead of gold — a
+       destructive action shouldn't flash the same "good to go" color
+       as everything else. */
+    #spotlightGame button,
+    .spotlight-offline-modal button {
+      -webkit-tap-highlight-color: transparent;
+    }
+    #spotlightGame button:active:not(:disabled):not(.spotlight-danger-btn),
+    .spotlight-offline-modal button:active:not(:disabled) {
+      background: var(--lamp);
+      border-color: var(--lamp);
+      color: var(--shadow);
+    }
+    .spotlight-danger-btn:active {
+      background: var(--urgent);
+      border-color: var(--urgent);
+      color: white;
+    }
+    /* The shop's own upgrade buttons already show the cost in --lamp
+       gold — filling the whole button gold on press would make that
+       text vanish, so they get a lighter touch instead. */
+    #spotlightGame .spotlight-upgrade:active:not(:disabled) {
+      background: var(--wall-lit) !important;
+      border-color: var(--lamp) !important;
+      color: inherit !important;
+    }
 
     .spotlight-gear-btn {
       margin-left: auto;

@@ -1370,6 +1370,7 @@
   var CRIT_MULTIPLIER = 10;
 
   function handleClick(e) {
+    var beforeUnlockedClick = unlockedCount();
     var isCrit = Math.random() < critChance();
     var amount = earnSpotlight(clickPower() * (isCrit ? CRIT_MULTIPLIER : 1) * (paparazziActive ? paparazziMultiplier() : 1));
     state.totalClicks++;
@@ -1383,7 +1384,16 @@
     spawnFloatingPlusOne(point.clientX, point.clientY, amount, isCrit);
     checkAchievements();
     renderCount();
-    renderShop(); // a click can be what crosses an unlock threshold
+    // Same reasoning as buyUpgrade(): only rebuild the shop DOM (which
+    // also re-runs the pin positioning) if this click actually crossed
+    // an unlock threshold. Rebuilding on every single tap — which is
+    // what "a click can be what crosses an unlock threshold" led to
+    // before — meant tapping her at all triggered the exact same
+    // mid-interaction DOM-replacement/scroll-jump bug buying an upgrade
+    // had, just far more often since it fired on every click instead of
+    // only on purchases.
+    if (unlockedCount() !== beforeUnlockedClick) renderShop();
+    else refreshShopAffordability();
     renderPrestige();
     save();
   }

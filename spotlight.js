@@ -40,6 +40,7 @@
   var offlineClaimBtn = document.getElementById('spotlightOfflineClaim');
   var statsToggleBtn = document.getElementById('spotlightStatsToggle');
   var statsPanelEl = document.getElementById('spotlightStatsPanel');
+  var statTotalEarnedEl = document.getElementById('spotlightStatTotalEarned');
   var statPlayTimeEl = document.getElementById('spotlightStatPlayTime');
   var statClicksEl = document.getElementById('spotlightStatClicks');
   var statCritsEl = document.getElementById('spotlightStatCrits');
@@ -1298,6 +1299,7 @@
   }
 
   function renderStats() {
+    statTotalEarnedEl.textContent = formatNumber(Math.floor(state.totalEarned)) + ' Spotlight';
     statPlayTimeEl.textContent = formatDuration(state.playTimeMs);
     statClicksEl.textContent = state.totalClicks.toLocaleString();
     statCritsEl.textContent = state.totalCrits.toLocaleString();

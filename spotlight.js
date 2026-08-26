@@ -19,7 +19,6 @@
   var quoteEnEl = document.getElementById('spotlightQuoteEn');
   var rateEl = document.getElementById('spotlightRate');
   var clickRateEl = document.getElementById('spotlightClickRate');
-  var pinnedCountEl = document.getElementById('spotlightPinnedCount');
   var shopEl = document.getElementById('spotlightShop');
   var boostShopEl = document.getElementById('spotlightBoostShop');
   var tabBoostBtn = document.getElementById('spotlightTabBoost');
@@ -748,7 +747,6 @@
 
   function renderCount() {
     countEl.textContent = formatNumber(state.spotlight);
-    pinnedCountEl.textContent = formatNumber(state.spotlight) + ' Spotlight';
     var rate = totalRatePerMinute();
     if (rate > 0) {
       rateEl.hidden = false;
@@ -1339,6 +1337,7 @@
     statsPanelEl.hidden = !open;
     statsToggleBtn.setAttribute('aria-expanded', String(open));
     if (open) renderStats();
+    updatePinnedLayout(); // the panel lives inside the pinned column now — its height just changed
   });
 
   // Ticks every second the tab is actually visible — "time spent in tab"
@@ -1420,6 +1419,7 @@
     achievementsPanelEl.hidden = !open;
     achievementsToggleBtn.setAttribute('aria-expanded', String(open));
     if (open) renderAchievements();
+    updatePinnedLayout();
   });
 
   function renderEffectsToggle() {
@@ -1448,6 +1448,7 @@
     var open = settingsPanelEl.hidden;
     settingsPanelEl.hidden = !open;
     settingsToggleBtn.setAttribute('aria-expanded', String(open));
+    updatePinnedLayout();
   });
 
   var CONFETTI_STREAM_CHANCE = 0.05; // easter egg, only reachable via this button

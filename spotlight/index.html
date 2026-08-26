@@ -475,17 +475,6 @@
       color: var(--ink-soft);
       margin: -0.4rem 0 1rem;
     }
-    /* Lives in the pinned column (see .spotlight-left.is-pinned) so the
-       current balance stays visible even while scrolled deep into a
-       long shop list, without needing to scroll back up to the HUD. */
-    .spotlight-pinned-count {
-      text-align: center;
-      font-family: var(--display);
-      font-size: 1.6rem;
-      color: var(--ink);
-      margin: 0 0 0.5rem;
-    }
-
     .spotlight-shop-label {
       font-family: var(--label);
       font-size: 0.7rem;
@@ -583,105 +572,104 @@
       attention she's certain she deserves &mdash; then automate it, because even main characters need downtime.</p>
 
     <div class="merge-game" id="spotlightGame">
-      <div class="merge-hud">
-        <div class="merge-hud-block">
-          <span class="merge-hud-label">Spotlight</span>
-          <span class="merge-hud-value" id="spotlightCount">0</span>
-        </div>
-        <div class="merge-hud-block">
-          <span class="merge-hud-label">Legacy</span>
-          <span class="merge-hud-value" id="spotlightLegacyCount">0</span>
-        </div>
-        <button type="button" class="spotlight-gear-btn" id="spotlightStatsToggle" aria-label="Stats" aria-expanded="false">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M3 3v18h18" /><path d="M20 18v3" /><path d="M16 16v5" /><path d="M12 13v8" /><path d="M8 16v5" /><path d="M3 11l5 -5l4 4l6 -6" /></svg>
-        </button>
-        <button type="button" class="spotlight-gear-btn" id="spotlightAchievementsToggle" aria-label="Achievements" aria-expanded="false">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M8 4h8v5a4 4 0 0 1 -8 0v-5z" /><path d="M8 9a3 3 0 0 1 -3 -3v-1h3" /><path d="M16 9a3 3 0 0 0 3 -3v-1h-3" /><path d="M12 13v3" /><path d="M9 20h6" /><path d="M10 16h4v2a2 2 0 0 1 -2 2v0a2 2 0 0 1 -2 -2v-2z" /></svg>
-        </button>
-        <button type="button" class="spotlight-gear-btn" id="spotlightSettingsToggle" aria-label="Settings" aria-expanded="false">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
-        </button>
-      </div>
-
-      <div class="spotlight-settings-panel spotlight-achievements-panel" id="spotlightAchievementsPanel" hidden></div>
-
-      <div class="spotlight-settings-panel" id="spotlightStatsPanel" hidden>
-        <div class="spotlight-settings-row spotlight-stat-row">
-          <span class="spotlight-settings-label">Spotlight earned (this run)</span>
-          <span class="spotlight-stat-value" id="spotlightStatTotalEarned">&mdash;</span>
-        </div>
-        <div class="spotlight-settings-row spotlight-stat-row">
-          <span class="spotlight-settings-label">Spotlight earned (all-time)</span>
-          <span class="spotlight-stat-value" id="spotlightStatLifetimeEarned">&mdash;</span>
-        </div>
-        <div class="spotlight-settings-row spotlight-stat-row">
-          <span class="spotlight-settings-label">Time in tab</span>
-          <span class="spotlight-stat-value" id="spotlightStatPlayTime">&mdash;</span>
-        </div>
-        <div class="spotlight-settings-row spotlight-stat-row">
-          <span class="spotlight-settings-label">Total clicks</span>
-          <span class="spotlight-stat-value" id="spotlightStatClicks">&mdash;</span>
-        </div>
-        <div class="spotlight-settings-row spotlight-stat-row">
-          <span class="spotlight-settings-label">Critical clicks</span>
-          <span class="spotlight-stat-value" id="spotlightStatCrits">&mdash;</span>
-        </div>
-        <div class="spotlight-settings-row spotlight-stat-row">
-          <span class="spotlight-settings-label">Earned while offline</span>
-          <span class="spotlight-stat-value" id="spotlightStatOffline">&mdash;</span>
-        </div>
-        <div class="spotlight-settings-divider"></div>
-        <div class="spotlight-settings-row spotlight-stat-row">
-          <span class="spotlight-settings-label">Legacy multiplier</span>
-          <span class="spotlight-stat-value" id="spotlightStatLegacyMult">&mdash;</span>
-        </div>
-        <div class="spotlight-settings-row spotlight-stat-row">
-          <span class="spotlight-settings-label">Click power</span>
-          <span class="spotlight-stat-value" id="spotlightStatClickPower">&mdash;</span>
-        </div>
-        <div class="spotlight-settings-row spotlight-stat-row">
-          <span class="spotlight-settings-label">Passive rate</span>
-          <span class="spotlight-stat-value" id="spotlightStatRate">&mdash;</span>
-        </div>
-        <div class="spotlight-settings-row spotlight-stat-row">
-          <span class="spotlight-settings-label">Critical chance</span>
-          <span class="spotlight-stat-value" id="spotlightStatCritChance">&mdash;</span>
-        </div>
-        <div class="spotlight-settings-row spotlight-stat-row">
-          <span class="spotlight-settings-label">Production discount</span>
-          <span class="spotlight-stat-value" id="spotlightStatBuildingDiscount">&mdash;</span>
-        </div>
-        <div class="spotlight-settings-row spotlight-stat-row">
-          <span class="spotlight-settings-label">Preparation discount</span>
-          <span class="spotlight-stat-value" id="spotlightStatClickDiscount">&mdash;</span>
-        </div>
-      </div>
-
-      <div class="spotlight-settings-panel" id="spotlightSettingsPanel" hidden>
-        <div class="spotlight-settings-row">
-          <span class="spotlight-settings-label">Reduce Effects</span>
-          <button type="button" class="merge-restart" id="spotlightEffectsToggle">Off</button>
-        </div>
-        <div class="spotlight-settings-row">
-          <span class="spotlight-settings-label">Shorthand Numbers</span>
-          <button type="button" class="merge-restart" id="spotlightNumberFormatToggle">On</button>
-        </div>
-        <div class="spotlight-settings-row">
-          <button type="button" class="merge-restart" id="spotlightConfettiTestBtn">🎉</button>
-        </div>
-        <div class="spotlight-settings-divider"></div>
-        <div class="spotlight-settings-row">
-          <button type="button" class="merge-restart spotlight-prestige-btn" id="spotlightPrestigeBtn" disabled>The Sequel</button>
-          <span class="spotlight-prestige-hint" id="spotlightPrestigeHint"></span>
-        </div>
-        <div class="spotlight-settings-row">
-          <button type="button" class="merge-restart spotlight-danger-btn" id="spotlightReset">Reset</button>
-        </div>
-      </div>
-
       <div class="spotlight-columns">
         <div class="spotlight-left">
-          <p class="spotlight-pinned-count" id="spotlightPinnedCount">0 Spotlight</p>
+          <div class="merge-hud">
+            <div class="merge-hud-block">
+              <span class="merge-hud-label">Spotlight</span>
+              <span class="merge-hud-value" id="spotlightCount">0</span>
+            </div>
+            <div class="merge-hud-block">
+              <span class="merge-hud-label">Legacy</span>
+              <span class="merge-hud-value" id="spotlightLegacyCount">0</span>
+            </div>
+            <button type="button" class="spotlight-gear-btn" id="spotlightStatsToggle" aria-label="Stats" aria-expanded="false">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M3 3v18h18" /><path d="M20 18v3" /><path d="M16 16v5" /><path d="M12 13v8" /><path d="M8 16v5" /><path d="M3 11l5 -5l4 4l6 -6" /></svg>
+            </button>
+            <button type="button" class="spotlight-gear-btn" id="spotlightAchievementsToggle" aria-label="Achievements" aria-expanded="false">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M8 4h8v5a4 4 0 0 1 -8 0v-5z" /><path d="M8 9a3 3 0 0 1 -3 -3v-1h3" /><path d="M16 9a3 3 0 0 0 3 -3v-1h-3" /><path d="M12 13v3" /><path d="M9 20h6" /><path d="M10 16h4v2a2 2 0 0 1 -2 2v0a2 2 0 0 1 -2 -2v-2z" /></svg>
+            </button>
+            <button type="button" class="spotlight-gear-btn" id="spotlightSettingsToggle" aria-label="Settings" aria-expanded="false">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
+            </button>
+          </div>
+
+          <div class="spotlight-settings-panel spotlight-achievements-panel" id="spotlightAchievementsPanel" hidden></div>
+
+          <div class="spotlight-settings-panel" id="spotlightStatsPanel" hidden>
+            <div class="spotlight-settings-row spotlight-stat-row">
+              <span class="spotlight-settings-label">Spotlight earned (this run)</span>
+              <span class="spotlight-stat-value" id="spotlightStatTotalEarned">&mdash;</span>
+            </div>
+            <div class="spotlight-settings-row spotlight-stat-row">
+              <span class="spotlight-settings-label">Spotlight earned (all-time)</span>
+              <span class="spotlight-stat-value" id="spotlightStatLifetimeEarned">&mdash;</span>
+            </div>
+            <div class="spotlight-settings-row spotlight-stat-row">
+              <span class="spotlight-settings-label">Time in tab</span>
+              <span class="spotlight-stat-value" id="spotlightStatPlayTime">&mdash;</span>
+            </div>
+            <div class="spotlight-settings-row spotlight-stat-row">
+              <span class="spotlight-settings-label">Total clicks</span>
+              <span class="spotlight-stat-value" id="spotlightStatClicks">&mdash;</span>
+            </div>
+            <div class="spotlight-settings-row spotlight-stat-row">
+              <span class="spotlight-settings-label">Critical clicks</span>
+              <span class="spotlight-stat-value" id="spotlightStatCrits">&mdash;</span>
+            </div>
+            <div class="spotlight-settings-row spotlight-stat-row">
+              <span class="spotlight-settings-label">Earned while offline</span>
+              <span class="spotlight-stat-value" id="spotlightStatOffline">&mdash;</span>
+            </div>
+            <div class="spotlight-settings-divider"></div>
+            <div class="spotlight-settings-row spotlight-stat-row">
+              <span class="spotlight-settings-label">Legacy multiplier</span>
+              <span class="spotlight-stat-value" id="spotlightStatLegacyMult">&mdash;</span>
+            </div>
+            <div class="spotlight-settings-row spotlight-stat-row">
+              <span class="spotlight-settings-label">Click power</span>
+              <span class="spotlight-stat-value" id="spotlightStatClickPower">&mdash;</span>
+            </div>
+            <div class="spotlight-settings-row spotlight-stat-row">
+              <span class="spotlight-settings-label">Passive rate</span>
+              <span class="spotlight-stat-value" id="spotlightStatRate">&mdash;</span>
+            </div>
+            <div class="spotlight-settings-row spotlight-stat-row">
+              <span class="spotlight-settings-label">Critical chance</span>
+              <span class="spotlight-stat-value" id="spotlightStatCritChance">&mdash;</span>
+            </div>
+            <div class="spotlight-settings-row spotlight-stat-row">
+              <span class="spotlight-settings-label">Production discount</span>
+              <span class="spotlight-stat-value" id="spotlightStatBuildingDiscount">&mdash;</span>
+            </div>
+            <div class="spotlight-settings-row spotlight-stat-row">
+              <span class="spotlight-settings-label">Preparation discount</span>
+              <span class="spotlight-stat-value" id="spotlightStatClickDiscount">&mdash;</span>
+            </div>
+          </div>
+
+          <div class="spotlight-settings-panel" id="spotlightSettingsPanel" hidden>
+            <div class="spotlight-settings-row">
+              <span class="spotlight-settings-label">Reduce Effects</span>
+              <button type="button" class="merge-restart" id="spotlightEffectsToggle">Off</button>
+            </div>
+            <div class="spotlight-settings-row">
+              <span class="spotlight-settings-label">Shorthand Numbers</span>
+              <button type="button" class="merge-restart" id="spotlightNumberFormatToggle">On</button>
+            </div>
+            <div class="spotlight-settings-row">
+              <button type="button" class="merge-restart" id="spotlightConfettiTestBtn">🎉</button>
+            </div>
+            <div class="spotlight-settings-divider"></div>
+            <div class="spotlight-settings-row">
+              <button type="button" class="merge-restart spotlight-prestige-btn" id="spotlightPrestigeBtn" disabled>The Sequel</button>
+              <span class="spotlight-prestige-hint" id="spotlightPrestigeHint"></span>
+            </div>
+            <div class="spotlight-settings-row">
+              <button type="button" class="merge-restart spotlight-danger-btn" id="spotlightReset">Reset</button>
+            </div>
+          </div>
+
           <div class="spotlight-stage">
             <div class="spotlight-portrait-wrap" id="spotlightPortraitWrap">
               <div class="spotlight-paparazzi-glow"></div>

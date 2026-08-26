@@ -1553,9 +1553,7 @@
     spotlightRightEl.style.marginTop = '';
 
     var rect = spotlightLeftEl.getBoundingClientRect();
-    var rightRect = spotlightRightEl.getBoundingClientRect();
     pinnedNaturalDocTop = rect.top + window.scrollY;
-    pinnedContainerDocBottom = rightRect.bottom + window.scrollY;
     spotlightLeftEl.style.left = rect.left + 'px';
     spotlightLeftEl.style.width = rect.width + 'px'; // mobile's media-query !important overrides this to 100%
     spotlightLeftEl.classList.add('is-pinned');
@@ -1577,6 +1575,13 @@
       // the tabs visibly touch the border line.
       spotlightRightEl.style.marginTop = (spotlightLeftEl.offsetHeight + 13) + 'px';
     }
+    // Measured last, after marginTop/marginLeft actually landed — doing
+    // this earlier (before the reserved space was applied) captured the
+    // shop's bottom edge at its old, un-pushed-down position, making the
+    // floor think the shop ended much higher than it really does. With a
+    // short shop list that let her genuinely clip down past the real
+    // bottom of the page instead of stopping there.
+    pinnedContainerDocBottom = spotlightRightEl.getBoundingClientRect().bottom + window.scrollY;
     computePinnedTop();
   }
 

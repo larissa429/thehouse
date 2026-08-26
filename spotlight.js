@@ -1571,7 +1571,11 @@
       var gapPx = parseFloat(getComputedStyle(spotlightRightEl.parentElement).gap) || 0;
       spotlightRightEl.style.marginLeft = (rect.width + gapPx) + 'px';
     } else {
-      spotlightRightEl.style.marginTop = spotlightLeftEl.offsetHeight + 'px';
+      // +13px (~0.8rem) of actual breathing room below the pinned
+      // header's own border-bottom, matching the gap below the tabs —
+      // without this, the shop starts exactly where her box ends and
+      // the tabs visibly touch the border line.
+      spotlightRightEl.style.marginTop = (spotlightLeftEl.offsetHeight + 13) + 'px';
     }
     computePinnedTop();
   }

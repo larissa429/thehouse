@@ -1561,12 +1561,17 @@
     spotlightLeftEl.classList.add('is-pinned');
     // Reserve the space she used to occupy in flow — desktop stacks the
     // columns side by side (push the shop right), mobile stacks them
-    // vertically (push the shop down).
+    // vertically (push the shop down). Mobile specifically re-measures
+    // AFTER applying is-pinned rather than reusing the pre-pin `rect`:
+    // the mobile media query changes her width (100% instead of the
+    // narrower unpinned column) and adds padding, both of which can
+    // shift her real rendered height — reusing the old measurement left
+    // a gap between the pinned header and the shop content underneath.
     if (PIN_BREAKPOINT.matches) {
       var gapPx = parseFloat(getComputedStyle(spotlightRightEl.parentElement).gap) || 0;
       spotlightRightEl.style.marginLeft = (rect.width + gapPx) + 'px';
     } else {
-      spotlightRightEl.style.marginTop = rect.height + 'px';
+      spotlightRightEl.style.marginTop = spotlightLeftEl.offsetHeight + 'px';
     }
     computePinnedTop();
   }

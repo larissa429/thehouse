@@ -18,6 +18,8 @@
   var quoteEsEl = document.getElementById('spotlightQuoteEs');
   var quoteEnEl = document.getElementById('spotlightQuoteEn');
   var rateEl = document.getElementById('spotlightRate');
+  var clickRateEl = document.getElementById('spotlightClickRate');
+  var pinnedCountEl = document.getElementById('spotlightPinnedCount');
   var shopEl = document.getElementById('spotlightShop');
   var boostShopEl = document.getElementById('spotlightBoostShop');
   var tabBoostBtn = document.getElementById('spotlightTabBoost');
@@ -746,6 +748,7 @@
 
   function renderCount() {
     countEl.textContent = formatNumber(state.spotlight);
+    pinnedCountEl.textContent = formatNumber(state.spotlight) + ' Spotlight';
     var rate = totalRatePerMinute();
     if (rate > 0) {
       rateEl.hidden = false;
@@ -753,6 +756,8 @@
     } else {
       rateEl.hidden = true;
     }
+    clickRateEl.hidden = false;
+    clickRateEl.textContent = '+' + formatNumber(clickPower()) + ' / click';
   }
 
   function renderShopSection(containerEl, kinds) {
@@ -1560,6 +1565,16 @@
   window.addEventListener('resize', updatePinnedLayout);
   window.addEventListener('scroll', queuePinnedScrollUpdate);
   if (PIN_BREAKPOINT.addEventListener) PIN_BREAKPOINT.addEventListener('change', updatePinnedLayout);
+  // The very first updatePinnedLayout() call (at the bottom of this file)
+  // runs before the portrait image has necessarily finished loading —
+  // her box has no explicit width/height, so it measures much shorter
+  // than its real size until the image arrives, baking in a wrong
+  // ceiling/floor that nothing then corrects (she's already out of flow
+  // by that point). Re-measure once the image, fonts, and everything
+  // else has actually settled.
+  portraitEl.addEventListener('load', updatePinnedLayout);
+  window.addEventListener('load', updatePinnedLayout);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(updatePinnedLayout);
 
   loadSave();
   checkOfflineGains();

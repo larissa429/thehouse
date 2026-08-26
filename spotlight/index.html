@@ -475,6 +475,16 @@
       color: var(--ink-soft);
       margin: -0.4rem 0 1rem;
     }
+    /* Lives in the pinned column (see .spotlight-left.is-pinned) so the
+       current balance stays visible even while scrolled deep into a
+       long shop list, without needing to scroll back up to the HUD. */
+    .spotlight-pinned-count {
+      text-align: center;
+      font-family: var(--display);
+      font-size: 1.6rem;
+      color: var(--ink);
+      margin: 0 0 0.5rem;
+    }
 
     .spotlight-shop-label {
       font-family: var(--label);
@@ -671,6 +681,7 @@
 
       <div class="spotlight-columns">
         <div class="spotlight-left">
+          <p class="spotlight-pinned-count" id="spotlightPinnedCount">0 Spotlight</p>
           <div class="spotlight-stage">
             <div class="spotlight-portrait-wrap" id="spotlightPortraitWrap">
               <div class="spotlight-paparazzi-glow"></div>
@@ -685,6 +696,7 @@
           </div>
 
           <p class="spotlight-rate" id="spotlightRate" hidden></p>
+          <p class="spotlight-rate" id="spotlightClickRate" hidden></p>
           <p class="spotlight-paparazzi-badge" id="spotlightPaparazziBadge" hidden>📸 Paparazzi! Clicks worth <span id="spotlightPaparazziMultText">5</span>x!</p>
         </div>
 

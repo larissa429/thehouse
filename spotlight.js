@@ -117,7 +117,7 @@
       kind: 'building',
       name: 'Dramatic Sigh',
       desc: 'Barely counts as effort. 1 click / minute.',
-      unlockAt: 10,
+      unlockAt: 0,
       baseCost: 10,
       costMultiplier: 1.15,
       ratePerMinute: 1
@@ -197,7 +197,7 @@
       kind: 'click',
       name: 'Confidence Boost',
       desc: '+5 Spotlight per click.',
-      unlockAt: 5,
+      unlockAt: 0,
       baseCost: 25,
       costMultiplier: 1.2,
       clickBonus: 5

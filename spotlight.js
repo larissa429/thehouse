@@ -23,8 +23,10 @@
   var boostShopEl = document.getElementById('spotlightBoostShop');
   var tabBoostBtn = document.getElementById('spotlightTabBoost');
   var tabProductionBtn = document.getElementById('spotlightTabProduction');
-  var tabLegacyBtn = document.getElementById('spotlightTabLegacy');
   var legacyShopEl = document.getElementById('spotlightLegacyShop');
+  var betweenRunsOverlayEl = document.getElementById('spotlightBetweenRunsOverlay');
+  var betweenRunsSummaryEl = document.getElementById('spotlightBetweenRunsSummary');
+  var startNewRunBtn = document.getElementById('spotlightStartNewRun');
   var fxLayerEl = document.getElementById('spotlightFxLayer');
   var confettiLayerEl = document.getElementById('spotlightConfettiLayer');
   var effectsToggleBtn = document.getElementById('spotlightEffectsToggle');
@@ -759,6 +761,9 @@
     renderPrestige();
     renderCount();
     refreshShopAffordability();
+    // Keep the running total in the Between Runs summary in sync as
+    // points get spent, not just the number shown at the moment it opened.
+    if (!betweenRunsOverlayEl.hidden) betweenRunsSummaryEl.textContent = formatNumber(state.legacy) + ' Legacy remaining.';
   }
 
   function legacySkillClickBonus() {
@@ -950,15 +955,29 @@
     }
   }
 
+  // Prestiging is now two steps: doPrestige() banks the Legacy gain and
+  // opens the "Between Runs" screen (the ONLY place the Legacy skill
+  // shop is reachable — see renderLegacyShop()/legacyShopEl), and
+  // startNewRun() (triggered by that screen's own button) actually
+  // performs the run wipe once they're done spending.
   function doPrestige() {
     var gain = legacyGainPreview();
     if (gain < 1) return;
     var confirmed = window.confirm(
       'Prestige for +' + gain + ' Legacy?\n\nThis restarts your Production and Preparation progress from scratch. ' +
-      'Legacy is permanent — it boosts everything you earn from here on, and never resets.'
+      'Legacy is permanent — it boosts everything you earn from here on, and never resets. ' +
+      "You'll get a screen to spend it on permanent skills before the new run begins."
     );
     if (!confirmed) return;
-    var newLegacy = state.legacy + gain;
+    state.legacy += gain;
+    save();
+    renderPrestige();
+    betweenRunsSummaryEl.textContent = '+' + formatNumber(gain) + ' Legacy earned this run — ' + formatNumber(state.legacy) + ' total.';
+    renderLegacyShop();
+    betweenRunsOverlayEl.hidden = false;
+  }
+
+  function startNewRun() {
     var keepReducedEffects = state.reducedEffects;
     var keepShorthandNumbers = state.shorthandNumbers;
     var keepColorfulText = state.colorfulText;
@@ -971,24 +990,26 @@
     var keepTotalOfflineEarned = state.totalOfflineEarned;
     var keepLifetimeEarned = state.lifetimeEarned;
     var keepUnlockedAchievements = state.unlockedAchievements;
-    // Legacy skills are bought WITH Legacy points, which already survive
-    // prestige — so the skills themselves have to as well, or spending
-    // points would be a strictly worse deal than just hoarding them.
+    // Both the Legacy total (gain already applied in doPrestige) and
+    // whatever skills were just bought on the Between Runs screen carry
+    // over into the new run.
+    var keepLegacy = state.legacy;
     var keepLegacySkills = state.legacySkills;
     cancelPaparazzi();
-    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: keepLifetimeEarned, owned: {}, legacySkills: keepLegacySkills, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned, unlockedAchievements: keepUnlockedAchievements };
+    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: keepLifetimeEarned, owned: {}, legacySkills: keepLegacySkills, reducedEffects: keepReducedEffects, legacy: keepLegacy, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned, unlockedAchievements: keepUnlockedAchievements };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     LEGACY_SKILLS.forEach(function (s) { if (typeof state.legacySkills[s.id] !== 'number') state.legacySkills[s.id] = 0; });
     save();
     lastLine = null;
     showLine(SEQUEL_LINE);
+    betweenRunsOverlayEl.hidden = true;
     renderCount();
     renderShop();
     renderPrestige();
-    if (!legacyShopEl.hidden) renderLegacyShop(); // affordability just changed if it's the visible tab
   }
 
   prestigeBtn.addEventListener('click', doPrestige);
+  startNewRunBtn.addEventListener('click', startNewRun);
 
   // Plain comma-formatted under 10,000 (still easy to read at a glance);
   // abbreviated with a K/M/B/T suffix above that, where the full digit
@@ -1365,19 +1386,14 @@
   function setTab(tab) {
     boostShopEl.hidden = tab !== 'boost';
     shopEl.hidden = tab !== 'production';
-    legacyShopEl.hidden = tab !== 'legacy';
     tabBoostBtn.classList.toggle('is-active', tab === 'boost');
     tabProductionBtn.classList.toggle('is-active', tab === 'production');
-    tabLegacyBtn.classList.toggle('is-active', tab === 'legacy');
-    if (tab === 'legacy') renderLegacyShop();
-    // Preparation/Production/Legacy can be very different lengths — the
-    // pinned column's floor needs to know the newly-visible list's real
-    // height.
+    // Preparation/Production can be very different lengths — the pinned
+    // column's floor needs to know the newly-visible list's real height.
     if (typeof updatePinnedLayout === 'function' && spotlightLeftEl) updatePinnedLayout();
   }
   tabBoostBtn.addEventListener('click', function () { setTab('boost'); });
   tabProductionBtn.addEventListener('click', function () { setTab('production'); });
-  tabLegacyBtn.addEventListener('click', function () { setTab('legacy'); });
 
   // --- ambient fame effects ---------------------------------------------
   // Purely decorative — confetti and bouquets get more frequent as her

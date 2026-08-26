@@ -387,6 +387,15 @@
       font-weight: bold;
       margin: 0 0 1.1rem;
     }
+    .spotlight-between-runs-modal {
+      max-width: 28rem;
+    }
+    .spotlight-between-runs-shop {
+      max-height: 20rem;
+      overflow-y: auto;
+      text-align: left;
+      margin: 0.8rem 0 1.2rem;
+    }
     .spotlight-danger-btn:hover {
       background: var(--urgent);
       color: white;
@@ -729,11 +738,9 @@
           <div class="spotlight-tab-row">
             <button type="button" class="spotlight-tab-btn is-active" id="spotlightTabBoost" data-tab="boost">Preparation</button>
             <button type="button" class="spotlight-tab-btn" id="spotlightTabProduction" data-tab="production">Production</button>
-            <button type="button" class="spotlight-tab-btn" id="spotlightTabLegacy" data-tab="legacy">Legacy</button>
           </div>
           <div class="spotlight-shop" id="spotlightBoostShop"></div>
           <div class="spotlight-shop" id="spotlightShop" hidden></div>
-          <div class="spotlight-shop" id="spotlightLegacyShop" hidden></div>
         </div>
       </div>
     </div>
@@ -750,6 +757,16 @@
       <p class="spotlight-offline-time" id="spotlightOfflineTime"></p>
       <p class="spotlight-offline-amount" id="spotlightOfflineAmount"></p>
       <button type="button" class="merge-restart" id="spotlightOfflineClaim">Collect</button>
+    </div>
+  </div>
+
+  <div class="spotlight-offline-overlay" id="spotlightBetweenRunsOverlay" hidden>
+    <div class="spotlight-offline-modal spotlight-between-runs-modal">
+      <h3>Between Runs</h3>
+      <p class="spotlight-offline-time" id="spotlightBetweenRunsSummary"></p>
+      <p class="spotlight-offline-time">Spend Legacy points on permanent skills before starting the new run — this is the only time you can buy them.</p>
+      <div class="spotlight-shop spotlight-between-runs-shop" id="spotlightLegacyShop"></div>
+      <button type="button" class="merge-restart" id="spotlightStartNewRun">Start New Run</button>
     </div>
   </div>
 

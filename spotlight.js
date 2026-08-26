@@ -23,6 +23,8 @@
   var boostShopEl = document.getElementById('spotlightBoostShop');
   var tabBoostBtn = document.getElementById('spotlightTabBoost');
   var tabProductionBtn = document.getElementById('spotlightTabProduction');
+  var tabLegacyBtn = document.getElementById('spotlightTabLegacy');
+  var legacyShopEl = document.getElementById('spotlightLegacyShop');
   var fxLayerEl = document.getElementById('spotlightFxLayer');
   var confettiLayerEl = document.getElementById('spotlightConfettiLayer');
   var effectsToggleBtn = document.getElementById('spotlightEffectsToggle');
@@ -521,6 +523,72 @@
     }
   ];
 
+  // A skill tree spent in Legacy points themselves rather than Spotlight
+  // — bought with doPrestige()'s payout, on top of (not instead of) the
+  // usual +2%/point passive bonus. Unspent points still sit in the
+  // Legacy counter earning that bonus as always; spending them here
+  // converts some of them into a specific permanent buff instead, on top
+  // of whatever bonus the ones you keep are still generating. Costs are
+  // small flat integers (this is a few-points-per-prestige currency, not
+  // a Spotlight-scale one) — no cost curve/discount interactions with
+  // the regular shop at all.
+  var LEGACY_SKILLS = [
+    {
+      id: 'encore',
+      kind: 'legacySkillClick',
+      name: 'Encore',
+      desc: '+2 flat Spotlight per click. Stacks up to 15 times.',
+      cost: 1,
+      clickBonus: 2,
+      maxOwned: 15
+    },
+    {
+      id: 'standingOvation',
+      kind: 'legacySkillRate',
+      name: 'Standing Ovation',
+      desc: '+5% passive rate. Stacks up to 10 times.',
+      cost: 2,
+      rateBonus: 0.05,
+      maxOwned: 10
+    },
+    {
+      id: 'oldPro',
+      kind: 'legacySkillDiscount',
+      name: 'Old Pro',
+      desc: '-2% cost on every Production and Preparation upgrade. Stacks up to 10 times.',
+      cost: 2,
+      discountPerOwn: 0.02,
+      maxOwned: 10
+    },
+    {
+      id: 'cameraReady',
+      kind: 'legacySkillCrit',
+      name: 'Camera Ready',
+      desc: '+2% critical chance. Stacks up to 10 times.',
+      cost: 2,
+      critChanceBonus: 0.02,
+      maxOwned: 10
+    },
+    {
+      id: 'neverForgetsAFace',
+      kind: 'legacySkillOfflineCap',
+      name: 'Never Forgets a Face',
+      desc: '+4 hours credited toward offline gains. Stacks up to 10 times.',
+      cost: 1,
+      capBonusHours: 4,
+      maxOwned: 10
+    },
+    {
+      id: 'wordOfMouth',
+      kind: 'legacySkillPaparazziFreq',
+      name: 'Word of Mouth',
+      desc: '-8% average wait between paparazzi visits. Stacks up to 5 times.',
+      cost: 2,
+      freqReduction: 0.08,
+      maxOwned: 5
+    }
+  ];
+
   // Achievements are permanent once unlocked — checked against whatever
   // the CURRENT run's state looks like, never re-evaluated after that.
   // Each grants a small permanent multiplier (`bonusType` + `bonusValue`,
@@ -622,8 +690,9 @@
     return mult;
   }
 
-  var state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, colorfulText: true, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
+  var state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, legacySkills: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, colorfulText: true, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
   UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
+  LEGACY_SKILLS.forEach(function (s) { state.legacySkills[s.id] = 0; });
 
   function loadSave() {
     try {
@@ -657,6 +726,11 @@
           if (typeof parsed.owned[u.id] === 'number') state.owned[u.id] = parsed.owned[u.id];
         });
       }
+      if (parsed.legacySkills) {
+        LEGACY_SKILLS.forEach(function (s) {
+          if (typeof parsed.legacySkills[s.id] === 'number') state.legacySkills[s.id] = parsed.legacySkills[s.id];
+        });
+      }
     } catch (e) { /* corrupt or missing save — just start fresh */ }
   }
 
@@ -665,11 +739,76 @@
     localStorage.setItem(SAVE_KEY, JSON.stringify(state));
   }
 
+  // --- Legacy skill tree ------------------------------------------------
+  // Bought with Legacy points themselves (see LEGACY_SKILLS above), not
+  // Spotlight — separate `state.legacySkills` tracker, separate `cost`
+  // field (a flat integer, not upgradeCost()'s curve).
+  function legacySkillCost(s) {
+    return s.cost;
+  }
+
+  function buyLegacySkill(s) {
+    var owned = state.legacySkills[s.id];
+    if (s.maxOwned && owned >= s.maxOwned) return;
+    var cost = legacySkillCost(s);
+    if (state.legacy < cost) return;
+    state.legacy -= cost;
+    state.legacySkills[s.id] += 1;
+    save();
+    renderLegacyShop();
+    renderPrestige();
+    renderCount();
+    refreshShopAffordability();
+  }
+
+  function legacySkillClickBonus() {
+    return LEGACY_SKILLS.reduce(function (sum, s) {
+      return s.kind === 'legacySkillClick' ? sum + state.legacySkills[s.id] * s.clickBonus : sum;
+    }, 0);
+  }
+
+  function legacySkillRateMultiplier() {
+    var mult = 1;
+    LEGACY_SKILLS.forEach(function (s) {
+      if (s.kind === 'legacySkillRate') mult += state.legacySkills[s.id] * s.rateBonus;
+    });
+    return mult;
+  }
+
+  function legacySkillDiscountFactor() {
+    var factor = 1;
+    LEGACY_SKILLS.forEach(function (s) {
+      if (s.kind === 'legacySkillDiscount') factor *= Math.pow(1 - s.discountPerOwn, state.legacySkills[s.id]);
+    });
+    return factor;
+  }
+
+  function legacySkillCritBonus() {
+    return LEGACY_SKILLS.reduce(function (sum, s) {
+      return s.kind === 'legacySkillCrit' ? sum + state.legacySkills[s.id] * s.critChanceBonus : sum;
+    }, 0);
+  }
+
+  function legacySkillOfflineCapBonusHours() {
+    return LEGACY_SKILLS.reduce(function (sum, s) {
+      return s.kind === 'legacySkillOfflineCap' ? sum + state.legacySkills[s.id] * s.capBonusHours : sum;
+    }, 0);
+  }
+
+  function legacySkillPaparazziFreqFactor() {
+    var factor = 1;
+    LEGACY_SKILLS.forEach(function (s) {
+      if (s.kind === 'legacySkillPaparazziFreq') factor *= Math.pow(1 - s.freqReduction, state.legacySkills[s.id]);
+    });
+    return factor;
+  }
+
   // `target` picks which upgrade kind a discount applies to — 'building'
   // for Producer Connections, 'click' for Acting Coach. Each is computed
-  // independently so they never affect each other's costs.
+  // independently so they never affect each other's costs. Old Pro (the
+  // Legacy skill) applies on top of both, regardless of target.
   function discountFactor(target) {
-    var factor = 1;
+    var factor = legacySkillDiscountFactor();
     UPGRADES.forEach(function (u) {
       if (u.kind === 'discount' && u.target === target) factor *= Math.pow(1 - u.discountPerOwn, state.owned[u.id]);
     });
@@ -686,7 +825,7 @@
     var base = UPGRADES.reduce(function (sum, u) {
       return u.kind === 'building' ? sum + state.owned[u.id] * u.ratePerMinute : sum;
     }, 0);
-    return base * achievementBonusMultiplier('rate');
+    return base * achievementBonusMultiplier('rate') * legacySkillRateMultiplier();
   }
 
   function starPowerMultiplier() {
@@ -700,7 +839,7 @@
   function clickPower() {
     var base = UPGRADES.reduce(function (sum, u) {
       return u.kind === 'click' ? sum + state.owned[u.id] * u.clickBonus : sum;
-    }, 1); // base of 1 per click
+    }, 1) + legacySkillClickBonus(); // base of 1 per click, plus Encore's flat bonus
     return base * starPowerMultiplier() * achievementBonusMultiplier('clickPower');
   }
 
@@ -709,7 +848,7 @@
   function critChance() {
     return UPGRADES.reduce(function (sum, u) {
       return u.kind === 'critChance' ? sum + state.owned[u.id] * u.critChanceBonus : sum;
-    }, CRIT_CHANCE_BASE);
+    }, CRIT_CHANCE_BASE) + legacySkillCritBonus();
   }
 
   // --- paparazzi event ---------------------------------------------------
@@ -738,7 +877,7 @@
   }
 
   function paparazziFreqFactor() {
-    var factor = 1;
+    var factor = legacySkillPaparazziFreqFactor();
     UPGRADES.forEach(function (u) {
       if (u.kind === 'paparazziFreq') factor *= Math.pow(1 - u.freqReduction, state.owned[u.id]);
     });
@@ -832,15 +971,21 @@
     var keepTotalOfflineEarned = state.totalOfflineEarned;
     var keepLifetimeEarned = state.lifetimeEarned;
     var keepUnlockedAchievements = state.unlockedAchievements;
+    // Legacy skills are bought WITH Legacy points, which already survive
+    // prestige — so the skills themselves have to as well, or spending
+    // points would be a strictly worse deal than just hoarding them.
+    var keepLegacySkills = state.legacySkills;
     cancelPaparazzi();
-    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: keepLifetimeEarned, owned: {}, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned, unlockedAchievements: keepUnlockedAchievements };
+    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: keepLifetimeEarned, owned: {}, legacySkills: keepLegacySkills, reducedEffects: keepReducedEffects, legacy: newLegacy, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned, unlockedAchievements: keepUnlockedAchievements };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
+    LEGACY_SKILLS.forEach(function (s) { if (typeof state.legacySkills[s.id] !== 'number') state.legacySkills[s.id] = 0; });
     save();
     lastLine = null;
     showLine(SEQUEL_LINE);
     renderCount();
     renderShop();
     renderPrestige();
+    if (!legacyShopEl.hidden) renderLegacyShop(); // affordability just changed if it's the visible tab
   }
 
   prestigeBtn.addEventListener('click', doPrestige);
@@ -922,6 +1067,54 @@
       });
 
       containerEl.appendChild(btn);
+    });
+  }
+
+  // Mirrors renderShopSection's markup/classes for a consistent look, but
+  // simpler: no unlockAt/requires/minPrestige gating, and cost/currency
+  // are Legacy points via legacySkillCost()/state.legacy instead of
+  // upgradeCost()/state.spotlight.
+  function renderLegacyShop() {
+    legacyShopEl.innerHTML = '';
+    LEGACY_SKILLS.forEach(function (s) {
+      var owned = state.legacySkills[s.id];
+      var maxedOut = s.maxOwned && owned >= s.maxOwned;
+      var cost = legacySkillCost(s);
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'spotlight-upgrade';
+      btn.dataset.id = s.id;
+      btn.disabled = maxedOut || state.legacy < cost;
+
+      var info = document.createElement('div');
+      info.className = 'spotlight-upgrade-info';
+      var name = document.createElement('span');
+      name.className = 'spotlight-upgrade-name';
+      name.textContent = s.name;
+      var desc = document.createElement('span');
+      desc.className = 'spotlight-upgrade-desc';
+      desc.textContent = s.desc;
+      info.appendChild(name);
+      info.appendChild(desc);
+
+      var costEl = document.createElement('span');
+      costEl.className = 'spotlight-upgrade-cost';
+      costEl.textContent = maxedOut ? 'Maxed' : cost + ' Legacy';
+
+      var ownedEl = document.createElement('span');
+      ownedEl.className = 'spotlight-upgrade-owned';
+      ownedEl.textContent = owned > 0 ? 'Owned: ' + owned : '';
+
+      btn.appendChild(info);
+      btn.appendChild(costEl);
+      btn.appendChild(ownedEl);
+
+      btn.addEventListener('click', function () {
+        buyLegacySkill(s);
+      });
+
+      legacyShopEl.appendChild(btn);
     });
   }
 
@@ -1087,7 +1280,7 @@
   function offlineCapMs() {
     var bonusHours = UPGRADES.reduce(function (sum, u) {
       return u.kind === 'offlineCap' ? sum + state.owned[u.id] * u.capBonusHours : sum;
-    }, 0);
+    }, 0) + legacySkillOfflineCapBonusHours();
     return OFFLINE_CAP_BASE_MS + bonusHours * 60 * 60 * 1000;
   }
 
@@ -1157,8 +1350,9 @@
     // Unlike prestiging, the plain Reset button is a full wipe — Legacy
     // included. It's the "start completely over" button; The Sequel is
     // the one that keeps Legacy around.
-    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
+    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, legacySkills: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
+    LEGACY_SKILLS.forEach(function (s) { state.legacySkills[s.id] = 0; });
     cancelPaparazzi();
     save();
     lastLine = null;
@@ -1169,17 +1363,21 @@
   });
 
   function setTab(tab) {
-    var showBoost = tab === 'boost';
-    boostShopEl.hidden = !showBoost;
-    shopEl.hidden = showBoost;
-    tabBoostBtn.classList.toggle('is-active', showBoost);
-    tabProductionBtn.classList.toggle('is-active', !showBoost);
-    // Preparation/Production can be very different lengths — the pinned
-    // column's floor needs to know the newly-visible list's real height.
+    boostShopEl.hidden = tab !== 'boost';
+    shopEl.hidden = tab !== 'production';
+    legacyShopEl.hidden = tab !== 'legacy';
+    tabBoostBtn.classList.toggle('is-active', tab === 'boost');
+    tabProductionBtn.classList.toggle('is-active', tab === 'production');
+    tabLegacyBtn.classList.toggle('is-active', tab === 'legacy');
+    if (tab === 'legacy') renderLegacyShop();
+    // Preparation/Production/Legacy can be very different lengths — the
+    // pinned column's floor needs to know the newly-visible list's real
+    // height.
     if (typeof updatePinnedLayout === 'function' && spotlightLeftEl) updatePinnedLayout();
   }
   tabBoostBtn.addEventListener('click', function () { setTab('boost'); });
   tabProductionBtn.addEventListener('click', function () { setTab('production'); });
+  tabLegacyBtn.addEventListener('click', function () { setTab('legacy'); });
 
   // --- ambient fame effects ---------------------------------------------
   // Purely decorative — confetti and bouquets get more frequent as her

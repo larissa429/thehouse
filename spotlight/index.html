@@ -52,6 +52,25 @@
     @media (max-width: 640px) {
       .spotlight-columns { flex-direction: column; }
       .spotlight-left, .spotlight-right { flex: 1 1 auto; width: 100%; }
+      /* Tried plain position:sticky (top:0 is normally the one case
+         that's completely reliable, no measurement needed) but this
+         site sets overflow-x:hidden on <html>/<body> site-wide — a
+         deliberate, load-bearing fix against horizontal-pan bugs
+         elsewhere — and that combination is a known way to silently
+         break position:sticky. So mobile reuses the same JS-driven
+         position:fixed system as desktop (see spotlight.js) instead,
+         just pinned to the viewport TOP rather than centered — the
+         !important here overrides the inline left/width JS measures
+         for desktop, making her span the full viewport edge-to-edge
+         with her own padding instead. Needs an opaque background since
+         the shop now scrolls behind her. */
+      .spotlight-left.is-pinned {
+        left: 0 !important;
+        width: 100% !important;
+        background: var(--wall);
+        border-bottom: var(--edge);
+        padding: 0.6rem 1.5rem 0.8rem;
+      }
     }
 
     .spotlight-stage {

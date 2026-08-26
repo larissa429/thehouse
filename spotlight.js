@@ -1499,17 +1499,21 @@
   window.addEventListener('beforeunload', save);
 
   // --- pin the portrait/bubble column while the shop list scrolls -----
-  // Desktop only: keeps her vertically centered in the viewport, still
-  // to the left of the upgrade list, while the (often long) shop
-  // scrolls past — but clamped between a ceiling (never above where she
-  // naturally starts, so she can't float up over the page heading on a
-  // short or freshly-loaded page) and a floor (never below the bottom
-  // of the shop list). position:sticky with a percentage `top` turned
-  // out to be unreliable (percentage sticky offsets need an
-  // explicitly-sized scroll container to resolve against — the page
-  // body isn't one), so this measures the column's natural, in-flow
-  // position and the shop column's bottom edge, then applies true
-  // position:fixed with `top` computed and clamped on every scroll.
+  // Keeps her visible while the (often long) shop scrolls past: desktop
+  // centers her vertically in the viewport, mobile pins her to the very
+  // top (full-width, like a sticky header) so the shop scrolls
+  // underneath. Both are clamped between a ceiling (desktop: never
+  // above where she naturally starts, so she can't float up over the
+  // page heading on a short/fresh page; mobile: never above the
+  // viewport top, i.e. 0) and a floor (never below the bottom of the
+  // shop list, so she doesn't end up floating over the footer either).
+  // Tried plain position:sticky first — reliable in general, but this
+  // site sets overflow-x:hidden on <html>/<body> site-wide (deliberate,
+  // load-bearing, protects against horizontal-pan bugs elsewhere) and
+  // that combination is a known way to silently break sticky. So this
+  // measures the column's natural, in-flow position and the shop
+  // column's bottom edge, then applies true position:fixed with `top`
+  // computed and clamped on every scroll.
   var spotlightLeftEl = document.querySelector('.spotlight-left');
   var spotlightRightEl = document.querySelector('.spotlight-right');
   var PIN_BREAKPOINT = window.matchMedia('(min-width: 641px)');
@@ -1519,10 +1523,10 @@
   function computePinnedTop() {
     if (!spotlightLeftEl.classList.contains('is-pinned')) return;
     var elH = spotlightLeftEl.offsetHeight;
-    var centerTop = (window.innerHeight - elH) / 2;
+    var ceiling = PIN_BREAKPOINT.matches ? (window.innerHeight - elH) / 2 : 0;
     var naturalTopNow = pinnedNaturalDocTop - window.scrollY; // where she'd be on screen if still in flow
     var floorTopNow = pinnedContainerDocBottom - elH - window.scrollY; // lowest she's allowed to sit
-    var top = Math.min(Math.max(centerTop, naturalTopNow), floorTopNow);
+    var top = Math.min(Math.max(ceiling, naturalTopNow), floorTopNow);
     // If the ceiling and floor cross (the shop is shorter than her own
     // box), just hold her at the ceiling rather than let the floor push
     // her above it.
@@ -1546,20 +1550,24 @@
     spotlightLeftEl.style.width = '';
     spotlightLeftEl.style.top = '';
     spotlightRightEl.style.marginLeft = '';
-
-    if (!PIN_BREAKPOINT.matches) return; // mobile: stays in normal flow, on top
+    spotlightRightEl.style.marginTop = '';
 
     var rect = spotlightLeftEl.getBoundingClientRect();
     var rightRect = spotlightRightEl.getBoundingClientRect();
     pinnedNaturalDocTop = rect.top + window.scrollY;
     pinnedContainerDocBottom = rightRect.bottom + window.scrollY;
     spotlightLeftEl.style.left = rect.left + 'px';
-    spotlightLeftEl.style.width = rect.width + 'px';
+    spotlightLeftEl.style.width = rect.width + 'px'; // mobile's media-query !important overrides this to 100%
     spotlightLeftEl.classList.add('is-pinned');
-    // Reserve the space it used to occupy in flow so the shop column
-    // doesn't jump left into where it was.
-    var gapPx = parseFloat(getComputedStyle(spotlightRightEl.parentElement).gap) || 0;
-    spotlightRightEl.style.marginLeft = (rect.width + gapPx) + 'px';
+    // Reserve the space she used to occupy in flow — desktop stacks the
+    // columns side by side (push the shop right), mobile stacks them
+    // vertically (push the shop down).
+    if (PIN_BREAKPOINT.matches) {
+      var gapPx = parseFloat(getComputedStyle(spotlightRightEl.parentElement).gap) || 0;
+      spotlightRightEl.style.marginLeft = (rect.width + gapPx) + 'px';
+    } else {
+      spotlightRightEl.style.marginTop = rect.height + 'px';
+    }
     computePinnedTop();
   }
 

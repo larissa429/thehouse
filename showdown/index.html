@@ -10,6 +10,12 @@
   <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
   <style>
+    /* Guards every [hidden] element in this page against being overridden
+       by a later same-specificity `display:` class rule (.showdown-overlay's
+       display:flex, specifically) — hit this exact bug on other pages
+       before, cheaper to fix it globally here from the start. */
+    [hidden] { display: none !important; }
+
     #showdownGame {
       max-width: 40rem;
     }

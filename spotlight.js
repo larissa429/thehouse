@@ -872,16 +872,22 @@
   // at random, reassigned fresh whenever the line changes (not on every
   // render, or it'd flicker/reshuffle constantly while the same line
   // sits on screen).
-  var AP_WORD_COLORS = ['#e05a4e', '#5fa8e0', '#e3a94e', '#6fbf73'];
+  var AP_WORD_COLORS = ['#bd1b0d', '#132DB4', '#e3a94e', '#077c0c'];
 
   function renderBubbleLine(el, text) {
     el.innerHTML = '';
     if (!state.colorfulText) { el.textContent = text; return; }
     var words = text.split(' ');
+    var lastColor = null;
     words.forEach(function (word, i) {
       var span = document.createElement('span');
       span.textContent = word + (i < words.length - 1 ? ' ' : '');
-      span.style.color = AP_WORD_COLORS[Math.floor(Math.random() * AP_WORD_COLORS.length)];
+      var color;
+      do {
+        color = AP_WORD_COLORS[Math.floor(Math.random() * AP_WORD_COLORS.length)];
+      } while (color === lastColor && AP_WORD_COLORS.length > 1);
+      lastColor = color;
+      span.style.color = color;
       el.appendChild(span);
     });
   }

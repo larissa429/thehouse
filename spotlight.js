@@ -116,7 +116,14 @@
   // flat clickBonus to every manual click, 'discount' multiplies the
   // cost of every 'building' purchase by (1 - discountPerOwn) per copy
   // owned, capped at maxOwned so it can't approach free.
+  // Grouped by kind (all Production together, all Preparation-click
+  // together, etc.) rather than by when each tier was added — the shop
+  // renders in this exact array order per section (see
+  // renderShopSection), so upgrades of the same kind physically sitting
+  // apart here meant scrolling back and forth between related tiers in
+  // the actual list.
   var UPGRADES = [
+    // --- Production (passive rate) --------------------------------------
     {
       id: 'sigh',
       kind: 'building',
@@ -197,6 +204,58 @@
       costMultiplier: 1.18,
       ratePerMinute: 260000
     },
+    // --- post-Sequel Production: requires at least 1 Legacy point to even
+    // see. Picks up right where the pre-prestige tiers left off in both
+    // cost and rate, so a fresh Sequel run still has somewhere to grow
+    // past Cinematic Universe once it's earned enough again.
+    {
+      id: 'worldTour',
+      kind: 'building',
+      name: 'World Tour',
+      desc: "She's a global phenomenon now. 1,600,000 clicks / minute.",
+      unlockAt: 4000000,
+      baseCost: 4500000,
+      costMultiplier: 1.19,
+      ratePerMinute: 1600000,
+      minPrestige: 1
+    },
+    // Passive income kept going stale by mid-late game too — these three
+    // keep the curve meaningful well past World Tour.
+    {
+      id: 'franchiseDeal',
+      kind: 'building',
+      name: 'Franchise Deal',
+      desc: 'Spin-offs, merchandise, a theme park attraction. 12,000,000 clicks / minute.',
+      unlockAt: 30000000,
+      baseCost: 35000000,
+      costMultiplier: 1.19,
+      ratePerMinute: 12000000,
+      minPrestige: 1
+    },
+    {
+      id: 'culturalIcon',
+      kind: 'building',
+      name: 'Cultural Icon Status',
+      desc: "She's taught in schools now. 90,000,000 clicks / minute.",
+      unlockAt: 300000000,
+      baseCost: 350000000,
+      costMultiplier: 1.19,
+      ratePerMinute: 90000000,
+      minPrestige: 1
+    },
+    {
+      id: 'permanentWing',
+      kind: 'building',
+      name: 'A Museum Wing, Permanently',
+      desc: 'Not on loan. Not rotating. Hers, forever. 700,000,000 clicks / minute.',
+      unlockAt: 3000000000,
+      baseCost: 3500000000,
+      costMultiplier: 1.19,
+      ratePerMinute: 700000000,
+      minPrestige: 1
+    },
+
+    // --- Preparation (click power) ---------------------------------------
     {
       id: 'confidence',
       kind: 'click',
@@ -227,11 +286,6 @@
       costMultiplier: 1.2,
       clickBonus: 60
     },
-    // Preparation had a big pacing gap here — three tiers covering
-    // unlockAt 5 to 5,000, then nothing pre-prestige until Legend Status
-    // at 20,000 — while Production has 8 tiers spread across the same
-    // range. These three fill it in, roughly matching Production's ~6x
-    // cost/value jump per tier.
     {
       id: 'methodActing',
       kind: 'click',
@@ -262,130 +316,7 @@
       costMultiplier: 1.21,
       clickBonus: 2200
     },
-    {
-      id: 'connections',
-      kind: 'discount',
-      target: 'building',
-      name: 'Producer Connections',
-      desc: '-5% cost on future Production upgrades. Stacks up to 10 times.',
-      unlockAt: 100,
-      baseCost: 200,
-      costMultiplier: 1.6,
-      discountPerOwn: 0.05,
-      maxOwned: 10
-    },
-    {
-      id: 'coach',
-      kind: 'discount',
-      target: 'click',
-      name: 'Acting Coach',
-      desc: '-5% cost on future Preparation upgrades. Stacks up to 10 times.',
-      unlockAt: 300,
-      baseCost: 400,
-      costMultiplier: 1.6,
-      discountPerOwn: 0.05,
-      maxOwned: 10
-    },
-    {
-      id: 'timing',
-      kind: 'critChance',
-      name: 'Dramatic Instinct',
-      desc: '+1% critical chance. Stacks up to 10 times.',
-      unlockAt: 250,
-      baseCost: 350,
-      costMultiplier: 1.5,
-      critChanceBonus: 0.01,
-      maxOwned: 10
-    },
-    {
-      id: 'paparazzi',
-      kind: 'paparazzi',
-      name: 'Paparazzi',
-      desc: 'Every so often, her biggest fan shows up — manual clicks during the 5-second spotlight are worth 5x.',
-      unlockAt: 500,
-      baseCost: 1000,
-      costMultiplier: 1,
-      maxOwned: 1
-    },
-    {
-      id: 'tipline',
-      kind: 'paparazziFreq',
-      requires: 'paparazzi',
-      name: 'Tip Line',
-      desc: '-10% average wait between paparazzi visits. Stacks up to 5 times.',
-      unlockAt: 500,
-      baseCost: 800,
-      costMultiplier: 1.4,
-      freqReduction: 0.1,
-      maxOwned: 5
-    },
-    {
-      id: 'cover',
-      kind: 'paparazziMult',
-      requires: 'paparazzi',
-      name: 'Magazine Cover',
-      desc: '+1x click value during the paparazzi spotlight. Stacks up to 5 times.',
-      unlockAt: 500,
-      baseCost: 1200,
-      costMultiplier: 1.4,
-      multiplierBonus: 1,
-      maxOwned: 5
-    },
-    // Passive income normally ignores the paparazzi window entirely (it's
-    // built around manual clicks) — this makes it benefit too, automatically,
-    // no clicking required. See the passive-tick interval below.
-    {
-      id: 'publicist',
-      kind: 'paparazziPassive',
-      requires: 'paparazzi',
-      name: 'Personal Publicist',
-      desc: "Your passive income gets the paparazzi's multiplier too — no clicking required.",
-      unlockAt: 5000,
-      baseCost: 15000,
-      costMultiplier: 1,
-      maxOwned: 1
-    },
-    // Stretches the 5-second window itself rather than the payout —
-    // more time to actually land clicks during it.
-    {
-      id: 'extendedCut',
-      kind: 'paparazziDuration',
-      requires: 'paparazzi',
-      name: 'Extended Cut',
-      desc: '+1 second to the paparazzi spotlight window. Stacks up to 5 times.',
-      unlockAt: 2000,
-      baseCost: 3000,
-      costMultiplier: 1.5,
-      durationBonusMs: 1000,
-      maxOwned: 5
-    },
-    {
-      id: 'scandal',
-      kind: 'paparazziMult',
-      requires: 'cover',
-      name: 'Scandalous Rumor',
-      desc: '+2x click value during the paparazzi spotlight. Stacks up to 5 times.',
-      unlockAt: 5000,
-      baseCost: 6000,
-      costMultiplier: 1.4,
-      multiplierBonus: 2,
-      maxOwned: 5
-    },
-    // --- post-Sequel tier: requires at least 1 Legacy point to even see.
-    // Picks up right where the pre-prestige tiers left off in both cost
-    // and rate, so a fresh Sequel run still has somewhere to grow past
-    // Cinematic Universe once it's earned enough again.
-    {
-      id: 'worldTour',
-      kind: 'building',
-      name: 'World Tour',
-      desc: "She's a global phenomenon now. 1,600,000 clicks / minute.",
-      unlockAt: 4000000,
-      baseCost: 4500000,
-      costMultiplier: 1.19,
-      ratePerMinute: 1600000,
-      minPrestige: 1
-    },
+    // --- post-Sequel Preparation, same deal as post-Sequel Production above.
     {
       id: 'legendStatus',
       kind: 'click',
@@ -397,9 +328,6 @@
       clickBonus: 10000,
       minPrestige: 1
     },
-    // Click power kept going stale by mid-late game (100M+ Spotlight
-    // makes +400/click a rounding error) — these three keep the curve
-    // meaningful well past that, each roughly 8x the last.
     {
       id: 'worldPremiere',
       kind: 'click',
@@ -444,41 +372,138 @@
       clickBonus: 25000000,
       minPrestige: 1
     },
-    // Same idea for passive income — World Tour was the last stop before
-    // things went stale too.
+    // A flat multiplier on top of everything else clickPower() already
+    // adds up (base + every clickBonus upgrade above) — unlike those, this
+    // doesn't have its own number, it just makes the total hit harder.
+    // Grouped here with the rest of click power rather than off on its own.
     {
-      id: 'franchiseDeal',
-      kind: 'building',
-      name: 'Franchise Deal',
-      desc: 'Spin-offs, merchandise, a theme park attraction. 12,000,000 clicks / minute.',
-      unlockAt: 30000000,
-      baseCost: 35000000,
-      costMultiplier: 1.19,
-      ratePerMinute: 12000000,
-      minPrestige: 1
+      id: 'starPower',
+      kind: 'clickPowerMult',
+      name: 'Star Power',
+      desc: '+5% to your total click power. Stacks up to 10 times.',
+      unlockAt: 8000,
+      baseCost: 12000,
+      costMultiplier: 1.45,
+      multBonus: 0.05,
+      maxOwned: 10
+    },
+
+    // --- cost discounts ---------------------------------------------------
+    {
+      id: 'connections',
+      kind: 'discount',
+      target: 'building',
+      name: 'Producer Connections',
+      desc: '-5% cost on future Production upgrades. Stacks up to 10 times.',
+      unlockAt: 100,
+      baseCost: 200,
+      costMultiplier: 1.6,
+      discountPerOwn: 0.05,
+      maxOwned: 10
     },
     {
-      id: 'culturalIcon',
-      kind: 'building',
-      name: 'Cultural Icon Status',
-      desc: "She's taught in schools now. 90,000,000 clicks / minute.",
-      unlockAt: 300000000,
-      baseCost: 350000000,
-      costMultiplier: 1.19,
-      ratePerMinute: 90000000,
-      minPrestige: 1
+      id: 'coach',
+      kind: 'discount',
+      target: 'click',
+      name: 'Acting Coach',
+      desc: '-5% cost on future Preparation upgrades. Stacks up to 10 times.',
+      unlockAt: 300,
+      baseCost: 400,
+      costMultiplier: 1.6,
+      discountPerOwn: 0.05,
+      maxOwned: 10
+    },
+
+    // --- critical clicks ---------------------------------------------------
+    {
+      id: 'timing',
+      kind: 'critChance',
+      name: 'Dramatic Instinct',
+      desc: '+1% critical chance. Stacks up to 10 times.',
+      unlockAt: 250,
+      baseCost: 350,
+      costMultiplier: 1.5,
+      critChanceBonus: 0.01,
+      maxOwned: 10
+    },
+
+    // --- paparazzi event ---------------------------------------------------
+    {
+      id: 'paparazzi',
+      kind: 'paparazzi',
+      name: 'Paparazzi',
+      desc: 'Every so often, her biggest fan shows up — manual clicks during the 5-second spotlight are worth 5x.',
+      unlockAt: 500,
+      baseCost: 1000,
+      costMultiplier: 1,
+      maxOwned: 1
     },
     {
-      id: 'permanentWing',
-      kind: 'building',
-      name: 'A Museum Wing, Permanently',
-      desc: 'Not on loan. Not rotating. Hers, forever. 700,000,000 clicks / minute.',
-      unlockAt: 3000000000,
-      baseCost: 3500000000,
-      costMultiplier: 1.19,
-      ratePerMinute: 700000000,
-      minPrestige: 1
+      id: 'tipline',
+      kind: 'paparazziFreq',
+      requires: 'paparazzi',
+      name: 'Tip Line',
+      desc: '-10% average wait between paparazzi visits. Stacks up to 5 times.',
+      unlockAt: 500,
+      baseCost: 800,
+      costMultiplier: 1.4,
+      freqReduction: 0.1,
+      maxOwned: 5
     },
+    {
+      id: 'cover',
+      kind: 'paparazziMult',
+      requires: 'paparazzi',
+      name: 'Magazine Cover',
+      desc: '+1x click value during the paparazzi spotlight. Stacks up to 5 times.',
+      unlockAt: 500,
+      baseCost: 1200,
+      costMultiplier: 1.4,
+      multiplierBonus: 1,
+      maxOwned: 5
+    },
+    {
+      id: 'scandal',
+      kind: 'paparazziMult',
+      requires: 'cover',
+      name: 'Scandalous Rumor',
+      desc: '+2x click value during the paparazzi spotlight. Stacks up to 5 times.',
+      unlockAt: 5000,
+      baseCost: 6000,
+      costMultiplier: 1.4,
+      multiplierBonus: 2,
+      maxOwned: 5
+    },
+    // Passive income normally ignores the paparazzi window entirely (it's
+    // built around manual clicks) — this makes it benefit too, automatically,
+    // no clicking required. See the passive-tick interval below.
+    {
+      id: 'publicist',
+      kind: 'paparazziPassive',
+      requires: 'paparazzi',
+      name: 'Personal Publicist',
+      desc: "Your passive income gets the paparazzi's multiplier too — no clicking required.",
+      unlockAt: 5000,
+      baseCost: 15000,
+      costMultiplier: 1,
+      maxOwned: 1
+    },
+    // Stretches the 5-second window itself rather than the payout —
+    // more time to actually land clicks during it.
+    {
+      id: 'extendedCut',
+      kind: 'paparazziDuration',
+      requires: 'paparazzi',
+      name: 'Extended Cut',
+      desc: '+1 second to the paparazzi spotlight window. Stacks up to 5 times.',
+      unlockAt: 2000,
+      baseCost: 3000,
+      costMultiplier: 1.5,
+      durationBonusMs: 1000,
+      maxOwned: 5
+    },
+
+    // --- other post-Sequel-only upgrades ------------------------------------
     // Spends Spotlight (not Legacy) to permanently boost the per-point
     // Legacy bonus itself — a multiplier on the multiplier, so it's most
     // valuable the more Legacy is already banked. Requires having
@@ -497,7 +522,8 @@
     },
     // Extends how long an absence can be credited for offline gains (see
     // OFFLINE_CAP_MS) — the 12h base cap is a deliberate anti-exploit
-    // limit, not a technical one, so it's fair game to buy past.
+    // limit, not a technical one, so it's fair game to buy past. Not
+    // actually Legacy-gated (minPrestige unset) — unlike the above.
     {
       id: 'standingArrangement',
       kind: 'offlineCap',
@@ -508,20 +534,6 @@
       costMultiplier: 1.5,
       capBonusHours: 6,
       maxOwned: 6
-    },
-    // A flat multiplier on top of everything else clickPower() already
-    // adds up (base + every clickBonus upgrade) — unlike those, this
-    // doesn't have its own number, it just makes the total hit harder.
-    {
-      id: 'starPower',
-      kind: 'clickPowerMult',
-      name: 'Star Power',
-      desc: '+5% to your total click power. Stacks up to 10 times.',
-      unlockAt: 8000,
-      baseCost: 12000,
-      costMultiplier: 1.45,
-      multBonus: 0.05,
-      maxOwned: 10
     }
   ];
 

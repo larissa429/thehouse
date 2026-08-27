@@ -1147,9 +1147,20 @@
   // this point should set `minPrestige: N` to require N Legacy ever
   // earned before it's purchasable — see the check in renderShopSection.
   var LEGACY_DIVISOR = 1000000;
+  // Each completed prestige raises the divisor by 50% of the base, so
+  // the same Legacy payout costs progressively more totalEarned every
+  // time — first prestige (prestigeCount 0) is unaffected, second costs
+  // 1.5x, third 2x, and so on. Without this, an auto-clicker (or just
+  // getting good at the early game) can chain prestiges far faster than
+  // intended, since totalEarned resets but the base threshold never grew.
+  var LEGACY_DIVISOR_GROWTH_PER_PRESTIGE = 0.5;
+
+  function legacyDivisor() {
+    return LEGACY_DIVISOR * (1 + state.prestigeCount * LEGACY_DIVISOR_GROWTH_PER_PRESTIGE);
+  }
 
   function legacyGainPreview() {
-    return Math.floor(Math.sqrt(state.totalEarned / LEGACY_DIVISOR));
+    return Math.floor(Math.sqrt(state.totalEarned / legacyDivisor()));
   }
 
   function renderPrestige() {
@@ -1163,7 +1174,7 @@
       prestigeBtn.disabled = true;
       prestigeBtn.textContent = 'The Sequel';
       prestigeHintEl.hidden = false;
-      prestigeHintEl.textContent = 'Reach ' + formatNumber(LEGACY_DIVISOR) + ' total Spotlight to prestige.';
+      prestigeHintEl.textContent = 'Reach ' + formatNumber(legacyDivisor()) + ' total Spotlight to prestige.';
     }
   }
 

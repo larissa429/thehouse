@@ -838,6 +838,27 @@
         return ACHIEVEMENTS.filter(function (a) { return a.id !== 'womanOfManyTalents'; })
           .every(function (a) { return state.unlockedAchievements[a.id]; });
       }
+    },
+    // Cookie Clicker's "Lucky!" — no state condition at all, just a coin
+    // flip re-rolled every second (checkAchievements() already runs
+    // check() once per second for every not-yet-unlocked achievement,
+    // so a random-odds check() gets "once per second" for free). Purely
+    // luck-based, same as the real thing.
+    {
+      id: 'lucky',
+      name: 'Lucky',
+      desc: 'Got remarkably lucky — roughly a 1 in 1,000,000 shot, rolled once per second, however long that takes.',
+      bonusType: 'clickPower',
+      bonusValue: 0.05,
+      check: function () { return Math.random() < 1 / 1000000; }
+    },
+    {
+      id: 'againstAllOdds',
+      name: 'Against All Odds',
+      desc: "Got absurdly lucky — roughly a 1 in 10,000,000 shot, rolled once per second. You probably shouldn't have this.",
+      bonusType: 'clickPower',
+      bonusValue: 0.3,
+      check: function () { return Math.random() < 1 / 10000000; }
     }
   ];
 

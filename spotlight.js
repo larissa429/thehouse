@@ -1062,7 +1062,14 @@
 
   function renderCount() {
     countEl.textContent = formatNumber(state.spotlight);
-    var rate = totalRatePerMinute();
+    // totalRatePerMinute()/clickPower() don't include the Legacy bonus —
+    // earnSpotlight() applies it separately, at the moment income
+    // actually lands, so every source (clicks, crits, paparazzi, passive)
+    // gets it from one place instead of each having to remember to. That
+    // means these previews need to multiply it back in themselves, or
+    // they'd quietly undersell the real per-click/per-minute gain to
+    // anyone sitting on Legacy points.
+    var rate = totalRatePerMinute() * legacyMultiplier();
     if (rate > 0) {
       rateEl.hidden = false;
       rateEl.textContent = '+' + formatNumber(rate) + ' / min, passively';
@@ -1070,7 +1077,7 @@
       rateEl.hidden = true;
     }
     clickRateEl.hidden = false;
-    clickRateEl.textContent = '+' + formatNumber(clickPower()) + ' / click';
+    clickRateEl.textContent = '+' + formatNumber(clickPower() * legacyMultiplier()) + ' / click';
   }
 
   function renderShopSection(containerEl, kinds) {
@@ -1740,8 +1747,10 @@
     statCritsEl.textContent = state.totalCrits.toLocaleString();
     statOfflineEl.textContent = formatNumber(Math.floor(state.totalOfflineEarned)) + ' Spotlight';
     statLegacyMultEl.textContent = legacyMultiplier().toFixed(2) + 'x';
-    statClickPowerEl.textContent = formatNumber(clickPower()) + ' / click';
-    statRateEl.textContent = formatNumber(totalRatePerMinute()) + ' / min';
+    // Same Legacy-multiplier catch-up as renderCount() — clickPower()/
+    // totalRatePerMinute() don't include it themselves.
+    statClickPowerEl.textContent = formatNumber(clickPower() * legacyMultiplier()) + ' / click';
+    statRateEl.textContent = formatNumber(totalRatePerMinute() * legacyMultiplier()) + ' / min';
     statCritChanceEl.textContent = (Math.round(critChance() * 1000) / 10) + '%';
     statBuildingDiscountEl.textContent = formatPercent(discountFactor('building'));
     statClickDiscountEl.textContent = formatPercent(discountFactor('click'));

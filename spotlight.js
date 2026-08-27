@@ -52,6 +52,9 @@
   var statClicksEl = document.getElementById('spotlightStatClicks');
   var statCritsEl = document.getElementById('spotlightStatCrits');
   var statOfflineEl = document.getElementById('spotlightStatOffline');
+  var statOfflineClaimsEl = document.getElementById('spotlightStatOfflineClaims');
+  var statPaparazziEventsEl = document.getElementById('spotlightStatPaparazziEvents');
+  var statPrestigeCountEl = document.getElementById('spotlightStatPrestigeCount');
   var statLegacyMultEl = document.getElementById('spotlightStatLegacyMult');
   var statClickPowerEl = document.getElementById('spotlightStatClickPower');
   var statRateEl = document.getElementById('spotlightStatRate');
@@ -254,6 +257,21 @@
       ratePerMinute: 700000000,
       minPrestige: 1
     },
+    // --- minPrestige: 3 — a second Legacy-gated tier, past the first
+    // Sequel's own tier above. Everything so far only ever asked for one
+    // prestige; this is the first thing that actually rewards going
+    // multiple runs deep instead of just banking Legacy passively.
+    {
+      id: 'globalDistribution',
+      kind: 'building',
+      name: 'Global Distribution Deal',
+      desc: 'Dubbed into every language. Subtitled into the rest. 5,000,000,000 clicks / minute.',
+      unlockAt: 25000000000,
+      baseCost: 30000000000,
+      costMultiplier: 1.19,
+      ratePerMinute: 5000000000,
+      minPrestige: 3
+    },
 
     // --- Preparation (click power) ---------------------------------------
     {
@@ -371,6 +389,18 @@
       costMultiplier: 1.22,
       clickBonus: 25000000,
       minPrestige: 1
+    },
+    // Same minPrestige: 3 deal as Global Distribution Deal above.
+    {
+      id: 'methodBeyondMethod',
+      kind: 'click',
+      name: 'Method Beyond Method',
+      desc: '+180,000,000 Spotlight per click.',
+      unlockAt: 4000000000,
+      baseCost: 5000000000,
+      costMultiplier: 1.22,
+      clickBonus: 180000000,
+      minPrestige: 3
     },
     // A flat multiplier on top of everything else clickPower() already
     // adds up (base + every clickBonus upgrade above) — unlike those, this
@@ -520,6 +550,20 @@
       maxOwned: 10,
       minPrestige: 1
     },
+    // Stacks with Director's Cut — minPrestige: 3, same second tier as
+    // the two above.
+    {
+      id: 'auteurStatus',
+      kind: 'legacyMult',
+      name: 'Auteur Status',
+      desc: '+10% to your Legacy bonus per point. Stacks up to 10 times.',
+      unlockAt: 50000000,
+      baseCost: 100000000,
+      costMultiplier: 1.7,
+      legacyMultBonus: 0.1,
+      maxOwned: 10,
+      minPrestige: 3
+    },
     // Extends how long an absence can be credited for offline gains (see
     // OFFLINE_CAP_MS) — the 12h base cap is a deliberate anti-exploit
     // limit, not a technical one, so it's fair game to buy past. Not
@@ -600,6 +644,40 @@
       cost: 2,
       freqReduction: 0.08,
       maxOwned: 5
+    },
+    // Starts each new run with a head start instead of a hard zero —
+    // applied once, right when startNewRun() actually resets Spotlight.
+    {
+      id: 'generationalWealth',
+      kind: 'legacySkillStartingSpotlight',
+      name: 'Generational Wealth',
+      desc: 'Start each new run with 500 Spotlight instead of 0. Stacks up to 5 times.',
+      cost: 3,
+      startingSpotlightBonus: 500,
+      maxOwned: 5
+    },
+    // The crit MULTIPLIER itself, not the chance — a lever nothing else
+    // in the game touches, so it stays meaningful even once crit chance
+    // is already near its practical ceiling.
+    {
+      id: 'iconic',
+      kind: 'legacySkillCritMult',
+      name: 'Iconic',
+      desc: 'Critical clicks hit for +1x more. Stacks up to 5 times.',
+      cost: 3,
+      critMultBonus: 1,
+      maxOwned: 5
+    },
+    // A capstone, not a tier — expensive, one-time, meant to be a savings
+    // goal in its own right rather than something bought early and forgotten.
+    {
+      id: 'hallOfFame',
+      kind: 'legacySkillClick',
+      name: 'Hall of Fame',
+      desc: '+100 flat Spotlight per click. One time only.',
+      cost: 20,
+      clickBonus: 100,
+      maxOwned: 1
     }
   ];
 
@@ -693,6 +771,73 @@
         return UPGRADES.filter(function (u) { return u.kind === 'building'; })
           .every(function (u) { return state.owned[u.id] >= 1; });
       }
+    },
+    {
+      id: 'soldOutShow',
+      name: 'Sold Out Show',
+      desc: 'Own at least one of every Preparation upgrade.',
+      bonusType: 'clickPower',
+      bonusValue: 0.05,
+      check: function () {
+        return UPGRADES.filter(function (u) { return u.kind === 'click'; })
+          .every(function (u) { return state.owned[u.id] >= 1; });
+      }
+    },
+    {
+      id: 'diamondAnniversary',
+      name: 'Diamond Anniversary',
+      desc: 'Bank 10 total Legacy points.',
+      bonusType: 'rate',
+      bonusValue: 0.05,
+      check: function () { return state.legacy >= 10; }
+    },
+    {
+      id: 'paparazziFavorite',
+      name: "Paparazzi's Favorite",
+      desc: 'Live through 50 paparazzi events.',
+      bonusType: 'clickPower',
+      bonusValue: 0.03,
+      check: function () { return state.paparazziEventsSeen >= 50; }
+    },
+    {
+      id: 'noDaysOff',
+      name: 'No Days Off',
+      desc: 'Collect offline gains 20 times.',
+      bonusType: 'rate',
+      bonusValue: 0.03,
+      check: function () { return state.offlineClaimsCount >= 20; }
+    },
+    {
+      id: 'methodActress',
+      name: 'Method Actress',
+      desc: 'Land 500 critical clicks.',
+      bonusType: 'clickPower',
+      bonusValue: 0.05,
+      check: function () { return state.totalCrits >= 500; }
+    },
+    {
+      id: 'encoreEncore',
+      name: 'Encore, Encore',
+      desc: 'Prestige 5 times.',
+      bonusType: 'rate',
+      bonusValue: 0.1,
+      check: function () { return state.prestigeCount >= 5; }
+    },
+    // A meta-achievement — references ACHIEVEMENTS itself, which is fine
+    // since check() only actually runs (from checkAchievements(), every
+    // second) long after this whole array literal has finished
+    // evaluating, by which point the outer `ACHIEVEMENTS` binding it
+    // closes over is fully populated.
+    {
+      id: 'womanOfManyTalents',
+      name: 'A Woman of Many Talents',
+      desc: 'Unlock every other achievement.',
+      bonusType: 'clickPower',
+      bonusValue: 0.1,
+      check: function () {
+        return ACHIEVEMENTS.filter(function (a) { return a.id !== 'womanOfManyTalents'; })
+          .every(function (a) { return state.unlockedAchievements[a.id]; });
+      }
     }
   ];
 
@@ -704,7 +849,7 @@
     return mult;
   }
 
-  var state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, legacySkills: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, colorfulText: true, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
+  var state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, legacySkills: {}, reducedEffects: false, legacy: 0, shorthandNumbers: true, colorfulText: true, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, paparazziEventsSeen: 0, offlineClaimsCount: 0, prestigeCount: 0, unlockedAchievements: {} };
   UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
   LEGACY_SKILLS.forEach(function (s) { state.legacySkills[s.id] = 0; });
   loadSave();
@@ -748,6 +893,9 @@
       if (typeof parsed.totalClicks === 'number') state.totalClicks = parsed.totalClicks;
       if (typeof parsed.totalCrits === 'number') state.totalCrits = parsed.totalCrits;
       if (typeof parsed.totalOfflineEarned === 'number') state.totalOfflineEarned = parsed.totalOfflineEarned;
+      if (typeof parsed.paparazziEventsSeen === 'number') state.paparazziEventsSeen = parsed.paparazziEventsSeen;
+      if (typeof parsed.offlineClaimsCount === 'number') state.offlineClaimsCount = parsed.offlineClaimsCount;
+      if (typeof parsed.prestigeCount === 'number') state.prestigeCount = parsed.prestigeCount;
       if (parsed.unlockedAchievements) {
         ACHIEVEMENTS.forEach(function (a) {
           if (parsed.unlockedAchievements[a.id]) state.unlockedAchievements[a.id] = true;
@@ -836,6 +984,18 @@
       if (s.kind === 'legacySkillPaparazziFreq') factor *= Math.pow(1 - s.freqReduction, state.legacySkills[s.id]);
     });
     return factor;
+  }
+
+  function legacySkillStartingSpotlightBonus() {
+    return LEGACY_SKILLS.reduce(function (sum, s) {
+      return s.kind === 'legacySkillStartingSpotlight' ? sum + state.legacySkills[s.id] * s.startingSpotlightBonus : sum;
+    }, 0);
+  }
+
+  function legacySkillCritMultBonus() {
+    return LEGACY_SKILLS.reduce(function (sum, s) {
+      return s.kind === 'legacySkillCritMult' ? sum + state.legacySkills[s.id] * s.critMultBonus : sum;
+    }, 0);
   }
 
   // `target` picks which upgrade kind a discount applies to — 'building'
@@ -935,6 +1095,7 @@
   function triggerPaparazzi() {
     if (state.owned.paparazzi <= 0) return;
     paparazziActive = true;
+    state.paparazziEventsSeen++;
     portraitWrapEl.classList.add('is-paparazzi');
     paparazziBadgeMultEl.textContent = paparazziMultiplier();
     paparazziBadgeEl.hidden = false;
@@ -1020,15 +1181,21 @@
     var keepTotalOfflineEarned = state.totalOfflineEarned;
     var keepLifetimeEarned = state.lifetimeEarned;
     var keepUnlockedAchievements = state.unlockedAchievements;
+    var keepPaparazziEventsSeen = state.paparazziEventsSeen;
+    var keepOfflineClaimsCount = state.offlineClaimsCount;
+    var keepPrestigeCount = state.prestigeCount + 1; // this run wipe IS the prestige completing
     // Both the Legacy total (gain already applied in doPrestige) and
     // whatever skills were just bought on the Between Runs screen carry
     // over into the new run.
     var keepLegacy = state.legacy;
     var keepLegacySkills = state.legacySkills;
     cancelPaparazzi();
-    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: keepLifetimeEarned, owned: {}, legacySkills: keepLegacySkills, reducedEffects: keepReducedEffects, legacy: keepLegacy, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned, unlockedAchievements: keepUnlockedAchievements };
+    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: keepLifetimeEarned, owned: {}, legacySkills: keepLegacySkills, reducedEffects: keepReducedEffects, legacy: keepLegacy, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned, paparazziEventsSeen: keepPaparazziEventsSeen, offlineClaimsCount: keepOfflineClaimsCount, prestigeCount: keepPrestigeCount, unlockedAchievements: keepUnlockedAchievements };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     LEGACY_SKILLS.forEach(function (s) { if (typeof state.legacySkills[s.id] !== 'number') state.legacySkills[s.id] = 0; });
+    // Generational Wealth: start the new run with a head start instead
+    // of a hard zero, if bought.
+    state.spotlight = legacySkillStartingSpotlightBonus();
     save();
     lastLine = null;
     showLine(SEQUEL_LINE);
@@ -1372,6 +1539,7 @@
     var creditedMs = Math.min(elapsedMs, cap);
     var amount = earnSpotlight(rate * (creditedMs / 60000));
     state.totalOfflineEarned += amount;
+    state.offlineClaimsCount++;
     offlineTimeEl.textContent = 'You were away for ' + formatDuration(elapsedMs) +
       (elapsedMs > cap ? ' (capped at ' + formatDuration(cap) + ')' : '') + '.';
     offlineAmountEl.textContent = '+' + formatNumber(Math.floor(amount)) + ' Spotlight';
@@ -1386,12 +1554,19 @@
     save();
   });
 
-  var CRIT_MULTIPLIER = 10;
+  var CRIT_MULTIPLIER_BASE = 10;
+
+  // Iconic (Legacy skill) adds flat +1x per copy on top of the base 10x —
+  // a lever nothing else in the game touches, kept separate from
+  // critChance() (which controls how OFTEN, not how hard).
+  function critMultiplier() {
+    return CRIT_MULTIPLIER_BASE + legacySkillCritMultBonus();
+  }
 
   function handleClick(e) {
     var beforeUnlockedClick = unlockedCount();
     var isCrit = Math.random() < critChance();
-    var amount = earnSpotlight(clickPower() * (isCrit ? CRIT_MULTIPLIER : 1) * (paparazziActive ? paparazziMultiplier() : 1));
+    var amount = earnSpotlight(clickPower() * (isCrit ? critMultiplier() : 1) * (paparazziActive ? paparazziMultiplier() : 1));
     state.totalClicks++;
     if (isCrit) state.totalCrits++;
     if (isCrit) showLine(CRIT_LINES[Math.floor(Math.random() * CRIT_LINES.length)]);
@@ -1431,7 +1606,7 @@
     // Unlike prestiging, the plain Reset button is a full wipe — Legacy
     // included. It's the "start completely over" button; The Sequel is
     // the one that keeps Legacy around.
-    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, legacySkills: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, unlockedAchievements: {} };
+    state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, legacySkills: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, paparazziEventsSeen: 0, offlineClaimsCount: 0, prestigeCount: 0, unlockedAchievements: {} };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     LEGACY_SKILLS.forEach(function (s) { state.legacySkills[s.id] = 0; });
     cancelPaparazzi();
@@ -1746,6 +1921,9 @@
     statClicksEl.textContent = state.totalClicks.toLocaleString();
     statCritsEl.textContent = state.totalCrits.toLocaleString();
     statOfflineEl.textContent = formatNumber(Math.floor(state.totalOfflineEarned)) + ' Spotlight';
+    statOfflineClaimsEl.textContent = state.offlineClaimsCount.toLocaleString();
+    statPaparazziEventsEl.textContent = state.paparazziEventsSeen.toLocaleString();
+    statPrestigeCountEl.textContent = state.prestigeCount.toLocaleString();
     statLegacyMultEl.textContent = legacyMultiplier().toFixed(2) + 'x';
     // Same Legacy-multiplier catch-up as renderCount() — clickPower()/
     // totalRatePerMinute() don't include it themselves.

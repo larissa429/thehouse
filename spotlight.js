@@ -919,7 +919,12 @@
       if (typeof parsed.prestigeCount === 'number') state.prestigeCount = parsed.prestigeCount;
       if (parsed.unlockedAchievements) {
         ACHIEVEMENTS.forEach(function (a) {
-          if (parsed.unlockedAchievements[a.id]) state.unlockedAchievements[a.id] = true;
+          if (parsed.unlockedAchievements[a.id]) {
+            // Saves from before this tracked timestamps just have `true` —
+            // keep that as-is (still counts as unlocked, just no known
+            // time) rather than fabricating a fake "unlocked right now".
+            state.unlockedAchievements[a.id] = parsed.unlockedAchievements[a.id];
+          }
         });
       }
       if (parsed.owned) {
@@ -1249,7 +1254,16 @@
     n = Math.floor(n);
     var abs = Math.abs(n);
     if (abs < 10000 || !state.shorthandNumbers) return n.toLocaleString();
-    var units = [[1e12, 'T'], [1e9, 'B'], [1e6, 'M'], [1e3, 'K']];
+    // Capped at Trillion before — a long-idle save can genuinely blow
+    // past that (compounding passive income + upgrades), which just
+    // showed as an ugly "10,944.93T" instead of rolling over. Extended
+    // with the standard short-scale names, generous headroom past
+    // anything remotely reachable right now.
+    var units = [
+      [1e42, 'Td'], [1e39, 'Dd'], [1e36, 'Ud'], [1e33, 'Dc'], [1e30, 'No'],
+      [1e27, 'Oc'], [1e24, 'Sp'], [1e21, 'Sx'], [1e18, 'Qi'], [1e15, 'Qa'],
+      [1e12, 'T'], [1e9, 'B'], [1e6, 'M'], [1e3, 'K']
+    ];
     for (var i = 0; i < units.length; i++) {
       if (abs >= units[i][0]) {
         var str = (n / units[i][0]).toFixed(2).replace(/\.?0+$/, '');
@@ -2005,7 +2019,7 @@
     ACHIEVEMENTS.forEach(function (a) {
       if (state.unlockedAchievements[a.id]) return;
       if (!a.check()) return;
-      state.unlockedAchievements[a.id] = true;
+      state.unlockedAchievements[a.id] = Date.now(); // real timestamp, not just true — so idle unlocks (Lucky!) show when they actually happened
       unlockedAny = true;
       showAchievementToast(a.name);
     });
@@ -2041,6 +2055,15 @@
       info.appendChild(name);
       info.appendChild(desc);
       info.appendChild(bonus);
+      // Only real numeric timestamps get a date shown — saves from
+      // before this tracked timestamps just have a bare `true`, so
+      // there's genuinely no time to show for those.
+      if (typeof state.unlockedAchievements[a.id] === 'number') {
+        var unlockedAt = document.createElement('span');
+        unlockedAt.className = 'spotlight-achievement-unlocked-at';
+        unlockedAt.textContent = 'Unlocked ' + new Date(state.unlockedAchievements[a.id]).toLocaleString();
+        info.appendChild(unlockedAt);
+      }
 
       row.appendChild(icon);
       row.appendChild(info);

@@ -237,9 +237,27 @@
     nextRound();
   }
 
+  function returnToStart() {
+    // Same mid-round-safe teardown as startShift, but lands on the start
+    // screen instead of launching straight into a fresh shift.
+    running = false;
+    activeToken++;
+    if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+
+    score = 0;
+    lives = MAX_LIVES;
+    round = 0;
+    lastJobId = null;
+    renderHud();
+    clearField();
+    hideResult();
+    gameOverOverlay.hidden = true;
+    startOverlay.hidden = false;
+  }
+
   startBtn.addEventListener('click', startShift);
-  restartBtn.addEventListener('click', startShift);
-  restartBtn2.addEventListener('click', startShift);
+  restartBtn.addEventListener('click', returnToStart);
+  restartBtn2.addEventListener('click', returnToStart);
 
   renderHud();
 })();

@@ -115,11 +115,12 @@
     }
     .oddjobs-plant:active { transform: scale(0.9); }
     .oddjobs-plant.is-wilting {
+      filter: brightness(0.65) saturate(0.3) sepia(0.55) hue-rotate(-25deg);
       animation: oddjobs-wilt-pulse 0.5s ease-in-out infinite;
     }
     @keyframes oddjobs-wilt-pulse {
-      0%, 100% { filter: brightness(1) sepia(0); }
-      50% { filter: brightness(0.75) sepia(0.6); }
+      0%, 100% { filter: brightness(0.65) saturate(0.3) sepia(0.55) hue-rotate(-25deg); }
+      50% { filter: brightness(0.4) saturate(0.1) sepia(0.9) hue-rotate(-35deg); }
     }
 
     /* --- Catch the memory petal --- */

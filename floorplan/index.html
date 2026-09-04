@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Floor Plan &middot; The House</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    [hidden] { display: none !important; }
+
+    #floorplanGame { max-width: 40rem; }
+
+    .floorplan-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.9rem;
+      flex-wrap: wrap;
+    }
+    .floorplan-tab {
+      font-family: var(--label);
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 6px;
+      padding: 0.5rem 0.9rem;
+      cursor: pointer;
+    }
+    .floorplan-tab.is-active {
+      color: var(--shadow);
+      background: var(--lamp);
+      border-color: transparent;
+    }
+    .floorplan-tab.is-ghost {
+      color: var(--ink-soft);
+      opacity: 0.4;
+      cursor: default;
+      pointer-events: none;
+      font-style: italic;
+    }
+
+    .floorplan-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .floorplan-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .floorplan-room-rect { fill: var(--wall-lit); stroke: rgba(157,133,112,0.4); stroke-width: 0.3; }
+    .floorplan-room-label {
+      font-family: var(--label);
+      font-size: 2.6px;
+      letter-spacing: 0.03em;
+      fill: var(--ink-soft);
+      text-transform: uppercase;
+    }
+
+    .floorplan-layer { position: absolute; inset: 0; }
+
+    .floorplan-dot {
+      position: absolute;
+      width: 3.2%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.35);
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      transition: left 0s, top 0s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .floorplan-dot.is-wandering { transition-timing-function: ease-in-out; }
+
+    .floorplan-door {
+      position: absolute;
+      width: 7%;
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      opacity: 0.3;
+      filter: grayscale(60%);
+      transition: opacity 0.2s, filter 0.2s, transform 0.2s;
+      background: url(../images/door.png) center / contain no-repeat;
+      border: none;
+      padding: 0;
+    }
+    .floorplan-door:hover { opacity: 1; filter: grayscale(0%); }
+
+    .floorplan-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--ink-soft);
+      font-style: italic;
+      padding: 2rem;
+      pointer-events: none;
+    }
+
+    .floorplan-note-card { display: flex; gap: 0.9rem; align-items: center; }
+    .floorplan-note-portrait {
+      width: 4.5rem;
+      height: 4.5rem;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--edgeclr);
+      flex-shrink: 0;
+    }
+    .floorplan-note-room {
+      font-family: var(--label);
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--dt-on-paper);
+      margin: 0 0 0.2rem;
+    }
+
+    .floorplan-caption {
+      margin-top: 0.7rem;
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+    }
+  </style>
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+    <span class="eyebrow breadcrumb"><a href="../games/">&larr; Games</a></span>
+
+    <h1>Floor Plan</h1>
+    <p>The House doesn't have one fixed layout &mdash; it changes on its own. Every visit carves the rooms fresh.
+      Tap a dot to see who's there.</p>
+
+    <div id="floorplanGame">
+      <div class="floorplan-tabs" id="floorplanTabs"></div>
+      <div class="floorplan-stage" id="floorplanStage">
+        <svg class="floorplan-svg" id="floorplanSvg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+        <div class="floorplan-layer" id="floorplanLayer"></div>
+      </div>
+      <p class="floorplan-caption" id="floorplanCaption"></p>
+    </div>
+
+  </main>
+
+  <div class="note-overlay" id="note-overlay">
+    <div class="note" id="note-content">
+      <button class="note-close" id="note-close">&times;</button>
+      <div id="note-body"></div>
+    </div>
+  </div>
+
+  <site-footer></site-footer>
+
+  <script src="../components.js" defer></script>
+  <script src="../connections.js" defer></script>
+  <script src="../floorplan.js" defer></script>
+</body>
+</html>

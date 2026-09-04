@@ -444,6 +444,11 @@
     running = false;
     activeToken++;
     if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+    // resolve() normally freezes the timer bar's CSS transition the
+    // instant a round ends — but returning to start can happen mid-round,
+    // bypassing resolve() entirely, so the bar would otherwise keep
+    // animating toward 0% behind the start overlay.
+    timerFillEl.style.transition = 'none';
 
     score = 0;
     lives = MAX_LIVES;

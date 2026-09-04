@@ -38,7 +38,9 @@
   var LOCKED_DOOR_CHANCE = 0.05;   // floor 2 only — Penny, an even rarer find
   var WANDER_CHECK_MS = 9000;      // how often a dot might decide to wander
   var WANDER_CHANCE = 0.35;        // odds a wander check actually moves someone
-  var WANDER_LEG_MS = 1400;        // duration of each leg (room -> hallway -> room)
+  var WANDER_MS_PER_UNIT = 45;     // walking speed — ms per viewBox unit of distance
+  var WANDER_MIN_LEG_MS = 350;     // floor, so a short hop isn't instant
+  var WANDER_MAX_LEG_MS = 1800;    // ceiling, so a long hallway leg isn't glacial
 
   // --- Residents ---------------------------------------------------------
   // Colors match each resident's existing connection-note color in
@@ -181,7 +183,12 @@
           rect: rect,
           cx: rect.x + rect.w / 2,
           cy: rect.y + rect.h / 2,
-          doorPoint: { x: rect.x + rect.w / 2, y: side === 'top' ? corridorY - opts.corridorHalf : corridorY + opts.corridorHalf },
+          // The true centerline of the corridor, not its near edge — a
+          // wandering dot's waypoints come straight from this, and should
+          // read as walking down the middle of the hallway, not hugging
+          // the wall it just stepped out of.
+          doorPoint: { x: rect.x + rect.w / 2, y: corridorY },
+          seg: { key: 'spine', axis: 'h', pos: corridorY },
           occupants: []
         });
       });
@@ -249,11 +256,26 @@
     o: [['top', 'right', 'bottom', 'left']]
   };
 
+  // The 4 fixed points where perimeter segments meet, and which two
+  // corners each segment's centerline runs between — used to route a
+  // wandering dot through the actual turn(s) between two different
+  // segments, rather than a straight line cutting across the bend.
+  var CORNER_POINTS = {
+    NW: { x: PERIMETER.x0, y: PERIMETER.y0 },
+    NE: { x: PERIMETER.x1, y: PERIMETER.y0 },
+    SE: { x: PERIMETER.x1, y: PERIMETER.y1 },
+    SW: { x: PERIMETER.x0, y: PERIMETER.y1 }
+  };
+  var SEGMENT_CORNERS = { top: ['NW', 'NE'], right: ['NE', 'SE'], bottom: ['SW', 'SE'], left: ['NW', 'SW'] };
+
   // rowSign is which way this row extends from the corridor: seg.outSign
   // for the outward row, -seg.outSign for the inward one. alongFrom/To
   // optionally narrow the usable stretch of the segment (used to inset
-  // the inward row away from corners).
-  function layoutPerimeterRow(seg, names, rowSign, alongFrom, alongTo) {
+  // the inward row away from corners). segKey identifies which side of
+  // the perimeter this is (top/right/bottom/left) — tagged onto every
+  // room it produces so wandering knows which corridor segment a room
+  // opens onto, for routing through the right corner(s) between segments.
+  function layoutPerimeterRow(seg, names, rowSign, segKey, alongFrom, alongTo) {
     var rooms = [];
     var n = names.length;
     if (!n) return rooms;
@@ -270,14 +292,20 @@
       var farEdge = nearEdge + rowSign * PERIMETER_DEPTH;
       var d0 = Math.min(nearEdge, farEdge), d1 = Math.max(nearEdge, farEdge);
       var rect, doorPoint;
+      // doorPoint sits on the corridor's true centerline (seg.pos), not
+      // the near edge — a wander waypoint built from this should read as
+      // walking down the middle of the hallway, never hugging the wall.
       if (seg.axis === 'h') {
         rect = { x: alongStart, y: d0, w: alongLen, h: d1 - d0 };
-        doorPoint = { x: rect.x + rect.w / 2, y: nearEdge };
+        doorPoint = { x: rect.x + rect.w / 2, y: seg.pos };
       } else {
         rect = { x: d0, y: alongStart, w: d1 - d0, h: alongLen };
-        doorPoint = { x: nearEdge, y: rect.y + rect.h / 2 };
+        doorPoint = { x: seg.pos, y: rect.y + rect.h / 2 };
       }
-      rooms.push({ name: name, rect: rect, cx: rect.x + rect.w / 2, cy: rect.y + rect.h / 2, doorPoint: doorPoint, occupants: [] });
+      rooms.push({
+        name: name, rect: rect, cx: rect.x + rect.w / 2, cy: rect.y + rect.h / 2,
+        doorPoint: doorPoint, seg: { key: segKey, axis: seg.axis, pos: seg.pos }, occupants: []
+      });
     });
     return rooms;
   }
@@ -286,14 +314,18 @@
     var allSegs = perimeterSegments();
 
     if (shapeKey === 'o') {
-      var ringSegs = ['top', 'right', 'bottom', 'left'].map(function (k) { return allSegs[k]; });
+      var ringKeys = ['top', 'right', 'bottom', 'left'];
+      var ringSegs = ringKeys.map(function (k) { return allSegs[k]; });
       var ringNames = names.filter(function (n) { return n !== 'Courtyard'; });
       var perSeg = Math.ceil(ringNames.length / ringSegs.length);
       var rooms = [];
       var corridorSegments = [];
+      var segMeta = [];
       ringSegs.forEach(function (seg, i) {
-        rooms = rooms.concat(layoutPerimeterRow(seg, ringNames.slice(i * perSeg, (i + 1) * perSeg), seg.outSign));
+        var key = ringKeys[i];
+        rooms = rooms.concat(layoutPerimeterRow(seg, ringNames.slice(i * perSeg, (i + 1) * perSeg), seg.outSign, key));
         corridorSegments.push(corridorRectFor(seg));
+        segMeta.push({ key: key, corners: SEGMENT_CORNERS[key] });
       });
       var inset = PERIMETER_HALF + PERIMETER_GAP;
       var cRect = {
@@ -302,9 +334,12 @@
       };
       rooms.push({
         name: 'Courtyard', rect: cRect, cx: cRect.x + cRect.w / 2, cy: cRect.y + cRect.h / 2,
-        doorPoint: { x: cRect.x + cRect.w / 2, y: PERIMETER.y0 - PERIMETER_HALF }, occupants: []
+        // Touches the ring at the north segment, so it routes through
+        // wandering exactly like any other room opening onto 'top'.
+        doorPoint: { x: cRect.x + cRect.w / 2, y: PERIMETER.y0 }, seg: { key: 'top', axis: 'h', pos: PERIMETER.y0 },
+        occupants: []
       });
-      return { rooms: rooms, corridorSegments: corridorSegments };
+      return { rooms: rooms, corridorSegments: corridorSegments, segments: segMeta };
     }
 
     var options = SHAPE_SEGMENT_OPTIONS[shapeKey];
@@ -327,14 +362,17 @@
 
     var rooms = [];
     var corridorSegments = [];
+    var segMeta2 = [];
     chosenSegs.forEach(function (seg, i) {
-      rooms = rooms.concat(layoutPerimeterRow(seg, names.slice(i * perSegOut, (i + 1) * perSegOut), seg.outSign));
+      var key = chosenKeys[i];
+      rooms = rooms.concat(layoutPerimeterRow(seg, names.slice(i * perSegOut, (i + 1) * perSegOut), seg.outSign, key));
       if (i === inwardSegIndex && inwardNames.length) {
-        rooms = rooms.concat(layoutPerimeterRow(seg, inwardNames, -seg.outSign, seg.from + CORNER_INSET, seg.to - CORNER_INSET));
+        rooms = rooms.concat(layoutPerimeterRow(seg, inwardNames, -seg.outSign, key, seg.from + CORNER_INSET, seg.to - CORNER_INSET));
       }
       corridorSegments.push(corridorRectFor(seg));
+      segMeta2.push({ key: key, corners: SEGMENT_CORNERS[key] });
     });
-    return { rooms: rooms, corridorSegments: corridorSegments };
+    return { rooms: rooms, corridorSegments: corridorSegments, segments: segMeta2 };
   }
 
   var HANGOUT_SHAPES = ['straight', 'l', 'u', 'o'];
@@ -705,6 +743,73 @@
   // there's no adjacency list to consult — just route through the midpoint
   // between the two rooms' doorways.
 
+  // BFS over whichever corners this floor's chosen segments actually
+  // connect, from segment A's two corners to segment B's two corners —
+  // e.g. an L only has 2 segments/3 corners, a U 3 segments/4 corners, so
+  // this is always a tiny graph. Returns the corner-name path to walk
+  // (possibly empty if A and B share a corner directly).
+  function findCorridorPath(floor, keyA, keyB) {
+    if (keyA === keyB) return [];
+    var adj = {};
+    (floor.segments || []).forEach(function (s) {
+      var a = s.corners[0], b = s.corners[1];
+      (adj[a] = adj[a] || []).push(b);
+      (adj[b] = adj[b] || []).push(a);
+    });
+    var startCorners = SEGMENT_CORNERS[keyA], targetCorners = SEGMENT_CORNERS[keyB];
+    var queue = startCorners.map(function (c) { return [c]; });
+    var visited = {};
+    startCorners.forEach(function (c) { visited[c] = true; });
+    while (queue.length) {
+      var path = queue.shift();
+      var last = path[path.length - 1];
+      if (targetCorners.indexOf(last) !== -1) return path;
+      (adj[last] || []).forEach(function (next) {
+        if (!visited[next]) { visited[next] = true; queue.push(path.concat([next])); }
+      });
+    }
+    return [];
+  }
+
+  // The waypoints a dot walks between leaving fromRoom and arriving at
+  // toRoom's doorway — its own doorway, then straight down the corridor
+  // if they share one, or through however many corners connect the two
+  // segments if they don't. The final hop from the doorway into the
+  // room's actual landing slot happens separately, once occupancy for
+  // toRoom is finalized.
+  function buildWanderPath(fromRoom, toRoom, floor) {
+    var points = [fromRoom.doorPoint];
+    if (fromRoom.seg && toRoom.seg && fromRoom.seg.key !== toRoom.seg.key) {
+      findCorridorPath(floor, fromRoom.seg.key, toRoom.seg.key).forEach(function (cname) {
+        points.push(CORNER_POINTS[cname]);
+      });
+    }
+    points.push(toRoom.doorPoint);
+    return points;
+  }
+
+  // Walks `dot` through `points` in sequence, one CSS transition per leg,
+  // timed by actual distance rather than a fixed duration — so a short
+  // hop to the room next door doesn't take as long as a trip through two
+  // corners, and a long leg doesn't read as sped-up just to fit the same
+  // duration as a short one.
+  function animateAlongPath(dot, points, onDone) {
+    var i = 0;
+    function step() {
+      if (i >= points.length) { onDone(); return; }
+      var p = points[i++];
+      var prevX = parseFloat(dot.style.left) || p.x;
+      var prevY = parseFloat(dot.style.top) || p.y;
+      var dist = Math.hypot(p.x - prevX, p.y - prevY);
+      var dur = Math.max(WANDER_MIN_LEG_MS, Math.min(WANDER_MAX_LEG_MS, dist * WANDER_MS_PER_UNIT));
+      dot.style.transition = 'left ' + dur + 'ms ease-in-out, top ' + dur + 'ms ease-in-out';
+      dot.style.left = p.x + '%';
+      dot.style.top = p.y + '%';
+      setTimeout(step, dur);
+    }
+    step();
+  }
+
   function tryWander() {
     // Floor 2 is presence same as anywhere else now, but a resident's own
     // bedroom wandering into someone else's would read as a real mistake
@@ -726,15 +831,9 @@
     if (!others.length) return;
     var toRoom = others[Math.floor(Math.random() * others.length)];
 
-    var hx = (fromRoom.doorPoint.x + toRoom.doorPoint.x) / 2;
-    var hy = (fromRoom.doorPoint.y + toRoom.doorPoint.y) / 2;
-
     dot.classList.add('is-wandering');
-    dot.style.transition = 'left ' + WANDER_LEG_MS + 'ms ease-in-out, top ' + WANDER_LEG_MS + 'ms ease-in-out';
-    dot.style.left = hx + '%';
-    dot.style.top = hy + '%';
-
-    setTimeout(function () {
+    var path = buildWanderPath(fromRoom, toRoom, floor);
+    animateAlongPath(dot, path, function () {
       var slug = dot.dataset.slug;
       fromRoom.occupants = fromRoom.occupants.filter(function (s) { return s !== slug; });
       if (toRoom.occupants.indexOf(slug) === -1) toRoom.occupants.push(slug);
@@ -747,13 +846,13 @@
       toRoom.occupants.forEach(function (occSlug, idx) {
         var el = occSlug === slug ? dot : layerEl.querySelector('.floorplan-dot[data-slug="' + occSlug + '"]');
         if (!el) return;
-        if (el !== dot) el.style.transition = 'left 0.6s ease, top 0.6s ease, width 0.6s ease';
+        el.style.transition = 'left 0.5s ease, top 0.5s ease, width 0.5s ease';
         el.style.left = slots[idx].x + '%';
         el.style.top = slots[idx].y + '%';
         el.style.width = size + '%';
       });
       dot.classList.remove('is-wandering');
-    }, WANDER_LEG_MS);
+    });
   }
 
   wanderTimer = setInterval(tryWander, WANDER_CHECK_MS);

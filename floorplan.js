@@ -518,14 +518,21 @@
     var isBedroomFloor = activeFloor === 1;
     var anyRoom = floor.rooms.length > 0;
 
-    if (floor.corridorSegments) {
-      floor.corridorSegments.forEach(function (seg) {
-        var band = document.createElementNS(SVG_NS, 'rect');
-        band.setAttribute('x', seg.x); band.setAttribute('y', seg.y);
-        band.setAttribute('width', seg.w); band.setAttribute('height', seg.h);
-        band.setAttribute('class', 'floorplan-corridor');
-        svgEl.appendChild(band);
-      });
+    if (floor.corridorSegments && floor.corridorSegments.length) {
+      // One <path> with one subpath per segment, not separate <rect>
+      // elements — overlapping segments (every corner where two meet)
+      // would otherwise each composite their own translucent fill, doubling
+      // up right where they cross and reading as boxes stacked on top of
+      // each other rather than one hallway. Wound consistently, a single
+      // path's overlapping subpaths merge into one flat region instead.
+      var d = floor.corridorSegments.map(function (seg) {
+        var x2 = seg.x + seg.w, y2 = seg.y + seg.h;
+        return 'M' + seg.x + ',' + seg.y + ' L' + x2 + ',' + seg.y + ' L' + x2 + ',' + y2 + ' L' + seg.x + ',' + y2 + ' Z';
+      }).join(' ');
+      var band = document.createElementNS(SVG_NS, 'path');
+      band.setAttribute('d', d);
+      band.setAttribute('class', 'floorplan-corridor');
+      svgEl.appendChild(band);
     }
 
     floor.rooms.forEach(function (room) {

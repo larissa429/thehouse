@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Odd Jobs &middot; The House</title>
+  <meta name="description" content="The House &middot; an object show" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=EB+Garamond:ital@0;1&family=Courier+Prime&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    /* Guards every [hidden] element on this page against being overridden
+       by a later same-specificity `display:` rule — hit this exact bug on
+       other game pages before, cheaper to fix it globally here up front. */
+    [hidden] { display: none !important; }
+
+    #oddjobsGame { max-width: 34rem; }
+
+    .oddjobs-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 10px;
+      overflow: hidden;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .oddjobs-timerbar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: rgba(0,0,0,0.25);
+      z-index: 3;
+    }
+    .oddjobs-timerbar-fill {
+      height: 100%;
+      width: 100%;
+      background: var(--lamp);
+    }
+
+    .oddjobs-prompt {
+      position: absolute;
+      top: 0.9rem; left: 0; right: 0;
+      z-index: 3;
+      text-align: center;
+      font-family: var(--display);
+      font-size: 1.5rem;
+      color: var(--paper);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      transform: translateY(-0.4rem);
+    }
+    .oddjobs-prompt.is-shown {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .oddjobs-playfield {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .oddjobs-result {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--display);
+      font-size: 2rem;
+      color: var(--paper);
+      background: rgba(0,0,0,0);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+    }
+    .oddjobs-result.is-win {
+      opacity: 1;
+      color: var(--lamp);
+      background: rgba(0,0,0,0.35);
+    }
+    .oddjobs-result.is-lose {
+      opacity: 1;
+      color: var(--urgent);
+      background: rgba(0,0,0,0.35);
+    }
+
+    /* --- Water the wilting plant --- */
+    .oddjobs-plants {
+      display: flex;
+      gap: 1rem;
+    }
+    .oddjobs-plant {
+      font-size: 2.4rem;
+      line-height: 1;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.6rem;
+      border-radius: 50%;
+      filter: grayscale(0) saturate(1);
+      transition: transform 0.1s ease;
+    }
+    .oddjobs-plant:active { transform: scale(0.9); }
+    .oddjobs-plant.is-wilting {
+      animation: oddjobs-wilt-pulse 0.5s ease-in-out infinite;
+    }
+    @keyframes oddjobs-wilt-pulse {
+      0%, 100% { filter: brightness(1) sepia(0); }
+      50% { filter: brightness(0.75) sepia(0.6); }
+    }
+
+    /* --- Catch the memory petal --- */
+    .oddjobs-ground {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 12%;
+      background: linear-gradient(to top, rgba(0,0,0,0.25), transparent);
+    }
+    .oddjobs-petal {
+      position: absolute;
+      top: -10%;
+      font-size: 2rem;
+      line-height: 1;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.4rem;
+      transform: translateX(-50%);
+    }
+  </style>
+</head>
+<body>
+
+  <site-header></site-header>
+
+  <main class="wrap">
+
+    <span class="eyebrow breadcrumb"><a href="../games/">&larr; Games</a></span>
+
+    <h1>Odd Jobs</h1>
+    <p>Quick errands around the Inbetween &mdash; one task, a few seconds, don't overthink it.
+      <strong>Playtest note:</strong> only the Dream Garden's jobs are in so far, more locations to come.</p>
+
+    <div class="merge-game" id="oddjobsGame">
+      <div class="merge-hud">
+        <div class="merge-hud-block">
+          <span class="merge-hud-label">Score</span>
+          <span class="merge-hud-value" id="oddjobsScore">0</span>
+        </div>
+        <div class="merge-hud-block">
+          <span class="merge-hud-label">Lives</span>
+          <span class="merge-hud-value" id="oddjobsLives">&hearts;&hearts;&hearts;</span>
+        </div>
+        <button type="button" class="merge-restart" id="oddjobsRestart">Restart</button>
+      </div>
+
+      <div class="oddjobs-stage" id="oddjobsStage">
+        <div class="oddjobs-timerbar"><div class="oddjobs-timerbar-fill" id="oddjobsTimerFill"></div></div>
+        <div class="oddjobs-prompt" id="oddjobsPrompt"></div>
+        <div class="oddjobs-playfield" id="oddjobsPlayfield"></div>
+        <div class="oddjobs-result" id="oddjobsResult"></div>
+
+        <div class="merge-gameover" id="oddjobsStart">
+          <p class="merge-gameover-title">Odd Jobs</p>
+          <p style="max-width:22rem; text-align:center;">Someone always needs a hand around the Inbetween. Watch for the job, then do it &mdash; fast.</p>
+          <button type="button" class="merge-restart" id="oddjobsStartBtn">Start shift</button>
+        </div>
+
+        <div class="merge-gameover" id="oddjobsGameOver" hidden>
+          <p class="merge-gameover-title">Shift's over.</p>
+          <p class="merge-gameover-score">Score: <span id="oddjobsFinalScore">0</span></p>
+          <button type="button" class="merge-restart" id="oddjobsRestart2">Try again</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <site-footer></site-footer>
+
+  <script src="../components.js" defer></script>
+  <script src="../oddjobs.js" defer></script>
+</body>
+</html>

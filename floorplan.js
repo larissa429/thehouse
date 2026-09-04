@@ -178,7 +178,8 @@
     layoutRow(names.slice(0, half), 'top');
     layoutRow(names.slice(half), 'bottom');
 
-    return { rooms: rooms, corridorY: corridorY };
+    var corridorSegments = [{ x: spineX0, y: corridorY - opts.corridorHalf, w: spineLen, h: opts.corridorHalf * 2 }];
+    return { rooms: rooms, corridorSegments: corridorSegments };
   }
 
   function buildStraightHangoutFloor(names) {
@@ -187,25 +188,39 @@
 
   // --- Bent hangout floors (L / U / O) ----------------------------------
   // A different shape of hallway for variety, on top of the room-content
-  // variety the pool already gives. These trace one, two, three, or all
-  // four sides of a shared inner square, one room-row per side attached to
-  // its outward edge — an L is two adjacent sides, a U is three, an O is
-  // all four (which, as a side effect, leaves the inner square as genuine
-  // open floor — reads like a courtyard whether or not the Courtyard room
-  // happens to spawn this load). Rooms per side get a single row rather
-  // than the straight floor's two, since the inward side of a turn isn't
-  // really room-able space.
+  // variety the pool already gives. These trace one, two, or three sides
+  // of a shared inner square (L / U), rooms on BOTH sides of every used
+  // segment the same way the straight floor has rooms on both sides of
+  // its one corridor — an outward row (away from the inner square, full
+  // segment length) and an inward row (into it, inset from both ends so
+  // two segments meeting at a corner never reach into the same square
+  // inch). The inward row draws its own small second batch of extra
+  // rooms rather than splitting the outward batch thinner, so both sides
+  // actually end up populated instead of the inner row being an
+  // afterthought.
+  //
+  // O is the exception: all four sides, single row each (as before,
+  // outward only), because the inner square is reserved for a Courtyard
+  // that always fills it completely — the payoff for going all the way
+  // around instead of a real second room row.
 
   var PERIMETER = { x0: 26, y0: 26, x1: 74, y1: 74 };
   var PERIMETER_HALF = 4, PERIMETER_DEPTH = 15, PERIMETER_GAP = 1.2;
+  var CORNER_INSET = 6; // trimmed off each end of an inward row so it can't reach a shared corner
 
   function perimeterSegments() {
     return {
-      top: { axis: 'h', pos: PERIMETER.y0, from: PERIMETER.x0, to: PERIMETER.x1, side: 'north' },
-      right: { axis: 'v', pos: PERIMETER.x1, from: PERIMETER.y0, to: PERIMETER.y1, side: 'east' },
-      bottom: { axis: 'h', pos: PERIMETER.y1, from: PERIMETER.x0, to: PERIMETER.x1, side: 'south' },
-      left: { axis: 'v', pos: PERIMETER.x0, from: PERIMETER.y0, to: PERIMETER.y1, side: 'west' }
+      top: { axis: 'h', pos: PERIMETER.y0, from: PERIMETER.x0, to: PERIMETER.x1, outSign: -1 },
+      right: { axis: 'v', pos: PERIMETER.x1, from: PERIMETER.y0, to: PERIMETER.y1, outSign: 1 },
+      bottom: { axis: 'h', pos: PERIMETER.y1, from: PERIMETER.x0, to: PERIMETER.x1, outSign: 1 },
+      left: { axis: 'v', pos: PERIMETER.x0, from: PERIMETER.y0, to: PERIMETER.y1, outSign: -1 }
     };
+  }
+
+  function corridorRectFor(seg) {
+    return seg.axis === 'h'
+      ? { x: seg.from, y: seg.pos - PERIMETER_HALF, w: seg.to - seg.from, h: PERIMETER_HALF * 2 }
+      : { x: seg.pos - PERIMETER_HALF, y: seg.from, w: PERIMETER_HALF * 2, h: seg.to - seg.from };
   }
 
   // Each shape lists its possible segment combinations; one is picked at
@@ -216,29 +231,33 @@
     o: [['top', 'right', 'bottom', 'left']]
   };
 
-  function layoutPerimeterRow(seg, names) {
+  // rowSign is which way this row extends from the corridor: seg.outSign
+  // for the outward row, -seg.outSign for the inward one. alongFrom/To
+  // optionally narrow the usable stretch of the segment (used to inset
+  // the inward row away from corners).
+  function layoutPerimeterRow(seg, names, rowSign, alongFrom, alongTo) {
     var rooms = [];
     var n = names.length;
     if (!n) return rooms;
-    var segLen = seg.to - seg.from;
+    var from = alongFrom != null ? alongFrom : seg.from;
+    var to = alongTo != null ? alongTo : seg.to;
+    var segLen = to - from;
+    if (segLen <= 0) return rooms;
     var slotLen = segLen / n;
     names.forEach(function (name, i) {
       var gap = Math.min(PERIMETER_GAP, slotLen * 0.15);
-      var alongStart = seg.from + i * slotLen + gap / 2;
+      var alongStart = from + i * slotLen + gap / 2;
       var alongLen = slotLen - gap;
+      var nearEdge = seg.pos + rowSign * (PERIMETER_HALF + PERIMETER_GAP);
+      var farEdge = nearEdge + rowSign * PERIMETER_DEPTH;
+      var d0 = Math.min(nearEdge, farEdge), d1 = Math.max(nearEdge, farEdge);
       var rect, doorPoint;
       if (seg.axis === 'h') {
-        var y0, y1;
-        if (seg.side === 'north') { y1 = seg.pos - PERIMETER_HALF - PERIMETER_GAP; y0 = y1 - PERIMETER_DEPTH; }
-        else { y0 = seg.pos + PERIMETER_HALF + PERIMETER_GAP; y1 = y0 + PERIMETER_DEPTH; }
-        rect = { x: alongStart, y: y0, w: alongLen, h: y1 - y0 };
-        doorPoint = { x: rect.x + rect.w / 2, y: seg.side === 'north' ? seg.pos - PERIMETER_HALF : seg.pos + PERIMETER_HALF };
+        rect = { x: alongStart, y: d0, w: alongLen, h: d1 - d0 };
+        doorPoint = { x: rect.x + rect.w / 2, y: nearEdge };
       } else {
-        var x0, x1;
-        if (seg.side === 'west') { x1 = seg.pos - PERIMETER_HALF - PERIMETER_GAP; x0 = x1 - PERIMETER_DEPTH; }
-        else { x0 = seg.pos + PERIMETER_HALF + PERIMETER_GAP; x1 = x0 + PERIMETER_DEPTH; }
-        rect = { x: x0, y: alongStart, w: x1 - x0, h: alongLen };
-        doorPoint = { x: seg.side === 'west' ? seg.pos - PERIMETER_HALF : seg.pos + PERIMETER_HALF, y: rect.y + rect.h / 2 };
+        rect = { x: d0, y: alongStart, w: d1 - d0, h: alongLen };
+        doorPoint = { x: nearEdge, y: rect.y + rect.h / 2 };
       }
       rooms.push({ name: name, rect: rect, cx: rect.x + rect.w / 2, cy: rect.y + rect.h / 2, doorPoint: doorPoint, occupants: [] });
     });
@@ -246,16 +265,58 @@
   }
 
   function buildBentHangoutFloor(names, shapeKey) {
+    var allSegs = perimeterSegments();
+
+    if (shapeKey === 'o') {
+      var ringSegs = ['top', 'right', 'bottom', 'left'].map(function (k) { return allSegs[k]; });
+      var ringNames = names.filter(function (n) { return n !== 'Courtyard'; });
+      var perSeg = Math.ceil(ringNames.length / ringSegs.length);
+      var rooms = [];
+      var corridorSegments = [];
+      ringSegs.forEach(function (seg, i) {
+        rooms = rooms.concat(layoutPerimeterRow(seg, ringNames.slice(i * perSeg, (i + 1) * perSeg), seg.outSign));
+        corridorSegments.push(corridorRectFor(seg));
+      });
+      var inset = PERIMETER_HALF + PERIMETER_GAP;
+      var cRect = {
+        x: PERIMETER.x0 + inset, y: PERIMETER.y0 + inset,
+        w: (PERIMETER.x1 - PERIMETER.x0) - inset * 2, h: (PERIMETER.y1 - PERIMETER.y0) - inset * 2
+      };
+      rooms.push({
+        name: 'Courtyard', rect: cRect, cx: cRect.x + cRect.w / 2, cy: cRect.y + cRect.h / 2,
+        doorPoint: { x: cRect.x + cRect.w / 2, y: PERIMETER.y0 - PERIMETER_HALF }, occupants: []
+      });
+      return { rooms: rooms, corridorSegments: corridorSegments };
+    }
+
     var options = SHAPE_SEGMENT_OPTIONS[shapeKey];
     var chosenKeys = options[Math.floor(Math.random() * options.length)];
-    var allSegs = perimeterSegments();
     var chosenSegs = chosenKeys.map(function (k) { return allSegs[k]; });
-    var perSeg = Math.ceil(names.length / chosenSegs.length);
+
+    // A second, independent batch of extra rooms for the inward rows —
+    // otherwise the inner side is just the outer side's list split
+    // thinner, and ends up sparse instead of a real second row of rooms.
+    // Only ONE segment ever hosts an inward row, not every segment — two
+    // different segments' inward rows both reach toward the same shared
+    // corner (their depth, not just their length along the wall), so any
+    // pair of them can collide there regardless of how much each is inset
+    // lengthwise. With a single inward row there's nothing left for it to
+    // compete with, so no corner math is needed at all.
+    var inwardNames = pickExtraRooms(names);
+    var inwardSegIndex = Math.floor(Math.random() * chosenSegs.length);
+
+    var perSegOut = Math.ceil(names.length / chosenSegs.length);
+
     var rooms = [];
+    var corridorSegments = [];
     chosenSegs.forEach(function (seg, i) {
-      rooms = rooms.concat(layoutPerimeterRow(seg, names.slice(i * perSeg, (i + 1) * perSeg)));
+      rooms = rooms.concat(layoutPerimeterRow(seg, names.slice(i * perSegOut, (i + 1) * perSegOut), seg.outSign));
+      if (i === inwardSegIndex && inwardNames.length) {
+        rooms = rooms.concat(layoutPerimeterRow(seg, inwardNames, -seg.outSign, seg.from + CORNER_INSET, seg.to - CORNER_INSET));
+      }
+      corridorSegments.push(corridorRectFor(seg));
     });
-    return { rooms: rooms };
+    return { rooms: rooms, corridorSegments: corridorSegments };
   }
 
   var HANGOUT_SHAPES = ['straight', 'l', 'u', 'o'];
@@ -455,8 +516,17 @@
 
     var floor = house.floors[activeFloor];
     var isBedroomFloor = activeFloor === 1;
-    var isNarrow = isBedroomFloor || floor.shape === 'l' || floor.shape === 'u' || floor.shape === 'o';
     var anyRoom = floor.rooms.length > 0;
+
+    if (floor.corridorSegments) {
+      floor.corridorSegments.forEach(function (seg) {
+        var band = document.createElementNS(SVG_NS, 'rect');
+        band.setAttribute('x', seg.x); band.setAttribute('y', seg.y);
+        band.setAttribute('width', seg.w); band.setAttribute('height', seg.h);
+        band.setAttribute('class', 'floorplan-corridor');
+        svgEl.appendChild(band);
+      });
+    }
 
     floor.rooms.forEach(function (room) {
       if (room.name === '__locked_door__') return; // drawn as a door icon, not a labeled room
@@ -468,6 +538,7 @@
       svgEl.appendChild(rect);
 
       var label = room.name.replace(/'s Room$/, '');
+      var isNarrow = isBedroomFloor || room.rect.w < 20;
       var cls = 'floorplan-room-label' + (isNarrow ? ' is-door' : '');
       var baseSize = isNarrow ? 1.7 : 2.6;
       var text = svgText(room.cx, room.rect.y + room.rect.h - (isNarrow ? 1.6 : 2.4), label, cls);

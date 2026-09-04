@@ -1,13 +1,17 @@
 // Floor Plan — a procedurally generated house layout.
 //
 // The House doesn't have one fixed interior, so every page load carves a
-// fresh set of rooms with a small space-partitioning generator (think:
-// repeatedly splitting a rectangle in half) instead of using one hand-drawn
-// map. Floors 1 and 3 are both "hangout" floors drawing from the same
-// weighted room pool; floor 2 is bedrooms only, one per resident. A red...
-// well, a *colored* dot per resident sits wherever they've landed; tap one
-// to see who it is. Two extra, much rarer things can appear alongside the
-// normal rooms — see LOCKED_DOOR and HIDDEN_DOOR below.
+// fresh set of rooms with a small generator instead of using one hand-drawn
+// map — but it's not just "chop a box into smaller boxes." Every floor is
+// built around a central corridor, with rooms attached along both sides of
+// it, the way an actual floor plan reads: circulation space down the
+// middle, rooms lining it. Floors 1 and 3 are both "hangout" floors drawing
+// from the same weighted room pool; floor 2 is one long stretch of
+// bedrooms, doors lining both walls of the hallway. A colored dot per
+// resident sits wherever they've actually landed this load — nobody shows
+// up somewhere they aren't, bedrooms included. Tap a dot to see who it is.
+// Two extra, much rarer things can appear alongside the normal rooms — see
+// LOCKED_DOOR and HIDDEN_DOOR below.
 
 (function () {
   var tabsEl = document.getElementById('floorplanTabs');
@@ -26,6 +30,7 @@
   // --- Tunable odds — the whole point of this comment is "go ahead and
   // change these numbers later without needing to touch anything else." ---
   var ABSENCE_CHANCE = 0.18;       // any resident but Journal, per load
+  var BEDROOM_STAY_CHANCE = 0.3;   // odds a present resident is just in their own room today
   var EXTRA_ROOM_SLOTS = 3;        // how many extra rolls floors 1 & 3 get past the staples
   var RARE_ROOM_CHANCE = 0.42;     // per extra slot
   var RARER_ROOM_CHANCE = 0.12;    // per extra slot (independent of the rare roll)
@@ -40,24 +45,30 @@
   // styles.css (.note[data-color]) — nothing new invented there. Clickbaity
   // is the one real gap (he used to share a color with Cool S, since they
   // were one page) — gets the site's existing red accent instead.
+  //
+  // defaultChance is how often a resident with a defaultRoom actually goes
+  // there instead of falling through to the normal closeness-biased pick —
+  // omitted means "always" (Mirror really is in the kitchen constantly).
+  // AP and PBC both default to the bathroom, which reads wrong if it's
+  // guaranteed every single load — a bathroom is a quick stop, not a
+  // hangout, so it's a coin-flip-ish chance instead.
 
   var RESIDENTS = [
     { slug: 'journal', name: 'Journal', icon: '../images/icons/journal.png', color: '#d9b473', alwaysHome: true },
     { slug: 'mirror', name: 'Mirror', icon: '../images/icons/mirror.png', color: '#cfe0d8', defaultRoom: 'Kitchen' },
     { slug: 'lp', name: 'LP', icon: '../images/icons/lp.png', color: '#cfa8d4' },
-    { slug: 'n528', name: 'N528', icon: '../images/icons/n528.png', color: '#b8d4c9' },
+    { slug: 'n528', name: '-⁵⁄₂₈', icon: '../images/icons/n528.png', color: '#b8d4c9' },
     { slug: 'dream', name: 'Dream', icon: '../images/icons/dream.png', color: '#c7b8d4' },
     { slug: 'indigo', name: 'Indigo', icon: '../images/icons/indigo.png', color: '#b8a8d4' },
     { slug: 'cassette', name: 'Cassette', icon: '../images/icons/cassette.png', color: '#f0a878' },
     { slug: 'bluemarble', name: 'Blue Marble', icon: '../images/icons/bluemarble.png', color: '#a8d4c4' },
-    { slug: 'ap', name: 'AP', icon: '../images/icons/ap.png', color: '#e8a2a8', defaultRoom: 'Bathroom' },
+    { slug: 'ap', name: 'AP', icon: '../images/icons/ap.png', color: '#e8a2a8', defaultRoom: 'Bathroom', defaultChance: 0.45 },
     { slug: 'cools', name: 'Cool S', icon: '../images/icons/cool s.png', color: '#c4b0e8', pair: 'clickbaity' },
     { slug: 'clickbaity', name: 'Clickbaity', icon: '../images/clickbaity.png', color: '#c0463c', pair: 'cools' },
     { slug: 'geeky', name: 'Geeky', icon: '../images/icons/geeky.png', color: '#f0955a' },
-    { slug: 'pbc', name: 'PBC', icon: '../images/icons/pbc.png', color: '#e8781e', defaultRoom: 'Bathroom' },
+    { slug: 'pbc', name: 'PBC', icon: '../images/icons/pbc.png', color: '#e8781e', defaultRoom: 'Bathroom', defaultChance: 0.45 },
     // Dumptruck's only known hangout is her own (famously trashed) bedroom —
-    // so unless a rare-room cast claims her, she just isn't placed on the
-    // hangout floors at all. Her bedroom on Floor 2 covers her either way.
+    // so unless a rare-room cast claims her, she's just always there.
     { slug: 'dumptruck', name: 'Dumptruck', icon: '../images/icons/dumptruck.png', color: '#3f6b32', noHangoutDefault: true }
   ];
 
@@ -119,72 +130,65 @@
     return picked;
   }
 
-  // --- BSP room generator ----------------------------------------------
-  // Recursively splits a rectangle into `count` leaf cells. Cells share
-  // exact borders (no gap) — the gap used as the visual "hallway" is
-  // added afterward by shrinking each room inward, so the raw cells stay
-  // useful for adjacency math (who's next to whom).
+  // --- Corridor-and-doors room generator --------------------------------
+  // Every floor is one central corridor with rooms lining both sides of
+  // it — half the room list along the top wall, half along the bottom —
+  // instead of recursively slicing the whole canvas into a grid. That's
+  // the actual point of it: real negative space (margins, the corridor
+  // itself) instead of every square inch being "a room," which is what
+  // made the old generator read as a box getting subdivided rather than a
+  // floor plan. `doorPoint` is where each room meets the corridor — the
+  // waypoint ambient wandering routes through.
 
-  function splitBSP(rect, count) {
-    if (count <= 1) return [rect];
-    var horizontal = rect.w >= rect.h;
-    var ratio = 0.35 + Math.random() * 0.3;
-    var a, b;
-    if (horizontal) {
-      var splitX = rect.w * ratio;
-      a = { x: rect.x, y: rect.y, w: splitX, h: rect.h };
-      b = { x: rect.x + splitX, y: rect.y, w: rect.w - splitX, h: rect.h };
-    } else {
-      var splitY = rect.h * ratio;
-      a = { x: rect.x, y: rect.y, w: rect.w, h: splitY };
-      b = { x: rect.x, y: rect.y + splitY, w: rect.w, h: rect.h - splitY };
+  function buildCorridorFloor(names, opts) {
+    var corridorY = 50;
+    var spineX0 = opts.marginX, spineX1 = 100 - opts.marginX;
+    var spineLen = spineX1 - spineX0;
+    var half = Math.ceil(names.length / 2);
+    var rooms = [];
+
+    function layoutRow(rowNames, side) {
+      var n = rowNames.length;
+      if (!n) return;
+      var slotW = spineLen / n;
+      var gap = Math.min(opts.gap, slotW * 0.15);
+      rowNames.forEach(function (name, i) {
+        var x0 = spineX0 + i * slotW + gap / 2;
+        var w = slotW - gap;
+        var y0, h;
+        if (side === 'top') {
+          h = opts.depth != null ? opts.depth : (corridorY - opts.corridorHalf - opts.marginY - opts.doorGap);
+          y0 = (corridorY - opts.corridorHalf - opts.doorGap) - h;
+        } else {
+          y0 = corridorY + opts.corridorHalf + opts.doorGap;
+          h = opts.depth != null ? opts.depth : ((100 - opts.marginY) - y0);
+        }
+        var rect = { x: x0, y: y0, w: w, h: h };
+        rooms.push({
+          name: name,
+          rect: rect,
+          cx: rect.x + rect.w / 2,
+          cy: rect.y + rect.h / 2,
+          doorPoint: { x: rect.x + rect.w / 2, y: side === 'top' ? corridorY - opts.corridorHalf : corridorY + opts.corridorHalf },
+          occupants: []
+        });
+      });
     }
-    var frac = horizontal ? a.w / rect.w : a.h / rect.h;
-    var countA = Math.max(1, Math.min(count - 1, Math.round(count * frac)));
-    var countB = count - countA;
-    return splitBSP(a, countA).concat(splitBSP(b, countB));
+
+    layoutRow(names.slice(0, half), 'top');
+    layoutRow(names.slice(half), 'bottom');
+
+    return { rooms: rooms, corridorY: corridorY };
   }
 
-  var ROOM_MARGIN = 1.6; // shrink inward, in viewBox units, to leave a hallway gap
-
-  function padRect(r) {
-    var m = Math.min(ROOM_MARGIN, r.w * 0.18, r.h * 0.18);
-    return { x: r.x + m, y: r.y + m, w: r.w - m * 2, h: r.h - m * 2 };
+  function buildHangoutFloor(names) {
+    return buildCorridorFloor(names, { corridorHalf: 5, marginX: 6, marginY: 6, gap: 1.6, doorGap: 1.2 });
   }
 
-  function findAdjacent(cells) {
-    var edges = [];
-    var eps = 0.05;
-    for (var i = 0; i < cells.length; i++) {
-      for (var j = i + 1; j < cells.length; j++) {
-        var A = cells[i], B = cells[j];
-        var touchV = Math.abs(A.x + A.w - B.x) < eps || Math.abs(B.x + B.w - A.x) < eps;
-        var overlapY = Math.min(A.y + A.h, B.y + B.h) - Math.max(A.y, B.y) > eps;
-        var touchH = Math.abs(A.y + A.h - B.y) < eps || Math.abs(B.y + B.h - A.y) < eps;
-        var overlapX = Math.min(A.x + A.w, B.x + B.w) - Math.max(A.x, B.x) > eps;
-        if ((touchV && overlapY) || (touchH && overlapX)) edges.push([i, j]);
-      }
-    }
-    return edges;
-  }
-
-  // Builds a floor: given a list of room-name strings, returns
-  // { rooms: [{name, cell, rect, cx, cy, occupants:[]}], edges: [[i,j],...] }
-  function buildFloor(names) {
-    var cells = splitBSP({ x: 4, y: 4, w: 92, h: 92 }, names.length);
-    var rooms = names.map(function (name, i) {
-      var cell = cells[i];
-      var rect = padRect(cell);
-      return {
-        name: name,
-        cell: cell,
-        rect: rect,
-        cx: rect.x + rect.w / 2,
-        cy: rect.y + rect.h / 2,
-        occupants: []
-      };
-    });
-    return { rooms: rooms, edges: findAdjacent(cells) };
+  function buildResidentialFloor(names) {
+    // Thin door slots, not deep rooms — this is meant to read as "a very
+    // long hallway with bedroom doors lining it," not a row of little rooms.
+    return buildCorridorFloor(names, { corridorHalf: 4, marginX: 3, marginY: 6, gap: 0.9, doorGap: 0.8, depth: 9 });
   }
 
   // --- Whole-house generation --------------------------------------------
@@ -192,18 +196,24 @@
   function generateHouse() {
     var floor1Names = STAPLES.concat(pickExtraRooms(STAPLES));
     var floor3Names = STAPLES.concat(pickExtraRooms(STAPLES));
-    var floor1 = buildFloor(floor1Names);
-    var floor3 = buildFloor(floor3Names);
+    var floor1 = buildHangoutFloor(floor1Names);
+    var floor3 = buildHangoutFloor(floor3Names);
 
     var doorFound = false;
     try { doorFound = localStorage.getItem(HIDDEN_DOOR_KEY) === '1'; } catch (e) {}
     var hiddenDoorPresent = !doorFound && Math.random() < HIDDEN_DOOR_CHANCE;
+    var hiddenDoorX = hiddenDoorPresent ? (10 + Math.random() * 80) : null;
 
-    // Bedrooms: one per resident, plus a rare chance of The Locked Door.
+    // Bedrooms: one door per resident, plus a rare chance of The Locked Door.
     var bedroomNames = RESIDENTS.map(function (r) { return r.name + "'s Room"; });
     var lockedDoorPresent = Math.random() < LOCKED_DOOR_CHANCE;
     if (lockedDoorPresent) bedroomNames.push('__locked_door__');
-    var floor2 = buildFloor(bedroomNames);
+    var floor2 = buildResidentialFloor(bedroomNames);
+
+    function bedroomOf(slug) {
+      var r = findResident(slug);
+      return floor2.rooms.filter(function (room) { return room.name === r.name + "'s Room"; })[0];
+    }
 
     // --- Who's home ---
     var home = {};
@@ -217,7 +227,7 @@
     var placedSlugs = {};
 
     function place(slug, room) {
-      if (placedSlugs[slug]) return;
+      if (placedSlugs[slug] || !room) return;
       room.occupants.push(slug);
       placedSlugs[slug] = room;
     }
@@ -233,14 +243,22 @@
       }
     });
 
-    // 2. Everyone else who's home and not already placed by a cast scene.
+    // 2. Everyone else who's home: either they're just in their own room
+    //    today, or they're out — a resident is only ever placed in exactly
+    //    one spot total, bedroom included, so a bedroom dot always means
+    //    "actually in there right now," never just "this is whose room it is."
     RESIDENTS.forEach(function (r) {
       if (!home[r.slug] || placedSlugs[r.slug]) return;
-      if (r.noHangoutDefault) return; // Dumptruck, sans cast scene — stays in her room
       if (r.pair && placedSlugs[r.pair]) { place(r.slug, placedSlugs[r.pair]); return; }
+      if (r.noHangoutDefault) { place(r.slug, bedroomOf(r.slug)); return; } // Dumptruck
+
+      if (Math.random() < BEDROOM_STAY_CHANCE) {
+        var own = bedroomOf(r.slug);
+        if (own) { place(r.slug, own); return; }
+      }
 
       var candidate = null;
-      if (r.defaultRoom) {
+      if (r.defaultRoom && Math.random() < (r.defaultChance == null ? 1 : r.defaultChance)) {
         candidate = hangoutRooms.filter(function (room) { return room.name.indexOf(r.defaultRoom) !== -1; })[0];
       }
       if (!candidate) {
@@ -264,16 +282,10 @@
       place(r.slug, candidate);
     });
 
-    // 3. Bedrooms — ownership, not presence. Everyone gets theirs regardless
-    //    of the "who's home" roll above.
-    RESIDENTS.forEach(function (r) {
-      var room = floor2.rooms.filter(function (room) { return room.name === r.name + "'s Room"; })[0];
-      if (room) room.occupants.push(r.slug);
-    });
-
     return {
       floors: [floor1, floor2, floor3],
       hiddenDoorPresent: hiddenDoorPresent,
+      hiddenDoorX: hiddenDoorX,
       lockedDoorPresent: lockedDoorPresent
     };
   }
@@ -313,9 +325,8 @@
   }
 
   function dotSlots(room, count) {
-    // Small flow-wrap grid of offsets inside the room's padded rect, so
-    // multiple residents in one room don't stack exactly on top of each
-    // other.
+    // Small flow-wrap grid of offsets inside the room's rect, so multiple
+    // residents in one room don't stack exactly on top of each other.
     var cols = Math.min(4, Math.max(1, Math.ceil(Math.sqrt(count))));
     var slots = [];
     for (var i = 0; i < count; i++) {
@@ -333,6 +344,7 @@
     layerEl.innerHTML = '';
 
     var floor = house.floors[activeFloor];
+    var isBedroomFloor = activeFloor === 1;
     var anyRoom = floor.rooms.length > 0;
 
     floor.rooms.forEach(function (room) {
@@ -340,18 +352,19 @@
       var rect = document.createElementNS(SVG_NS, 'rect');
       rect.setAttribute('x', room.rect.x); rect.setAttribute('y', room.rect.y);
       rect.setAttribute('width', room.rect.w); rect.setAttribute('height', room.rect.h);
-      rect.setAttribute('rx', 1.2);
+      rect.setAttribute('rx', 1);
       rect.setAttribute('class', 'floorplan-room-rect');
       svgEl.appendChild(rect);
 
       var label = room.name.replace(/'s Room$/, '');
-      svgEl.appendChild(svgText(room.cx, room.rect.y + room.rect.h - 2.4, label, 'floorplan-room-label'));
+      var cls = 'floorplan-room-label' + (isBedroomFloor ? ' is-door' : '');
+      svgEl.appendChild(svgText(room.cx, room.rect.y + room.rect.h - (isBedroomFloor ? 1.6 : 2.4), label, cls));
     });
 
     floor.rooms.forEach(function (room) {
       var occupants = room.occupants;
       if (room.name === '__locked_door__') {
-        renderDoorIcon(room, 'locked');
+        renderDoorIcon(room);
         return;
       }
       var slots = dotSlots(room, occupants.length);
@@ -372,9 +385,9 @@
       layerEl.appendChild(empty);
     }
 
-    captionEl.textContent = activeFloor === 1
-      ? 'Every resident’s room — not necessarily where they are right now.'
-      : (totalDots === 0 ? 'Quiet in here at the moment.' : '');
+    captionEl.textContent = totalDots === 0
+      ? (isBedroomFloor ? 'Everyone’s out right now.' : 'Quiet in here at the moment.')
+      : (isBedroomFloor ? 'Whoever you see is actually in, right now.' : '');
   }
 
   function renderDot(resident, room, slot) {
@@ -391,7 +404,7 @@
     layerEl.appendChild(el);
   }
 
-  function renderDoorIcon(room, kind) {
+  function renderDoorIcon(room) {
     var el = document.createElement('button');
     el.type = 'button';
     el.className = 'floorplan-door';
@@ -403,16 +416,14 @@
   }
 
   function renderHiddenDoor(floor) {
-    // A rare, unlabeled door tucked into whichever room this floor
-    // generated last (reads as "off in a hallway" without needing its own
-    // dedicated cell). The House is hiding this on purpose — clicking it
-    // just makes it vanish. No reveal, no page, nothing.
-    var room = floor.rooms[floor.rooms.length - 1];
+    // A rare, unlabeled door sitting right in the hallway itself. The
+    // House is hiding this on purpose — clicking it just makes it vanish.
+    // No reveal, no page, nothing.
     var el = document.createElement('button');
     el.type = 'button';
     el.className = 'floorplan-door';
-    el.style.left = (room.rect.x + room.rect.w * 0.15) + '%';
-    el.style.top = (room.rect.y + room.rect.h * 0.85) + '%';
+    el.style.left = house.hiddenDoorX + '%';
+    el.style.top = floor.corridorY + '%';
     el.setAttribute('aria-label', 'A door');
     el.addEventListener('click', function () {
       house.hiddenDoorPresent = false;
@@ -475,36 +486,35 @@
 
   // --- Ambient wandering -----------------------------------------------
   // Every so often, a resident currently on the visible floor might slowly
-  // drift into a neighboring room — out into the hallway gap, then into the
-  // next room — so the page reads as caught mid-moment rather than static.
+  // drift into another room — out to their door, down the hallway to the
+  // next one — so the page reads as caught mid-moment rather than static.
+  // Every room connects to every other room via the shared corridor, so
+  // there's no adjacency list to consult — just route through the midpoint
+  // between the two rooms' doorways.
 
   function tryWander() {
-    // Floor 2 is ownership, not presence — bedrooms never wander into
-    // each other. Only the two hangout floors (index 0 and 2) do.
+    // Floor 2 is presence same as anywhere else now, but a resident's own
+    // bedroom wandering into someone else's would read as a real mistake
+    // (nobody should end up standing in a room that isn't theirs and isn't
+    // a hangout) — so bedrooms stay put once placed.
     if (activeFloor === 1) return;
     if (Math.random() >= WANDER_CHANCE) return;
     var floor = house.floors[activeFloor];
-    if (!floor || !floor.edges.length) return;
+    if (!floor || floor.rooms.length < 2) return;
 
     var dots = Array.prototype.slice.call(layerEl.querySelectorAll('.floorplan-dot'));
     if (!dots.length) return;
     var dot = dots[Math.floor(Math.random() * dots.length)];
     var fromRoomName = dot.dataset.room;
-    var fromIndex = floor.rooms.findIndex(function (r) { return r.name === fromRoomName; });
-    if (fromIndex === -1) return;
+    var fromRoom = floor.rooms.filter(function (r) { return r.name === fromRoomName; })[0];
+    if (!fromRoom) return;
 
-    var neighbors = floor.edges
-      .filter(function (e) { return e[0] === fromIndex || e[1] === fromIndex; })
-      .map(function (e) { return e[0] === fromIndex ? e[1] : e[0]; });
-    if (!neighbors.length) return;
-    var toIndex = neighbors[Math.floor(Math.random() * neighbors.length)];
-    var fromRoom = floor.rooms[fromIndex], toRoom = floor.rooms[toIndex];
+    var others = floor.rooms.filter(function (r) { return r.name !== fromRoomName; });
+    if (!others.length) return;
+    var toRoom = others[Math.floor(Math.random() * others.length)];
 
-    // Hallway waypoint: the midpoint of the shared border between the two
-    // *unpadded* cells, i.e. roughly where a doorway would be.
-    var A = fromRoom.cell, B = toRoom.cell;
-    var hx = (Math.max(A.x, B.x) + Math.min(A.x + A.w, B.x + B.w)) / 2;
-    var hy = (Math.max(A.y, B.y) + Math.min(A.y + A.h, B.y + B.h)) / 2;
+    var hx = (fromRoom.doorPoint.x + toRoom.doorPoint.x) / 2;
+    var hy = (fromRoom.doorPoint.y + toRoom.doorPoint.y) / 2;
 
     dot.classList.add('is-wandering');
     dot.style.transition = 'left ' + WANDER_LEG_MS + 'ms ease-in-out, top ' + WANDER_LEG_MS + 'ms ease-in-out';

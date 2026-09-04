@@ -218,9 +218,15 @@
   }
 
   function corridorRectFor(seg) {
+    // Extended past the segment's own from/to by its half-thickness at
+    // both ends — a segment's rect otherwise stops exactly at the shared
+    // corner point, which covers the *inner* corner (both segments reach
+    // it) but leaves the *outer* corner of the turn uncovered by either
+    // one, reading as a notch bitten out of the hallway right at the bend.
+    var from = seg.from - PERIMETER_HALF, to = seg.to + PERIMETER_HALF;
     return seg.axis === 'h'
-      ? { x: seg.from, y: seg.pos - PERIMETER_HALF, w: seg.to - seg.from, h: PERIMETER_HALF * 2 }
-      : { x: seg.pos - PERIMETER_HALF, y: seg.from, w: PERIMETER_HALF * 2, h: seg.to - seg.from };
+      ? { x: from, y: seg.pos - PERIMETER_HALF, w: to - from, h: PERIMETER_HALF * 2 }
+      : { x: seg.pos - PERIMETER_HALF, y: from, w: PERIMETER_HALF * 2, h: to - from };
   }
 
   // Each shape lists its possible segment combinations; one is picked at

@@ -141,6 +141,75 @@
       padding: 0.4rem;
       transform: translateX(-50%);
     }
+
+    /* --- Match the request --- */
+    .oddjobs-request {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      margin-bottom: 1.4rem;
+    }
+    .oddjobs-request-label {
+      font-family: var(--label);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .oddjobs-request-icon {
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+    .oddjobs-books {
+      display: flex;
+      gap: 0.9rem;
+    }
+    .oddjobs-book {
+      font-size: 2.2rem;
+      line-height: 1;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 8px;
+      transition: transform 0.1s ease;
+    }
+    .oddjobs-book:active { transform: scale(0.9); }
+
+    /* --- Shelve it --- */
+    .oddjobs-shelf-slot {
+      position: absolute;
+      font-size: 2rem;
+      line-height: 1;
+      opacity: 0.3;
+      filter: grayscale(0.6);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .oddjobs-shelf-slot.is-filled {
+      opacity: 1;
+      filter: none;
+    }
+    .oddjobs-shelf-chip {
+      position: absolute;
+      font-size: 2rem;
+      line-height: 1;
+      background: none;
+      border: none;
+      cursor: grab;
+      transform: translate(-50%, -50%);
+      touch-action: none;
+      z-index: 2;
+    }
+    .oddjobs-shelf-chip.is-dragging { cursor: grabbing; z-index: 5; }
+    .oddjobs-shelf-chip.is-placed { display: none; }
+
+    .oddjobs-job-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
@@ -153,7 +222,7 @@
 
     <h1>Odd Jobs</h1>
     <p>Quick errands around the Inbetween &mdash; one task, a few seconds, don't overthink it.
-      <strong>Playtest note:</strong> only the Dream Garden's jobs are in so far, more locations to come.</p>
+      <strong>Playtest note:</strong> only the Dream Garden and the Library are in so far, more locations to come.</p>
 
     <div class="merge-game" id="oddjobsGame">
       <div class="merge-hud">

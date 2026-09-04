@@ -45,6 +45,46 @@
   // callback reach into the fresh round it left behind.
   var activeToken = 0;
 
+  // --- Shared job helpers ---------------------------------------------
+
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  // Pointer-based drag (mouse + touch in one). Moves `chip` by percentage
+  // of `field`'s box as the pointer moves, then hands off to `onRelease`
+  // to do its own hit-testing (against whatever drop targets that job
+  // defines) once the pointer lifts.
+  function enableDrag(chip, field, onRelease) {
+    var dragging = false;
+    chip.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      dragging = true;
+      chip.classList.add('is-dragging');
+      chip.setPointerCapture(e.pointerId);
+    });
+    chip.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      var rect = field.getBoundingClientRect();
+      var x = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
+      var y = Math.min(Math.max(e.clientY - rect.top, 0), rect.height);
+      chip.style.left = (x / rect.width * 100) + '%';
+      chip.style.top = (y / rect.height * 100) + '%';
+    });
+    function release() {
+      if (!dragging) return;
+      dragging = false;
+      chip.classList.remove('is-dragging');
+      onRelease(chip);
+    }
+    chip.addEventListener('pointerup', release);
+    chip.addEventListener('pointercancel', release);
+  }
+
   // --- Jobs ---------------------------------------------------------
 
   var JOBS = [
@@ -110,6 +150,121 @@
           requestAnimationFrame(function () {
             petal.style.transition = 'top ' + duration + 'ms linear';
             petal.style.top = '104%';
+          });
+        });
+      }
+    },
+    {
+      id: 'matchRequest',
+      prompt: 'Match it!',
+      // A patron holds up the book they want — tap the matching book out
+      // of a small row of decoys. Tapping any other book fails the round.
+      // Shape-distinct emoji on purpose (not just closed books in
+      // different colors) — same colorblind-unfriendly trap as the
+      // wilting-plant pulse, avoided here from the start.
+      init: function (field, resolve) {
+        var BOOKS = ['📕', '📖', '📔', '📚'];
+        var options = shuffle(BOOKS.slice());
+        var target = options[Math.floor(Math.random() * options.length)];
+
+        var col = document.createElement('div');
+        col.className = 'oddjobs-job-column';
+
+        var request = document.createElement('div');
+        request.className = 'oddjobs-request';
+        var label = document.createElement('span');
+        label.className = 'oddjobs-request-label';
+        label.textContent = 'Wanted';
+        var icon = document.createElement('span');
+        icon.className = 'oddjobs-request-icon';
+        icon.textContent = target;
+        request.appendChild(label);
+        request.appendChild(icon);
+
+        var row = document.createElement('div');
+        row.className = 'oddjobs-books';
+        options.forEach(function (book) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'oddjobs-book';
+          btn.textContent = book;
+          btn.addEventListener('click', function () {
+            resolve(book === target);
+          });
+          row.appendChild(btn);
+        });
+
+        col.appendChild(request);
+        col.appendChild(row);
+        field.appendChild(col);
+      }
+    },
+    {
+      id: 'shelveIt',
+      prompt: 'Shelve it!',
+      // Three faded "ghost" slots are scattered up top, each a different
+      // book; three full-color chips sit along the bottom in shuffled
+      // order. Drag each chip onto its matching ghost slot. A chip
+      // dropped anywhere else just snaps back — only the clock can fail
+      // this one. Winning means placing all three before time runs out.
+      init: function (field, resolve) {
+        var BOOKS = ['📕', '📖', '📔'];
+        var slotSpots = [
+          { left: 22, top: 30 },
+          { left: 50, top: 22 },
+          { left: 78, top: 30 }
+        ];
+        var chipSpots = [
+          { left: 25, top: 80 },
+          { left: 50, top: 84 },
+          { left: 75, top: 80 }
+        ];
+
+        var slots = shuffle(BOOKS.slice()).map(function (book, i) {
+          var slot = document.createElement('div');
+          slot.className = 'oddjobs-shelf-slot';
+          slot.textContent = book;
+          slot.dataset.book = book;
+          slot.style.left = slotSpots[i].left + '%';
+          slot.style.top = slotSpots[i].top + '%';
+          field.appendChild(slot);
+          return slot;
+        });
+
+        var placed = 0;
+        shuffle(BOOKS.slice()).forEach(function (book, i) {
+          var chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'oddjobs-shelf-chip';
+          chip.textContent = book;
+          chip.dataset.book = book;
+          var home = chipSpots[i];
+          chip.style.left = home.left + '%';
+          chip.style.top = home.top + '%';
+          field.appendChild(chip);
+
+          enableDrag(chip, field, function () {
+            var chipRect = chip.getBoundingClientRect();
+            var cx = chipRect.left + chipRect.width / 2;
+            var cy = chipRect.top + chipRect.height / 2;
+            var hit = null;
+            slots.forEach(function (slot) {
+              if (slot.classList.contains('is-filled')) return;
+              var r = slot.getBoundingClientRect();
+              var pad = 12;
+              if (cx >= r.left - pad && cx <= r.right + pad && cy >= r.top - pad && cy <= r.bottom + pad) {
+                hit = slot;
+              }
+            });
+            if (hit && hit.dataset.book === chip.dataset.book) {
+              hit.classList.add('is-filled');
+              chip.classList.add('is-placed');
+              placed++;
+              if (placed === BOOKS.length) resolve(true);
+            } else {
+              chip.style.left = home.left + '%';
+              chip.style.top = home.top + '%';
+            }
           });
         });
       }

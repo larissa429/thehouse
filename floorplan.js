@@ -181,8 +181,90 @@
     return { rooms: rooms, corridorY: corridorY };
   }
 
-  function buildHangoutFloor(names) {
+  function buildStraightHangoutFloor(names) {
     return buildCorridorFloor(names, { corridorHalf: 5, marginX: 6, marginY: 6, gap: 1.6, doorGap: 1.2 });
+  }
+
+  // --- Bent hangout floors (L / U / O) ----------------------------------
+  // A different shape of hallway for variety, on top of the room-content
+  // variety the pool already gives. These trace one, two, three, or all
+  // four sides of a shared inner square, one room-row per side attached to
+  // its outward edge — an L is two adjacent sides, a U is three, an O is
+  // all four (which, as a side effect, leaves the inner square as genuine
+  // open floor — reads like a courtyard whether or not the Courtyard room
+  // happens to spawn this load). Rooms per side get a single row rather
+  // than the straight floor's two, since the inward side of a turn isn't
+  // really room-able space.
+
+  var PERIMETER = { x0: 26, y0: 26, x1: 74, y1: 74 };
+  var PERIMETER_HALF = 4, PERIMETER_DEPTH = 15, PERIMETER_GAP = 1.2;
+
+  function perimeterSegments() {
+    return {
+      top: { axis: 'h', pos: PERIMETER.y0, from: PERIMETER.x0, to: PERIMETER.x1, side: 'north' },
+      right: { axis: 'v', pos: PERIMETER.x1, from: PERIMETER.y0, to: PERIMETER.y1, side: 'east' },
+      bottom: { axis: 'h', pos: PERIMETER.y1, from: PERIMETER.x0, to: PERIMETER.x1, side: 'south' },
+      left: { axis: 'v', pos: PERIMETER.x0, from: PERIMETER.y0, to: PERIMETER.y1, side: 'west' }
+    };
+  }
+
+  // Each shape lists its possible segment combinations; one is picked at
+  // random so an "L," say, can land on any of its four possible corners.
+  var SHAPE_SEGMENT_OPTIONS = {
+    l: [['top', 'right'], ['right', 'bottom'], ['bottom', 'left'], ['left', 'top']],
+    u: [['left', 'top', 'right'], ['top', 'right', 'bottom'], ['right', 'bottom', 'left'], ['bottom', 'left', 'top']],
+    o: [['top', 'right', 'bottom', 'left']]
+  };
+
+  function layoutPerimeterRow(seg, names) {
+    var rooms = [];
+    var n = names.length;
+    if (!n) return rooms;
+    var segLen = seg.to - seg.from;
+    var slotLen = segLen / n;
+    names.forEach(function (name, i) {
+      var gap = Math.min(PERIMETER_GAP, slotLen * 0.15);
+      var alongStart = seg.from + i * slotLen + gap / 2;
+      var alongLen = slotLen - gap;
+      var rect, doorPoint;
+      if (seg.axis === 'h') {
+        var y0, y1;
+        if (seg.side === 'north') { y1 = seg.pos - PERIMETER_HALF - PERIMETER_GAP; y0 = y1 - PERIMETER_DEPTH; }
+        else { y0 = seg.pos + PERIMETER_HALF + PERIMETER_GAP; y1 = y0 + PERIMETER_DEPTH; }
+        rect = { x: alongStart, y: y0, w: alongLen, h: y1 - y0 };
+        doorPoint = { x: rect.x + rect.w / 2, y: seg.side === 'north' ? seg.pos - PERIMETER_HALF : seg.pos + PERIMETER_HALF };
+      } else {
+        var x0, x1;
+        if (seg.side === 'west') { x1 = seg.pos - PERIMETER_HALF - PERIMETER_GAP; x0 = x1 - PERIMETER_DEPTH; }
+        else { x0 = seg.pos + PERIMETER_HALF + PERIMETER_GAP; x1 = x0 + PERIMETER_DEPTH; }
+        rect = { x: x0, y: alongStart, w: x1 - x0, h: alongLen };
+        doorPoint = { x: seg.side === 'west' ? seg.pos - PERIMETER_HALF : seg.pos + PERIMETER_HALF, y: rect.y + rect.h / 2 };
+      }
+      rooms.push({ name: name, rect: rect, cx: rect.x + rect.w / 2, cy: rect.y + rect.h / 2, doorPoint: doorPoint, occupants: [] });
+    });
+    return rooms;
+  }
+
+  function buildBentHangoutFloor(names, shapeKey) {
+    var options = SHAPE_SEGMENT_OPTIONS[shapeKey];
+    var chosenKeys = options[Math.floor(Math.random() * options.length)];
+    var allSegs = perimeterSegments();
+    var chosenSegs = chosenKeys.map(function (k) { return allSegs[k]; });
+    var perSeg = Math.ceil(names.length / chosenSegs.length);
+    var rooms = [];
+    chosenSegs.forEach(function (seg, i) {
+      rooms = rooms.concat(layoutPerimeterRow(seg, names.slice(i * perSeg, (i + 1) * perSeg)));
+    });
+    return { rooms: rooms };
+  }
+
+  var HANGOUT_SHAPES = ['straight', 'l', 'u', 'o'];
+
+  function buildHangoutFloor(names) {
+    var shape = HANGOUT_SHAPES[Math.floor(Math.random() * HANGOUT_SHAPES.length)];
+    var floor = shape === 'straight' ? buildStraightHangoutFloor(names) : buildBentHangoutFloor(names, shape);
+    floor.shape = shape;
+    return floor;
   }
 
   function buildResidentialFloor(names) {
@@ -202,7 +284,14 @@
     var doorFound = false;
     try { doorFound = localStorage.getItem(HIDDEN_DOOR_KEY) === '1'; } catch (e) {}
     var hiddenDoorPresent = !doorFound && Math.random() < HIDDEN_DOOR_CHANCE;
-    var hiddenDoorX = hiddenDoorPresent ? (10 + Math.random() * 80) : null;
+    // Sits right at a random room's doorway — works the same regardless of
+    // which hallway shape Floor 1 rolled, since every shape's rooms carry
+    // a doorPoint sitting exactly on the corridor.
+    var hiddenDoorPoint = null;
+    if (hiddenDoorPresent && floor1.rooms.length) {
+      var refRoom = floor1.rooms[Math.floor(Math.random() * floor1.rooms.length)];
+      hiddenDoorPoint = refRoom.doorPoint;
+    }
 
     // Bedrooms: one door per resident, plus a rare chance of The Locked Door.
     var bedroomNames = RESIDENTS.map(function (r) { return r.name + "'s Room"; });
@@ -285,7 +374,7 @@
     return {
       floors: [floor1, floor2, floor3],
       hiddenDoorPresent: hiddenDoorPresent,
-      hiddenDoorX: hiddenDoorX,
+      hiddenDoorPoint: hiddenDoorPoint,
       lockedDoorPresent: lockedDoorPresent
     };
   }
@@ -339,12 +428,34 @@
     return slots;
   }
 
+  // A rare-room cast (up to 8 people) and a bent floor's narrower
+  // single-row rooms don't always agree on how much space there is —
+  // shrink dots a little once a room gets crowded, rather than letting a
+  // full cast scene overlap itself in a room sized for two or three.
+  function dotSizePercent(count) {
+    if (count <= 4) return 3.2;
+    return Math.max(1.7, 3.2 * (4 / count));
+  }
+
+  // Perimeter rooms are one row (not two), so they're narrower than the
+  // straight floor's rooms — a long name like "Karaoke Bar & Grill" won't
+  // fit at a fixed size next to a short one like "Foyer." Size each label
+  // to the room it's actually in instead of guessing one size for all.
+  function fitLabelFontSize(rect, label, baseSize) {
+    var available = rect.w * 0.9;
+    var estCharWidth = 0.62; // approx width-per-em for this label font
+    var needed = label.length * estCharWidth;
+    var fit = needed > 0 ? (available / needed) : baseSize;
+    return Math.max(1.1, Math.min(baseSize, fit));
+  }
+
   function renderStage() {
     svgEl.innerHTML = '';
     layerEl.innerHTML = '';
 
     var floor = house.floors[activeFloor];
     var isBedroomFloor = activeFloor === 1;
+    var isNarrow = isBedroomFloor || floor.shape === 'l' || floor.shape === 'u' || floor.shape === 'o';
     var anyRoom = floor.rooms.length > 0;
 
     floor.rooms.forEach(function (room) {
@@ -357,8 +468,11 @@
       svgEl.appendChild(rect);
 
       var label = room.name.replace(/'s Room$/, '');
-      var cls = 'floorplan-room-label' + (isBedroomFloor ? ' is-door' : '');
-      svgEl.appendChild(svgText(room.cx, room.rect.y + room.rect.h - (isBedroomFloor ? 1.6 : 2.4), label, cls));
+      var cls = 'floorplan-room-label' + (isNarrow ? ' is-door' : '');
+      var baseSize = isNarrow ? 1.7 : 2.6;
+      var text = svgText(room.cx, room.rect.y + room.rect.h - (isNarrow ? 1.6 : 2.4), label, cls);
+      text.style.fontSize = fitLabelFontSize(room.rect, label, baseSize) + 'px';
+      svgEl.appendChild(text);
     });
 
     floor.rooms.forEach(function (room) {
@@ -369,12 +483,12 @@
       }
       var slots = dotSlots(room, occupants.length);
       occupants.forEach(function (slug, i) {
-        renderDot(findResident(slug), room, slots[i]);
+        renderDot(findResident(slug), room, slots[i], occupants.length);
       });
     });
 
     if (activeFloor === 0 && house.hiddenDoorPresent) {
-      renderHiddenDoor(floor);
+      renderHiddenDoor();
     }
 
     var totalDots = floor.rooms.reduce(function (n, r) { return n + (r.name === '__locked_door__' ? 0 : r.occupants.length); }, 0);
@@ -390,12 +504,13 @@
       : (isBedroomFloor ? 'Whoever you see is actually in, right now.' : '');
   }
 
-  function renderDot(resident, room, slot) {
+  function renderDot(resident, room, slot, roomCount) {
     var el = document.createElement('button');
     el.type = 'button';
     el.className = 'floorplan-dot';
     el.style.left = slot.x + '%';
     el.style.top = slot.y + '%';
+    el.style.width = dotSizePercent(roomCount || 1) + '%';
     el.style.background = resident.color;
     el.dataset.slug = resident.slug;
     el.dataset.room = room.name;
@@ -415,15 +530,16 @@
     layerEl.appendChild(el);
   }
 
-  function renderHiddenDoor(floor) {
+  function renderHiddenDoor() {
     // A rare, unlabeled door sitting right in the hallway itself. The
     // House is hiding this on purpose — clicking it just makes it vanish.
     // No reveal, no page, nothing.
+    if (!house.hiddenDoorPoint) return;
     var el = document.createElement('button');
     el.type = 'button';
     el.className = 'floorplan-door';
-    el.style.left = house.hiddenDoorX + '%';
-    el.style.top = floor.corridorY + '%';
+    el.style.left = house.hiddenDoorPoint.x + '%';
+    el.style.top = house.hiddenDoorPoint.y + '%';
     el.setAttribute('aria-label', 'A door');
     el.addEventListener('click', function () {
       house.hiddenDoorPresent = false;
@@ -530,12 +646,14 @@
       // Reflow every dot now in toRoom (not just the arrival) so nobody
       // lands on top of someone who was already there.
       var slots = dotSlots(toRoom, toRoom.occupants.length);
+      var size = dotSizePercent(toRoom.occupants.length);
       toRoom.occupants.forEach(function (occSlug, idx) {
         var el = occSlug === slug ? dot : layerEl.querySelector('.floorplan-dot[data-slug="' + occSlug + '"]');
         if (!el) return;
-        if (el !== dot) el.style.transition = 'left 0.6s ease, top 0.6s ease';
+        if (el !== dot) el.style.transition = 'left 0.6s ease, top 0.6s ease, width 0.6s ease';
         el.style.left = slots[idx].x + '%';
         el.style.top = slots[idx].y + '%';
+        el.style.width = size + '%';
       });
       dot.classList.remove('is-wandering');
     }, WANDER_LEG_MS);

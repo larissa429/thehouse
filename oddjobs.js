@@ -55,6 +55,48 @@
     return arr;
   }
 
+  // Builds an init() for the "wanted icon + tap the matching option out of
+  // a row of decoys" job shape (Match the request, Pour the order). Same
+  // single-tap rules as every other simple job, just parameterized by the
+  // label text and the emoji set.
+  function wantedRowInit(label, choices) {
+    return function (field, resolve) {
+      var options = shuffle(choices.slice());
+      var target = options[Math.floor(Math.random() * options.length)];
+
+      var col = document.createElement('div');
+      col.className = 'oddjobs-job-column';
+
+      var request = document.createElement('div');
+      request.className = 'oddjobs-request';
+      var labelEl = document.createElement('span');
+      labelEl.className = 'oddjobs-request-label';
+      labelEl.textContent = label;
+      var icon = document.createElement('span');
+      icon.className = 'oddjobs-request-icon';
+      icon.textContent = target;
+      request.appendChild(labelEl);
+      request.appendChild(icon);
+
+      var row = document.createElement('div');
+      row.className = 'oddjobs-options';
+      options.forEach(function (choice) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'oddjobs-option';
+        btn.textContent = choice;
+        btn.addEventListener('click', function () {
+          resolve(choice === target);
+        });
+        row.appendChild(btn);
+      });
+
+      col.appendChild(request);
+      col.appendChild(row);
+      field.appendChild(col);
+    };
+  }
+
   // Pointer-based drag (mouse + touch in one). Moves `chip` by percentage
   // of `field`'s box as the pointer moves, then hands off to `onRelease`
   // to do its own hit-testing (against whatever drop targets that job
@@ -158,46 +200,10 @@
       id: 'matchRequest',
       prompt: 'Match it!',
       // A patron holds up the book they want — tap the matching book out
-      // of a small row of decoys. Tapping any other book fails the round.
-      // Shape-distinct emoji on purpose (not just closed books in
-      // different colors) — same colorblind-unfriendly trap as the
-      // wilting-plant pulse, avoided here from the start.
-      init: function (field, resolve) {
-        var BOOKS = ['📕', '📖', '📔', '📚'];
-        var options = shuffle(BOOKS.slice());
-        var target = options[Math.floor(Math.random() * options.length)];
-
-        var col = document.createElement('div');
-        col.className = 'oddjobs-job-column';
-
-        var request = document.createElement('div');
-        request.className = 'oddjobs-request';
-        var label = document.createElement('span');
-        label.className = 'oddjobs-request-label';
-        label.textContent = 'Wanted';
-        var icon = document.createElement('span');
-        icon.className = 'oddjobs-request-icon';
-        icon.textContent = target;
-        request.appendChild(label);
-        request.appendChild(icon);
-
-        var row = document.createElement('div');
-        row.className = 'oddjobs-books';
-        options.forEach(function (book) {
-          var btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'oddjobs-book';
-          btn.textContent = book;
-          btn.addEventListener('click', function () {
-            resolve(book === target);
-          });
-          row.appendChild(btn);
-        });
-
-        col.appendChild(request);
-        col.appendChild(row);
-        field.appendChild(col);
-      }
+      // of a small row of decoys. Shape-distinct emoji on purpose (not
+      // just closed books in different colors) — same colorblind-
+      // unfriendly trap as the wilting-plant pulse, avoided from the start.
+      init: wantedRowInit('Wanted', ['📕', '📖', '📔', '📚'])
     },
     {
       id: 'shelveIt',
@@ -266,6 +272,46 @@
               chip.style.top = home.top + '%';
             }
           });
+        });
+      }
+    },
+    {
+      id: 'pourOrder',
+      prompt: 'Pour it!',
+      // Same shape as Match the request — an order icon shows what's
+      // wanted, tap the matching drink out of a row of decoys.
+      init: wantedRowInit('Ordered', ['🍺', '🍷', '🍹', '🍸'])
+    },
+    {
+      id: 'busTable',
+      prompt: 'Bus it!',
+      // A handful of dirty dishes are scattered across the table — tap
+      // every one before time's up. No wrong target here; the clock
+      // alone is the pressure, same as Catch the memory petal.
+      init: function (field, resolve) {
+        var DISHES = ['🍽️', '🥤', '🍷', '🥣'];
+        var spots = [
+          { left: 25, top: 32 },
+          { left: 75, top: 32 },
+          { left: 25, top: 70 },
+          { left: 75, top: 70 }
+        ];
+        var cleared = 0;
+        var order = shuffle(DISHES.slice());
+        order.forEach(function (dish, i) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'oddjobs-dish';
+          btn.textContent = dish;
+          btn.style.left = spots[i].left + '%';
+          btn.style.top = spots[i].top + '%';
+          btn.addEventListener('click', function () {
+            if (btn.classList.contains('is-bused')) return;
+            btn.classList.add('is-bused');
+            cleared++;
+            if (cleared === order.length) resolve(true);
+          });
+          field.appendChild(btn);
         });
       }
     }

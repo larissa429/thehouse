@@ -142,7 +142,7 @@
       transform: translateX(-50%);
     }
 
-    /* --- Match the request --- */
+    /* --- Wanted-icon + tap-a-row-of-options (Match the request, Pour the order) --- */
     .oddjobs-request {
       display: flex;
       flex-direction: column;
@@ -161,11 +161,11 @@
       font-size: 2.2rem;
       line-height: 1;
     }
-    .oddjobs-books {
+    .oddjobs-options {
       display: flex;
       gap: 0.9rem;
     }
-    .oddjobs-book {
+    .oddjobs-option {
       font-size: 2.2rem;
       line-height: 1;
       background: none;
@@ -175,7 +175,7 @@
       border-radius: 8px;
       transition: transform 0.1s ease;
     }
-    .oddjobs-book:active { transform: scale(0.9); }
+    .oddjobs-option:active { transform: scale(0.9); }
 
     /* --- Shelve it --- */
     .oddjobs-shelf-slot {
@@ -210,6 +210,25 @@
       flex-direction: column;
       align-items: center;
     }
+
+    /* --- Bus the table --- */
+    .oddjobs-dish {
+      position: absolute;
+      font-size: 2rem;
+      line-height: 1;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.4rem;
+      transform: translate(-50%, -50%);
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    .oddjobs-dish:active { transform: translate(-50%, -50%) scale(0.85); }
+    .oddjobs-dish.is-bused {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.5);
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -222,7 +241,7 @@
 
     <h1>Odd Jobs</h1>
     <p>Quick errands around the Inbetween &mdash; one task, a few seconds, don't overthink it.
-      <strong>Playtest note:</strong> only the Dream Garden and the Library are in so far, more locations to come.</p>
+      <strong>Playtest note:</strong> only the Dream Garden, the Library, and the Replay are in so far, more locations to come.</p>
 
     <div class="merge-game" id="oddjobsGame">
       <div class="merge-hud">

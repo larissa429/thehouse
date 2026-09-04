@@ -77,6 +77,18 @@
     return null;
   }
 
+  // Every layout function fills slots by walking its room-name list in
+  // order, and the staples are always concatenated first — so without
+  // this, "Kitchen & Dining Room" (etc) would land in the same early slot
+  // almost every load regardless of which shape or extra rooms show up.
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
   // --- Closeness graph -----------------------------------------------
   // Pulled from each character's own Connections section, not invented.
   // Positive = pulls two residents toward the same room; negative = pushes
@@ -343,8 +355,8 @@
   // --- Whole-house generation --------------------------------------------
 
   function generateHouse() {
-    var floor1Names = STAPLES.concat(pickExtraRooms(STAPLES));
-    var floor3Names = STAPLES.concat(pickExtraRooms(STAPLES));
+    var floor1Names = shuffle(STAPLES.concat(pickExtraRooms(STAPLES)));
+    var floor3Names = shuffle(STAPLES.concat(pickExtraRooms(STAPLES)));
     var floor1 = buildHangoutFloor(floor1Names);
     var floor3 = buildHangoutFloor(floor3Names);
 
@@ -364,6 +376,7 @@
     var bedroomNames = RESIDENTS.map(function (r) { return r.name + "'s Room"; });
     var lockedDoorPresent = Math.random() < LOCKED_DOOR_CHANCE;
     if (lockedDoorPresent) bedroomNames.push('__locked_door__');
+    bedroomNames = shuffle(bedroomNames);
     var floor2 = buildResidentialFloor(bedroomNames);
 
     function bedroomOf(slug) {

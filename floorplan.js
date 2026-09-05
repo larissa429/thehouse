@@ -46,6 +46,9 @@
   var CLOSENESS_PLACEMENT_THRESHOLD = 5; // a bond weaker than this (either direction) is just noise — placement ignores it entirely instead of giving every mild acquaintance or minor friction a say
   var BEDROOM_VISIT_THRESHOLD = 6; // a real bond, positive only — this is "close enough to actually hang out in their room," not just "close enough to notice"
   var BEDROOM_VISIT_CAP = 3;       // a bedroom stops being visitable once this many people are already in it
+  var FOLLOW_CHANCE_PER_POINT = 0.08; // odds someone left behind tags along, per point of CLOSENESS with whoever just left (e.g. a +9 bond ~= 72%)
+  var PAIR_FOLLOW_CHANCE = 0.85;      // Cool S/Clickbaity specifically — a stronger, flatter chance than the closeness math gives anyone else
+  var FLEE_CHANCE_PER_POINT = 0.1;    // odds someone already in a room leaves when a disliked arrival shows up, per point of negative CLOSENESS
 
   // --- Residents ---------------------------------------------------------
   // Colors match each resident's existing connection-note color in
@@ -1202,6 +1205,87 @@
     step();
   }
 
+  // Wandering avoids (softly, never absolutely) a room someone has real
+  // friction with — the same CLOSENESS_PLACEMENT_THRESHOLD used for
+  // initial placement, so a passing acquaintance never factors in, only
+  // an actual grudge. Reused for the original random destination, and
+  // for wherever a fleeing resident goes next.
+  function pickRepulsionWeightedRoom(moverSlug, candidates) {
+    var weights = candidates.map(function (room) {
+      var score = 1;
+      room.occupants.forEach(function (occSlug) {
+        var c = closenessBetween(moverSlug, occSlug);
+        if (c <= -CLOSENESS_PLACEMENT_THRESHOLD) score += c;
+      });
+      return Math.max(0.15, score);
+    });
+    var total = weights.reduce(function (a, b) { return a + b; }, 0);
+    var roll = Math.random() * total;
+    for (var i = 0; i < candidates.length; i++) {
+      roll -= weights[i];
+      if (roll <= 0) return candidates[i];
+    }
+    return candidates[candidates.length - 1];
+  }
+
+  // Everyone left behind independently rolls whether to tag along —
+  // each roll is only about that one person's own bond with whoever
+  // just left, never about whether anyone else already decided to
+  // follow. Cool S/Clickbaity use a flatter, stronger roll instead of
+  // the closeness math everyone else gets.
+  function rollFollowers(moverSlug, leftBehindSlugs) {
+    var mover = findResident(moverSlug);
+    return leftBehindSlugs.filter(function (slug) {
+      var r = findResident(slug);
+      if (mover && r && (mover.pair === slug || r.pair === moverSlug)) {
+        return Math.random() < PAIR_FOLLOW_CHANCE;
+      }
+      var c = closenessBetween(moverSlug, slug);
+      if (c < CLOSENESS_PLACEMENT_THRESHOLD) return false;
+      return Math.random() < c * FOLLOW_CHANCE_PER_POINT;
+    });
+  }
+
+  // Same idea in reverse — everyone already in the room independently
+  // rolls whether the new arrival is enough to make them leave, based
+  // only on their own bond with whoever just walked in, never on
+  // whether anyone else in the room also flees.
+  function rollFleers(moverSlug, presentSlugs) {
+    return presentSlugs.filter(function (slug) {
+      var c = closenessBetween(moverSlug, slug);
+      if (c > -CLOSENESS_PLACEMENT_THRESHOLD) return false;
+      return Math.random() < Math.abs(c) * FLEE_CHANCE_PER_POINT;
+    });
+  }
+
+  // Walks `dot` from fromRoom to toRoom, updates occupancy on arrival,
+  // and reflows every dot now in toRoom so nobody lands on top of
+  // someone already there. Shared by the original mover, anyone
+  // following them out, and anyone fleeing their arrival.
+  function moveResident(dot, fromRoom, toRoom, floor, onDone) {
+    dot.classList.add('is-wandering');
+    var path = buildWanderPath(fromRoom, toRoom, floor);
+    animateAlongPath(dot, path, function () {
+      var slug = dot.dataset.slug;
+      fromRoom.occupants = fromRoom.occupants.filter(function (s) { return s !== slug; });
+      if (toRoom.occupants.indexOf(slug) === -1) toRoom.occupants.push(slug);
+      dot.dataset.room = toRoom.name;
+
+      var slots = dotSlots(toRoom, toRoom.occupants.length);
+      var size = dotSizePercent(toRoom.occupants.length, toRoom.rect.h < 12);
+      toRoom.occupants.forEach(function (occSlug, idx) {
+        var el = occSlug === slug ? dot : layerEl.querySelector('.floorplan-dot[data-slug="' + occSlug + '"]');
+        if (!el) return;
+        el.style.transition = 'left 0.5s ease, top 0.5s ease, width 0.5s ease';
+        el.style.left = slots[idx].x + '%';
+        el.style.top = slots[idx].y + '%';
+        el.style.width = size + '%';
+      });
+      dot.classList.remove('is-wandering');
+      if (onDone) onDone();
+    });
+  }
+
   function tryWander() {
     // Floor 2 is presence same as anywhere else now, but a resident's own
     // bedroom wandering into someone else's would read as a real mistake
@@ -1215,35 +1299,36 @@
     var dots = Array.prototype.slice.call(layerEl.querySelectorAll('.floorplan-dot'));
     if (!dots.length) return;
     var dot = dots[Math.floor(Math.random() * dots.length)];
+    var moverSlug = dot.dataset.slug;
     var fromRoomName = dot.dataset.room;
     var fromRoom = floor.rooms.filter(function (r) { return r.name === fromRoomName; })[0];
     if (!fromRoom) return;
 
     var others = floor.rooms.filter(function (r) { return r.name !== fromRoomName; });
     if (!others.length) return;
-    var toRoom = others[Math.floor(Math.random() * others.length)];
+    var toRoom = pickRepulsionWeightedRoom(moverSlug, others);
 
-    dot.classList.add('is-wandering');
-    var path = buildWanderPath(fromRoom, toRoom, floor);
-    animateAlongPath(dot, path, function () {
-      var slug = dot.dataset.slug;
-      fromRoom.occupants = fromRoom.occupants.filter(function (s) { return s !== slug; });
-      if (toRoom.occupants.indexOf(slug) === -1) toRoom.occupants.push(slug);
-      dot.dataset.room = toRoom.name;
+    // Snapshot who's on each side of the move BEFORE anyone actually
+    // moves — follow/flee reactions are purely about this one move,
+    // never chained off a follower's or fleer's own arrival/departure.
+    var leftBehind = fromRoom.occupants.filter(function (s) { return s !== moverSlug; });
+    var alreadyThere = toRoom.occupants.slice();
 
-      // Reflow every dot now in toRoom (not just the arrival) so nobody
-      // lands on top of someone who was already there.
-      var slots = dotSlots(toRoom, toRoom.occupants.length);
-      var size = dotSizePercent(toRoom.occupants.length, toRoom.rect.h < 12);
-      toRoom.occupants.forEach(function (occSlug, idx) {
-        var el = occSlug === slug ? dot : layerEl.querySelector('.floorplan-dot[data-slug="' + occSlug + '"]');
-        if (!el) return;
-        el.style.transition = 'left 0.5s ease, top 0.5s ease, width 0.5s ease';
-        el.style.left = slots[idx].x + '%';
-        el.style.top = slots[idx].y + '%';
-        el.style.width = size + '%';
+    moveResident(dot, fromRoom, toRoom, floor, function () {
+      var followers = rollFollowers(moverSlug, leftBehind);
+      var fleers = rollFleers(moverSlug, alreadyThere);
+      followers.forEach(function (slug) {
+        var followerDot = layerEl.querySelector('.floorplan-dot[data-slug="' + slug + '"]');
+        if (followerDot) moveResident(followerDot, fromRoom, toRoom, floor);
       });
-      dot.classList.remove('is-wandering');
+      fleers.forEach(function (slug) {
+        var fleerDot = layerEl.querySelector('.floorplan-dot[data-slug="' + slug + '"]');
+        if (!fleerDot) return;
+        var fleeCandidates = floor.rooms.filter(function (r) { return r !== toRoom; });
+        if (!fleeCandidates.length) return;
+        var fleeTo = pickRepulsionWeightedRoom(slug, fleeCandidates);
+        moveResident(fleerDot, toRoom, fleeTo, floor);
+      });
     });
   }
 

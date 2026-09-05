@@ -431,6 +431,86 @@
     return buildCorridorFloor(names, { corridorHalf: 4, marginX: 3, marginY: 6, gap: 0.9, doorGap: 0.8, depth: 9 });
   }
 
+  // Finds a spot along a corridor wall that isn't actually a room's own
+  // doorway — anywhere a room COULD sit but doesn't right now: the
+  // margin before the first room or after the last one in a row, the
+  // seam between two neighboring rooms, or (most often) a whole segment
+  // that came up with zero rooms at all, since the room-name list doesn't
+  // always divide evenly across however many segments this shape has.
+  // Reads as a second, unlabeled door built into the wall itself.
+  function findEmptyWallSpot(floor) {
+    var groups = {};
+    floor.rooms.forEach(function (room) {
+      if (!room.seg || !room.rect) return;
+      var seg = room.seg, edge, from, to;
+      if (seg.axis === 'h') {
+        var cy = room.rect.y + room.rect.h / 2;
+        edge = cy < seg.pos ? room.rect.y + room.rect.h : room.rect.y;
+        from = room.rect.x; to = room.rect.x + room.rect.w;
+      } else {
+        var cx = room.rect.x + room.rect.w / 2;
+        edge = cx < seg.pos ? room.rect.x + room.rect.w : room.rect.x;
+        from = room.rect.y; to = room.rect.y + room.rect.h;
+      }
+      var key = seg.axis + ':' + Math.round(edge * 10);
+      (groups[key] = groups[key] || { axis: seg.axis, edge: edge, spans: [] }).spans.push({ from: from, to: to });
+    });
+
+    // Every row's own full length — the straight floor's single shared
+    // spine for both its rows, or (for a bent floor) whichever perimeter
+    // segment, outward or inward row alike, a given edge value matches.
+    var rowBounds = {};
+    if (floor.corridorSegments && floor.corridorSegments.length && !floor.segments) {
+      var spine = floor.corridorSegments[0];
+      rowBounds.h = { from: spine.x, to: spine.x + spine.w };
+    }
+    var allSegs = floor.segments && floor.segments.length ? perimeterSegments() : null;
+    (floor.segments || []).forEach(function (segMeta) {
+      var seg = allSegs[segMeta.key];
+      if (!seg) return;
+      [seg.outSign, -seg.outSign].forEach(function (rowSign) {
+        var edge = seg.pos + rowSign * (PERIMETER_HALF + PERIMETER_GAP);
+        rowBounds[seg.axis + ':' + Math.round(edge * 10)] = { from: seg.from, to: seg.to };
+      });
+    });
+
+    var gaps = [];
+    Object.keys(groups).forEach(function (key) {
+      var g = groups[key];
+      var bounds = rowBounds[key] || rowBounds[g.axis];
+      if (!bounds) return;
+      g.spans.sort(function (a, b) { return a.from - b.from; });
+      var cursor = bounds.from;
+      g.spans.forEach(function (s) {
+        if (s.from - cursor > 1) gaps.push({ axis: g.axis, edge: g.edge, from: cursor, to: s.from });
+        cursor = Math.max(cursor, s.to);
+      });
+      if (bounds.to - cursor > 1) gaps.push({ axis: g.axis, edge: g.edge, from: cursor, to: bounds.to });
+    });
+
+    // A segment that got zero rooms at all doesn't produce a group above
+    // (nothing to group), so it needs its own separate check here — its
+    // outward row's near edge is still exactly computable even with no
+    // actual rooms placed on it, and the whole span counts as one gap.
+    (floor.segments || []).forEach(function (segMeta) {
+      var seg = allSegs[segMeta.key];
+      if (!seg) return;
+      var edge = seg.pos + seg.outSign * (PERIMETER_HALF + PERIMETER_GAP);
+      var key = seg.axis + ':' + Math.round(edge * 10);
+      if (!groups[key]) gaps.push({ axis: seg.axis, edge: edge, from: seg.from, to: seg.to });
+    });
+
+    if (!gaps.length) return null;
+
+    var pick = gaps[Math.floor(Math.random() * gaps.length)];
+    var span = pick.to - pick.from;
+    var margin = span > 0.1 ? Math.min(2, span / 2 - 0.01) : 0;
+    var t = margin > 0 ? pick.from + margin + Math.random() * (span - 2 * margin) : (pick.from + pick.to) / 2;
+    return pick.axis === 'h'
+      ? { x: t, y: pick.edge, axis: 'h' }
+      : { x: pick.edge, y: t, axis: 'v' };
+  }
+
   // --- Whole-house generation --------------------------------------------
 
   function generateHouse() {
@@ -442,13 +522,23 @@
     var doorFound = false;
     try { doorFound = localStorage.getItem(HIDDEN_DOOR_KEY) === '1'; } catch (e) {}
     var hiddenDoorPresent = !doorFound && Math.random() < HIDDEN_DOOR_CHANCE;
-    // Sits right at a random room's doorway — works the same regardless of
-    // which hallway shape Floor 1 rolled, since every shape's rooms carry
-    // a doorPoint sitting exactly on the corridor.
+    // Sits in a gap of empty wall between two rooms, not another room's
+    // own doorway — reads as a second, unmarked door built into the wall.
+    // Works the same regardless of which hallway shape Floor 1 rolled.
     var hiddenDoorPoint = null;
+    var hiddenDoorAxis = 'h';
     if (hiddenDoorPresent && floor1.rooms.length) {
-      var refRoom = floor1.rooms[Math.floor(Math.random() * floor1.rooms.length)];
-      hiddenDoorPoint = refRoom.doorPoint;
+      var spot = findEmptyWallSpot(floor1);
+      if (spot) {
+        hiddenDoorPoint = { x: spot.x, y: spot.y };
+        hiddenDoorAxis = spot.axis;
+      } else {
+        // No real gap this load (every wall packed edge-to-edge) — falls
+        // back to a room's own doorway rather than not spawning at all.
+        var refRoom = floor1.rooms[Math.floor(Math.random() * floor1.rooms.length)];
+        hiddenDoorPoint = refRoom.doorPoint;
+        hiddenDoorAxis = refRoom.seg ? refRoom.seg.axis : 'h';
+      }
     }
 
     // Bedrooms: one door per resident, plus a rare chance of The Locked Door.
@@ -553,6 +643,7 @@
       floors: [floor1, floor2, floor3],
       hiddenDoorPresent: hiddenDoorPresent,
       hiddenDoorPoint: hiddenDoorPoint,
+      hiddenDoorAxis: hiddenDoorAxis,
       lockedDoorPresent: lockedDoorPresent
     };
   }
@@ -782,13 +873,15 @@
   }
 
   function renderHiddenDoor() {
-    // A rare, unlabeled door sitting right in the hallway itself. The
-    // House is hiding this on purpose — clicking it just makes it vanish.
-    // No reveal, no page, nothing.
+    // A rare, unlabeled door built right into the wall itself — a thin
+    // tick mark, not a room's own doorway. The House is hiding this on
+    // purpose — clicking it just makes it vanish. No reveal, no page,
+    // nothing. Oriented across whichever wall it landed on: a horizontal
+    // wall (axis 'h') gets a vertical tick, a vertical wall the reverse.
     if (!house.hiddenDoorPoint) return;
     var el = document.createElement('button');
     el.type = 'button';
-    el.className = 'floorplan-door';
+    el.className = 'floorplan-hidden-door ' + (house.hiddenDoorAxis === 'v' ? 'is-horizontal' : 'is-vertical');
     el.style.left = house.hiddenDoorPoint.x + '%';
     el.style.top = house.hiddenDoorPoint.y + '%';
     el.setAttribute('aria-label', 'A door');

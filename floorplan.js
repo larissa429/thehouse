@@ -56,22 +56,22 @@
   // hangout, so it's a coin-flip-ish chance instead.
 
   var RESIDENTS = [
-    { slug: 'journal', name: 'Journal', icon: '../images/icons/journal.png', color: '#d9b473', alwaysHome: true },
-    { slug: 'mirror', name: 'Mirror', icon: '../images/icons/mirror.png', color: '#cfe0d8', defaultRoom: 'Kitchen' },
-    { slug: 'lp', name: 'LP', icon: '../images/icons/lp.png', color: '#cfa8d4' },
-    { slug: 'n528', name: '-⁵⁄₂₈', icon: '../images/icons/n528.png', color: '#b8d4c9' },
-    { slug: 'dream', name: 'Dream', icon: '../images/icons/dream.png', color: '#c7b8d4' },
-    { slug: 'indigo', name: 'Indigo', icon: '../images/icons/indigo.png', color: '#b8a8d4' },
-    { slug: 'cassette', name: 'Cassette', icon: '../images/icons/cassette.png', color: '#f0a878' },
-    { slug: 'bluemarble', name: 'Blue Marble', icon: '../images/icons/bluemarble.png', color: '#a8d4c4' },
-    { slug: 'ap', name: 'AP', icon: '../images/icons/ap.png', color: '#e8a2a8', defaultRoom: 'Bathroom', defaultChance: 0.45 },
-    { slug: 'cools', name: 'Cool S', icon: '../images/icons/cool s.png', color: '#c4b0e8', pair: 'clickbaity' },
-    { slug: 'clickbaity', name: 'Clickbaity', icon: '../images/clickbaity.png', color: '#c0463c', pair: 'cools' },
-    { slug: 'geeky', name: 'Geeky', icon: '../images/icons/geeky.png', color: '#f0955a' },
-    { slug: 'pbc', name: 'PBC', icon: '../images/icons/pbc.png', color: '#e8781e', defaultRoom: 'Bathroom', defaultChance: 0.45 },
+    { slug: 'journal', name: 'Journal', icon: '../images/zoomedicons/journal.webp', color: '#d9b473', alwaysHome: true },
+    { slug: 'mirror', name: 'Mirror', icon: '../images/zoomedicons/mirror.webp', color: '#cfe0d8', defaultRoom: 'Kitchen' },
+    { slug: 'lp', name: 'LP', icon: '../images/zoomedicons/lp.webp', color: '#cfa8d4' },
+    { slug: 'n528', name: '-⁵⁄₂₈', icon: '../images/zoomedicons/n528.webp', color: '#b8d4c9' },
+    { slug: 'dream', name: 'Dream', icon: '../images/zoomedicons/dream.webp', color: '#c7b8d4' },
+    { slug: 'indigo', name: 'Indigo', icon: '../images/zoomedicons/indigo.webp', color: '#b8a8d4' },
+    { slug: 'cassette', name: 'Cassette', icon: '../images/zoomedicons/cassette.webp', color: '#f0a878' },
+    { slug: 'bluemarble', name: 'Blue Marble', icon: '../images/zoomedicons/bluemarble.webp', color: '#a8d4c4' },
+    { slug: 'ap', name: 'AP', icon: '../images/zoomedicons/ap.webp', color: '#e8a2a8', defaultRoom: 'Bathroom', defaultChance: 0.45 },
+    { slug: 'cools', name: 'Cool S', icon: '../images/zoomedicons/cools.webp', color: '#c4b0e8', pair: 'clickbaity' },
+    { slug: 'clickbaity', name: 'Clickbaity', icon: '../images/zoomedicons/clickbaity.webp', color: '#c0463c', pair: 'cools' },
+    { slug: 'geeky', name: 'Geeky', icon: '../images/zoomedicons/geeky.webp', color: '#f0955a' },
+    { slug: 'pbc', name: 'PBC', icon: '../images/zoomedicons/pbc.webp', color: '#e8781e', defaultRoom: 'Bathroom', defaultChance: 0.45 },
     // Dumptruck's only known hangout is her own (famously trashed) bedroom —
     // so unless a rare-room cast claims her, she's just always there.
-    { slug: 'dumptruck', name: 'Dumptruck', icon: '../images/icons/dumptruck.png', color: '#3f6b32', noHangoutDefault: true }
+    { slug: 'dumptruck', name: 'Dumptruck', icon: '../images/zoomedicons/dumptruck.webp', color: '#3f6b32', noHangoutDefault: true }
   ];
 
   function findResident(slug) {
@@ -717,7 +717,7 @@
     wrap.className = 'floorplan-note-card';
     var img = document.createElement('img');
     img.className = 'floorplan-note-portrait';
-    img.src = '../images/icons/penny.png';
+    img.src = '../images/zoomedicons/penny.webp';
     img.alt = 'Penny';
     var text = document.createElement('div');
     var h4 = document.createElement('h4');

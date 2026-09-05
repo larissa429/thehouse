@@ -17,6 +17,7 @@
   var tabsEl = document.getElementById('floorplanTabs');
   if (!tabsEl) return; // not on the Floor Plan page
 
+  var stageEl = document.getElementById('floorplanStage');
   var svgEl = document.getElementById('floorplanSvg');
   var layerEl = document.getElementById('floorplanLayer');
   var captionEl = document.getElementById('floorplanCaption');
@@ -635,6 +636,7 @@
   }
 
   function renderStage() {
+    hideRoomTip();
     svgEl.innerHTML = '';
     layerEl.innerHTML = '';
 
@@ -688,9 +690,9 @@
         return;
       }
       // Appended before this room's dots, so the dots still end up on
-      // top of it in the DOM's paint/hit-test order — clicking a dot
-      // opens that resident, clicking anywhere else in the box opens
-      // the room itself.
+      // top of it in the DOM's paint/hit-test order — hovering or
+      // clicking a dot is about that resident, hovering or tapping
+      // anywhere else in the box is about the room itself.
       var hit = document.createElement('button');
       hit.type = 'button';
       hit.className = 'floorplan-room-hit';
@@ -699,7 +701,20 @@
       hit.style.width = room.rect.w + '%';
       hit.style.height = room.rect.h + '%';
       hit.setAttribute('aria-label', room.name);
-      hit.addEventListener('click', function () { openRoomCard(room); });
+      hit.addEventListener('mouseenter', function () {
+        if (!roomTipPinned) showRoomTip(room, false);
+      });
+      hit.addEventListener('mouseleave', function () {
+        if (!roomTipPinned) hideRoomTip();
+      });
+      // A tap fires a click with no prior hover on touch devices, so this
+      // is what actually opens the tip there — pinned so it survives
+      // until the next tap elsewhere, since there's no hover to hold it
+      // open in the meantime.
+      hit.addEventListener('click', function () {
+        if (roomTipPinned && roomTipRoom === room) { hideRoomTip(); return; }
+        showRoomTip(room, true);
+      });
       layerEl.appendChild(hit);
 
       var slots = dotSlots(room, occupants.length);
@@ -847,36 +862,76 @@
     noteOverlay.classList.add('open');
   }
 
-  // A hangout room gets its one-sentence description (if it has one —
-  // bedrooms don't) plus whoever's actually in it right now. Same plain
-  // note styling as the rest of the site, not a per-resident color.
-  function openRoomCard(room) {
-    noteBody.innerHTML = '';
-    var wrap = document.createElement('div');
-    var h4 = document.createElement('h4');
-    h4.textContent = room.name;
-    wrap.appendChild(h4);
+  // A room's info shows in a small themed tooltip instead of the big
+  // note-card modal — hover reveals it on desktop, a tap pins it open on
+  // touch devices (no hover state to reveal it there). One shared element,
+  // repositioned per room, rather than rebuilding the whole modal overlay
+  // for something this lightweight.
+  var roomTipEl = document.createElement('div');
+  roomTipEl.className = 'floorplan-room-tip';
+  stageEl.appendChild(roomTipEl);
+  var roomTipRoom = null;
+  var roomTipPinned = false;
+
+  function roomTipContent(room) {
     var desc = ROOM_DESCRIPTIONS[room.name];
+    var names = room.occupants.length
+      ? room.occupants.map(function (slug) { var r = findResident(slug); return r ? r.name : slug; }).join(', ')
+      : 'No one right now.';
+    roomTipEl.innerHTML = '';
+    var h5 = document.createElement('h5');
+    h5.textContent = room.name;
+    roomTipEl.appendChild(h5);
     if (desc) {
       var descEl = document.createElement('p');
       descEl.textContent = desc;
-      wrap.appendChild(descEl);
+      roomTipEl.appendChild(descEl);
     }
     var label = document.createElement('p');
-    label.className = 'floorplan-note-room';
+    label.className = 'floorplan-room-tip-label';
     label.textContent = 'Currently here';
-    wrap.appendChild(label);
+    roomTipEl.appendChild(label);
     var namesEl = document.createElement('p');
-    namesEl.textContent = room.occupants.length
-      ? room.occupants.map(function (slug) { var r = findResident(slug); return r ? r.name : slug; }).join(', ')
-      : 'No one right now.';
-    wrap.appendChild(namesEl);
-    noteBody.appendChild(wrap);
-    noteEl.style.background = '';
-    noteEl.style.color = '';
-    noteCloseEl.style.color = '';
-    noteOverlay.classList.add('open');
+    namesEl.textContent = names;
+    roomTipEl.appendChild(namesEl);
   }
+
+  // Anchored above the room, centered on it; flips to sit below instead
+  // when the room's too close to the top of the stage for that to fit.
+  function positionRoomTip(room) {
+    var flip = room.rect.y < 15;
+    roomTipEl.style.left = room.cx + '%';
+    roomTipEl.style.top = (flip ? room.rect.y + room.rect.h : room.rect.y) + '%';
+    roomTipEl.style.transform = flip ? 'translate(-50%, 0.6rem)' : 'translate(-50%, calc(-100% - 0.6rem))';
+    roomTipEl.style.marginLeft = '0px';
+    // The transform above only centers it against the room itself — a
+    // room near the left/right edge of the stage can still push the
+    // (fixed-width) tip past the stage's own edge, so nudge it back in.
+    var stageRect = stageEl.getBoundingClientRect();
+    var tipRect = roomTipEl.getBoundingClientRect();
+    var overflowLeft = stageRect.left - tipRect.left;
+    var overflowRight = tipRect.right - stageRect.right;
+    if (overflowLeft > 0) roomTipEl.style.marginLeft = (overflowLeft + 4) + 'px';
+    else if (overflowRight > 0) roomTipEl.style.marginLeft = -(overflowRight + 4) + 'px';
+  }
+
+  function showRoomTip(room, pinned) {
+    roomTipContent(room);
+    roomTipEl.classList.add('is-visible');
+    positionRoomTip(room);
+    roomTipRoom = room;
+    roomTipPinned = !!pinned;
+  }
+
+  function hideRoomTip() {
+    roomTipEl.classList.remove('is-visible');
+    roomTipRoom = null;
+    roomTipPinned = false;
+  }
+
+  document.addEventListener('click', function (e) {
+    if (roomTipPinned && !e.target.closest('.floorplan-room-hit')) hideRoomTip();
+  });
 
   function renderAll() {
     renderTabs();

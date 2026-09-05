@@ -1035,9 +1035,16 @@
   // touch devices (no hover state to reveal it there). One shared element,
   // repositioned per room, rather than rebuilding the whole modal overlay
   // for something this lightweight.
+  // Appended to <body>, not the stage — the stage clips its own children
+  // (overflow: hidden, so its corridor/room SVG never bleeds past its
+  // rounded corners), which was clipping the tip's top off whenever a
+  // room sat near the stage's own top edge, most visibly on a narrow
+  // mobile viewport where "near the top" is most rooms. Fixed
+  // positioning computed from real viewport pixels sidesteps that
+  // entirely instead of trying to out-guess the clip from inside it.
   var roomTipEl = document.createElement('div');
   roomTipEl.className = 'floorplan-room-tip';
-  stageEl.appendChild(roomTipEl);
+  document.body.appendChild(roomTipEl);
   var roomTipRoom = null;
   var roomTipPinned = false;
 
@@ -1064,24 +1071,47 @@
     roomTipEl.appendChild(namesEl);
   }
 
-  // Anchored above the room, centered on it; flips to sit below instead
-  // when the room's too close to the top of the stage for that to fit.
+  // Anchored above the room, centered on it, in real viewport pixels —
+  // flips to sit below instead when there's not enough room above the
+  // room within the actual viewport (not the stage's own coordinate
+  // space, which is what let the old version think there was room
+  // above when the stage itself was already flush against the top of
+  // the screen). Clamped horizontally and vertically against the
+  // viewport too, for a room hugging any edge of the screen.
   function positionRoomTip(room) {
-    var flip = room.rect.y < 15;
-    roomTipEl.style.left = room.cx + '%';
-    roomTipEl.style.top = (flip ? room.rect.y + room.rect.h : room.rect.y) + '%';
-    roomTipEl.style.transform = flip ? 'translate(-50%, 0.6rem)' : 'translate(-50%, calc(-100% - 0.6rem))';
-    roomTipEl.style.marginLeft = '0px';
-    // The transform above only centers it against the room itself — a
-    // room near the left/right edge of the stage can still push the
-    // (fixed-width) tip past the stage's own edge, so nudge it back in.
     var stageRect = stageEl.getBoundingClientRect();
+    var roomTop = stageRect.top + (room.rect.y / 100) * stageRect.height;
+    var roomBottom = stageRect.top + ((room.rect.y + room.rect.h) / 100) * stageRect.height;
+    var roomCenterX = stageRect.left + ((room.rect.x + room.rect.w / 2) / 100) * stageRect.width;
+
+    var margin = 8;
+    // Measure at the page's natural flow width first (max-width applies,
+    // but actual content width depends on which room's text is longest).
+    roomTipEl.style.left = '0px';
+    roomTipEl.style.top = '0px';
     var tipRect = roomTipEl.getBoundingClientRect();
-    var overflowLeft = stageRect.left - tipRect.left;
-    var overflowRight = tipRect.right - stageRect.right;
-    if (overflowLeft > 0) roomTipEl.style.marginLeft = (overflowLeft + 4) + 'px';
-    else if (overflowRight > 0) roomTipEl.style.marginLeft = -(overflowRight + 4) + 'px';
+    var tipW = tipRect.width, tipH = tipRect.height;
+
+    var flip = roomTop - tipH - margin < 0;
+    var top = flip ? roomBottom + margin : roomTop - tipH - margin;
+    top = Math.max(margin, Math.min(top, window.innerHeight - tipH - margin));
+
+    var left = roomCenterX - tipW / 2;
+    left = Math.max(margin, Math.min(left, window.innerWidth - tipW - margin));
+
+    roomTipEl.style.left = left + 'px';
+    roomTipEl.style.top = top + 'px';
   }
+
+  // A pinned tip (touch) can outlive the scroll position it was placed
+  // at — keep it glued to its room rather than left floating over
+  // whatever scrolled into its place.
+  window.addEventListener('scroll', function () {
+    if (roomTipRoom) positionRoomTip(roomTipRoom);
+  }, { passive: true });
+  window.addEventListener('resize', function () {
+    if (roomTipRoom) positionRoomTip(roomTipRoom);
+  });
 
   function showRoomTip(room, pinned) {
     roomTipContent(room);

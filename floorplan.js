@@ -813,17 +813,39 @@
     return { point: room.doorPoint, key: room.seg ? room.seg.key : null };
   }
 
+  function pathDistance(points) {
+    var total = 0;
+    for (var i = 1; i < points.length; i++) {
+      total += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+    }
+    return total;
+  }
+
   function buildWanderPath(fromRoom, toRoom, floor) {
     var from = effectiveDoor(fromRoom, toRoom);
     var to = effectiveDoor(toRoom, fromRoom);
-    var points = [from.point];
-    if (from.key && to.key && from.key !== to.key) {
-      findCorridorPath(floor, from.key, to.key).forEach(function (cname) {
-        points.push(CORNER_POINTS[cname]);
-      });
+
+    if (!from.key || !to.key || from.key === to.key) return [from.point, to.point];
+
+    var ringPoints = [from.point];
+    findCorridorPath(floor, from.key, to.key).forEach(function (cname) {
+      ringPoints.push(CORNER_POINTS[cname]);
+    });
+    ringPoints.push(to.point);
+
+    // A Courtyard sits in the middle of the ring, reachable from every
+    // segment — cutting straight through it is often shorter than
+    // walking two sides of the ring to get to the opposite segment, so
+    // it's worth comparing rather than always taking the ring route.
+    var courtyard = floor.rooms.filter(function (r) {
+      return r.doors && r !== fromRoom && r !== toRoom;
+    })[0];
+    if (courtyard && courtyard.doors[from.key] && courtyard.doors[to.key]) {
+      var throughPoints = [from.point, courtyard.doors[from.key], courtyard.doors[to.key], to.point];
+      if (pathDistance(throughPoints) < pathDistance(ringPoints)) return throughPoints;
     }
-    points.push(to.point);
-    return points;
+
+    return ringPoints;
   }
 
   // Walks `dot` through `points` in sequence, one CSS transition per leg,

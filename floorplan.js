@@ -127,8 +127,29 @@
   // --- Room pool -----------------------------------------------------
 
   var STAPLES = ['Kitchen & Dining Room', 'Living Room', 'Foyer', 'Bathroom'];
-  var RARE = ['In-House Theater', 'Courtyard', 'Crafts Room', 'Music Room', 'Arcade Nook', 'Sunroom', 'Board Game Den'];
+  var RARE = ['In-House Theater', 'Courtyard', 'Crafts Room', 'Music Room', 'Arcade', 'Sunroom', 'Board Game Den'];
   var RARER = ['Indoor Treehouse', 'Snow Room', 'Pillow Pit', 'Planetarium', 'Karaoke Bar & Grill'];
+
+  // One line per hangout room, shown when its box is clicked — bedrooms
+  // don't get one of these at all, just the occupant list.
+  var ROOM_DESCRIPTIONS = {
+    'Kitchen & Dining Room': 'Where meals happen, whenever anyone actually cooks.',
+    'Living Room': 'The most neutral room in any house.',
+    'Foyer': 'The first room anyone sees, and the last one anyone lingers in.',
+    'Bathroom': 'Originally called a "powder room."',
+    'In-House Theater': 'A home theater with a couch, a projector, and a screen.',
+    'Courtyard': 'An open-air courtyard at the center of The House.',
+    'Crafts Room': 'A room stocked with craft and art supplies.',
+    'Music Room': 'A room with instruments for practicing or playing music.',
+    'Arcade': 'A small room with a few arcade cabinets.',
+    'Sunroom': 'A glass-walled room that gets plenty of natural light.',
+    'Board Game Den': 'A den stocked with board games. Where friendships go to be tested.',
+    'Indoor Treehouse': 'A small treehouse built inside The House.',
+    'Snow Room': 'A room kept artificially cold, with snow on the ground.',
+    'Pillow Pit': 'A room filled with a deep pile of pillows.',
+    'Planetarium': 'A room with a dome ceiling that projects stars.',
+    'Karaoke Bar & Grill': 'A karaoke bar and grill combined into one room.'
+  };
 
   // Optional author-picked casts — if the room spawns AND everyone in its
   // cast is home, there's a chance the whole scene actually happens.
@@ -666,6 +687,21 @@
         renderLockedDoorMarker(room);
         return;
       }
+      // Appended before this room's dots, so the dots still end up on
+      // top of it in the DOM's paint/hit-test order — clicking a dot
+      // opens that resident, clicking anywhere else in the box opens
+      // the room itself.
+      var hit = document.createElement('button');
+      hit.type = 'button';
+      hit.className = 'floorplan-room-hit';
+      hit.style.left = room.rect.x + '%';
+      hit.style.top = room.rect.y + '%';
+      hit.style.width = room.rect.w + '%';
+      hit.style.height = room.rect.h + '%';
+      hit.setAttribute('aria-label', room.name);
+      hit.addEventListener('click', function () { openRoomCard(room); });
+      layerEl.appendChild(hit);
+
       var slots = dotSlots(room, occupants.length);
       occupants.forEach(function (slug, i) {
         renderDot(findResident(slug), room, slots[i], occupants.length);
@@ -808,6 +844,37 @@
     noteEl.style.background = '#3a3a3a';
     noteEl.style.color = '#e8e4dc';
     noteCloseEl.style.color = '#e8e4dc';
+    noteOverlay.classList.add('open');
+  }
+
+  // A hangout room gets its one-sentence description (if it has one —
+  // bedrooms don't) plus whoever's actually in it right now. Same plain
+  // note styling as the rest of the site, not a per-resident color.
+  function openRoomCard(room) {
+    noteBody.innerHTML = '';
+    var wrap = document.createElement('div');
+    var h4 = document.createElement('h4');
+    h4.textContent = room.name;
+    wrap.appendChild(h4);
+    var desc = ROOM_DESCRIPTIONS[room.name];
+    if (desc) {
+      var descEl = document.createElement('p');
+      descEl.textContent = desc;
+      wrap.appendChild(descEl);
+    }
+    var label = document.createElement('p');
+    label.className = 'floorplan-note-room';
+    label.textContent = 'Currently here';
+    wrap.appendChild(label);
+    var namesEl = document.createElement('p');
+    namesEl.textContent = room.occupants.length
+      ? room.occupants.map(function (slug) { var r = findResident(slug); return r ? r.name : slug; }).join(', ')
+      : 'No one right now.';
+    wrap.appendChild(namesEl);
+    noteBody.appendChild(wrap);
+    noteEl.style.background = '';
+    noteEl.style.color = '';
+    noteCloseEl.style.color = '';
     noteOverlay.classList.add('open');
   }
 

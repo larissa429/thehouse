@@ -603,13 +603,17 @@
     }
 
     floor.rooms.forEach(function (room) {
-      if (room.name === '__locked_door__') return; // drawn as a door icon, not a labeled room
       var rect = document.createElementNS(SVG_NS, 'rect');
       rect.setAttribute('x', room.rect.x); rect.setAttribute('y', room.rect.y);
       rect.setAttribute('width', room.rect.w); rect.setAttribute('height', room.rect.h);
       rect.setAttribute('rx', 1);
       rect.setAttribute('class', 'floorplan-room-rect');
       svgEl.appendChild(rect);
+
+      // The Locked Door gets a room box like everywhere else, on purpose
+      // left unlabeled — it's supposed to look like an ordinary bedroom
+      // door until you actually open it.
+      if (room.name === '__locked_door__') return;
 
       var label = room.name.replace(/'s Room$/, '');
       var isNarrow = isBedroomFloor || room.rect.w < 20;
@@ -623,7 +627,7 @@
     floor.rooms.forEach(function (room) {
       var occupants = room.occupants;
       if (room.name === '__locked_door__') {
-        renderDoorIcon(room);
+        renderLockedDoorMarker(room);
         return;
       }
       var slots = dotSlots(room, occupants.length);
@@ -649,6 +653,12 @@
       : (isBedroomFloor ? 'Whoever you see is actually in, right now.' : '');
   }
 
+  // Clickbaity's own object is a hollow red circle — an outline instead
+  // of a filled dot for him specifically reads as more "him" than just
+  // another colored disc. Width is a starting guess (roughly 3x the room
+  // rects' own 0.3-unit stroke) — easy to tune further once it's live.
+  var CLICKBAITY_OUTLINE_WIDTH = '2.5px';
+
   function renderDot(resident, room, slot, roomCount) {
     var el = document.createElement('button');
     el.type = 'button';
@@ -656,7 +666,12 @@
     el.style.left = slot.x + '%';
     el.style.top = slot.y + '%';
     el.style.width = dotSizePercent(roomCount || 1) + '%';
-    el.style.background = resident.color;
+    if (resident.slug === 'clickbaity') {
+      el.style.background = 'transparent';
+      el.style.border = CLICKBAITY_OUTLINE_WIDTH + ' solid ' + resident.color;
+    } else {
+      el.style.background = resident.color;
+    }
     el.dataset.slug = resident.slug;
     el.dataset.room = room.name;
     el.title = resident.name;
@@ -664,12 +679,17 @@
     layerEl.appendChild(el);
   }
 
-  function renderDoorIcon(room) {
+  // Penny's room stays visually ordinary — a plain unlabeled room box
+  // (drawn already, above) with just a small grey marker inside, easy to
+  // mistake for any other empty room until clicked.
+  function renderLockedDoorMarker(room) {
     var el = document.createElement('button');
     el.type = 'button';
-    el.className = 'floorplan-door';
+    el.className = 'floorplan-dot';
     el.style.left = room.cx + '%';
     el.style.top = room.cy + '%';
+    el.style.width = dotSizePercent(1) + '%';
+    el.style.background = '#8a8a8a';
     el.setAttribute('aria-label', 'A door');
     el.addEventListener('click', function () { openLockedDoorCard(); });
     layerEl.appendChild(el);

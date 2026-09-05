@@ -42,6 +42,9 @@
   var WANDER_MS_PER_UNIT = 45;     // walking speed — ms per viewBox unit of distance
   var WANDER_MIN_LEG_MS = 350;     // floor, so a short hop isn't instant
   var WANDER_MAX_LEG_MS = 1800;    // ceiling, so a long hallway leg isn't glacial
+  var CLOSENESS_PLACEMENT_THRESHOLD = 5; // a bond weaker than this (either direction) is just noise — placement ignores it entirely instead of giving every mild acquaintance or minor friction a say
+  var BEDROOM_VISIT_THRESHOLD = 6; // a real bond, positive only — this is "close enough to actually hang out in their room," not just "close enough to notice"
+  var BEDROOM_VISIT_CAP = 3;       // a bedroom stops being visitable once this many people are already in it
 
   // --- Residents ---------------------------------------------------------
   // Colors match each resident's existing connection-note color in
@@ -96,16 +99,21 @@
   // Pulled from each character's own Connections section, not invented.
   // Positive = pulls two residents toward the same room; negative = pushes
   // apart. This is a soft bias for placement, never a hard rule.
+  // Scale is -10 to 10, not just -2 to 3 — the old narrow range meant
+  // every strong bond used the same top value, which fused most of the
+  // cast into one indistinguishable "everyone's best friends" blob at
+  // placement time. Widening it lets real differences in closeness
+  // actually separate people into distinct friend groups instead.
   var CLOSENESS = [
-    ['journal', 'mirror', 3], ['journal', 'n528', 3], ['journal', 'bluemarble', -1], ['journal', 'dumptruck', 1],
-    ['mirror', 'bluemarble', 3], ['mirror', 'ap', 1],
-    ['lp', 'cassette', 3],
-    ['cassette', 'indigo', 3], ['cassette', 'bluemarble', 3],
-    ['n528', 'dream', 3],
-    ['geeky', 'clickbaity', 3], ['geeky', 'cools', 2],
-    ['indigo', 'dumptruck', -1],
-    ['pbc', 'journal', -2], ['pbc', 'mirror', -2], ['pbc', 'cassette', -2],
-    ['ap', 'cools', -1], ['ap', 'clickbaity', -1]
+    ['journal', 'mirror', 4], ['journal', 'n528', 5], ['journal', 'bluemarble', -3], ['journal', 'dumptruck', 3],
+    ['mirror', 'bluemarble', 6], ['mirror', 'ap', 3],
+    ['lp', 'cassette', 9], // dating
+    ['cassette', 'indigo', 6], ['cassette', 'bluemarble', 5], ['indigo', 'lp', 6],
+    ['n528', 'dream', 9],
+    ['geeky', 'clickbaity', 6], ['geeky', 'cools', 5],
+    ['indigo', 'dumptruck', -3],
+    ['pbc', 'journal', -7], ['pbc', 'mirror', -7], ['pbc', 'cassette', -7],
+    ['ap', 'cools', -3], ['ap', 'clickbaity', -3]
   ];
 
   function closenessBetween(a, b) {
@@ -480,22 +488,41 @@
         candidate = hangoutRooms.filter(function (room) { return room.name.indexOf(r.defaultRoom) !== -1; })[0];
       }
       if (!candidate) {
+        // A close-enough friend's bedroom counts as a hangout candidate
+        // too, once its owner has actually settled in there for the day —
+        // visiting only makes sense if someone's actually home, and only
+        // for a bond real enough to be worth going to someone's room for,
+        // not just any mild closeness. Capped so it never turns into a
+        // second living room.
+        var visitableBedrooms = floor2.rooms.filter(function (room) {
+          return room.name !== '__locked_door__' && room.occupants.length > 0 &&
+            room.occupants.length < BEDROOM_VISIT_CAP &&
+            room.occupants.some(function (slug) { return closenessBetween(r.slug, slug) >= BEDROOM_VISIT_THRESHOLD; });
+        });
+        var candidateRooms = hangoutRooms.concat(visitableBedrooms);
+
         // Closeness-biased pick: weight every room by how positive/negative
         // its current occupants read for this resident, then roll against
         // those weights. Rooms with no signal at all still get a small
-        // base weight so everyone has somewhere to land.
-        var weights = hangoutRooms.map(function (room) {
+        // base weight so everyone has somewhere to land. A bond under
+        // CLOSENESS_PLACEMENT_THRESHOLD doesn't count at all here — only
+        // real closeness or real friction should ever bias where someone
+        // lands; anything weaker is placed as if there were no bond.
+        var weights = candidateRooms.map(function (room) {
           var score = 1;
-          room.occupants.forEach(function (slug) { score += closenessBetween(r.slug, slug); });
+          room.occupants.forEach(function (slug) {
+            var c = closenessBetween(r.slug, slug);
+            if (Math.abs(c) >= CLOSENESS_PLACEMENT_THRESHOLD) score += c;
+          });
           return Math.max(0.15, score);
         });
         var total = weights.reduce(function (a, b) { return a + b; }, 0);
         var roll = Math.random() * total;
-        for (var i = 0; i < hangoutRooms.length; i++) {
+        for (var i = 0; i < candidateRooms.length; i++) {
           roll -= weights[i];
-          if (roll <= 0) { candidate = hangoutRooms[i]; break; }
+          if (roll <= 0) { candidate = candidateRooms[i]; break; }
         }
-        if (!candidate) candidate = hangoutRooms[hangoutRooms.length - 1];
+        if (!candidate) candidate = candidateRooms[candidateRooms.length - 1];
       }
       place(r.slug, candidate);
     });
@@ -544,8 +571,12 @@
 
   function dotSlots(room, count) {
     // Small flow-wrap grid of offsets inside the room's rect, so multiple
-    // residents in one room don't stack exactly on top of each other.
-    var cols = Math.min(4, Math.max(1, Math.ceil(Math.sqrt(count))));
+    // residents in one room don't stack exactly on top of each other. A
+    // bedroom is much shallower than a hangout room (rect.h ~9 vs 15+),
+    // so wrapping to a second row there puts the rows too close together
+    // to actually clear each other — force one single row instead.
+    var narrow = room.rect.h < 12;
+    var cols = narrow ? count : Math.min(4, Math.max(1, Math.ceil(Math.sqrt(count))));
     var slots = [];
     for (var i = 0; i < count; i++) {
       var col = i % cols, row = Math.floor(i / cols);
@@ -561,7 +592,11 @@
   // single-row rooms don't always agree on how much space there is —
   // shrink dots a little once a room gets crowded, rather than letting a
   // full cast scene overlap itself in a room sized for two or three.
-  function dotSizePercent(count) {
+  function dotSizePercent(count, narrow) {
+    // A narrow (bedroom-depth) room's single-row layout has less width
+    // to spread 3 dots across than a hangout room does, so it needs to
+    // start shrinking a person sooner than the normal >4 crowding rule.
+    if (narrow && count >= 3) return 2.5;
     if (count <= 4) return 3.2;
     return Math.max(1.7, 3.2 * (4 / count));
   }
@@ -665,7 +700,7 @@
     el.className = 'floorplan-dot';
     el.style.left = slot.x + '%';
     el.style.top = slot.y + '%';
-    el.style.width = dotSizePercent(roomCount || 1) + '%';
+    el.style.width = dotSizePercent(roomCount || 1, room.rect.h < 12) + '%';
     if (resident.slug === 'clickbaity') {
       el.style.background = 'transparent';
       el.style.border = CLICKBAITY_OUTLINE_WIDTH + ' solid ' + resident.color;
@@ -928,7 +963,7 @@
       // Reflow every dot now in toRoom (not just the arrival) so nobody
       // lands on top of someone who was already there.
       var slots = dotSlots(toRoom, toRoom.occupants.length);
-      var size = dotSizePercent(toRoom.occupants.length);
+      var size = dotSizePercent(toRoom.occupants.length, toRoom.rect.h < 12);
       toRoom.occupants.forEach(function (occSlug, idx) {
         var el = occSlug === slug ? dot : layerEl.querySelector('.floorplan-dot[data-slug="' + occSlug + '"]');
         if (!el) return;

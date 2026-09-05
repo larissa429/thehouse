@@ -496,14 +496,11 @@
       rowBounds[seg.axis + ':' + Math.round(inwardEdge * 10)] = { from: seg.from + CORNER_INSET, to: seg.to - CORNER_INSET };
     });
 
-    // A gap only needs to be a real seam, not a spacious one — even a
-    // cosmetically tiny one still sits flush against a real room edge,
-    // which beats the fallback (dead-center in the corridor, touching
-    // nothing) every time. Rooms tiling a row edge-to-edge with no slack
-    // left over anywhere is common enough (an 'o' with one room per
-    // side, say) that requiring a generous gap left this triggering the
-    // fallback far more often than intended.
-    var MIN_GAP = 0.1;
+    // A gap has to actually be big enough to hold a door — the cosmetic
+    // seam between two adjacent rooms, or a sliver of margin left over
+    // right next to a corner, is real empty wall but nowhere a door
+    // could plausibly fit. A bit more than the door mark's own footprint.
+    var MIN_GAP = dotSizePercent(1) + 1;
     var gaps = [];
     Object.keys(groups).forEach(function (key) {
       var g = groups[key];
@@ -554,6 +551,9 @@
     // Sits in a gap of empty wall between two rooms, not another room's
     // own doorway — reads as a second, unmarked door built into the wall.
     // Works the same regardless of which hallway shape Floor 1 rolled.
+    // Some loads just don't have a wall gap big enough anywhere, and
+    // that's fine — it simply doesn't spawn that load, rather than
+    // forcing it into a spot too small to actually be a door.
     var hiddenDoorPoint = null;
     var hiddenDoorAxis = 'h';
     if (hiddenDoorPresent && floor1.rooms.length) {
@@ -562,11 +562,7 @@
         hiddenDoorPoint = { x: spot.x, y: spot.y };
         hiddenDoorAxis = spot.axis;
       } else {
-        // No real gap this load (every wall packed edge-to-edge) — falls
-        // back to a room's own doorway rather than not spawning at all.
-        var refRoom = floor1.rooms[Math.floor(Math.random() * floor1.rooms.length)];
-        hiddenDoorPoint = refRoom.doorPoint;
-        hiddenDoorAxis = refRoom.seg ? refRoom.seg.axis : 'h';
+        hiddenDoorPresent = false;
       }
     }
 
@@ -903,14 +899,15 @@
 
   function renderHiddenDoor() {
     // A rare, unlabeled door built right into the wall itself — a thin
-    // tick mark, not a room's own doorway. The House is hiding this on
-    // purpose — clicking it just makes it vanish. No reveal, no page,
-    // nothing. Oriented across whichever wall it landed on: a horizontal
-    // wall (axis 'h') gets a vertical tick, a vertical wall the reverse.
+    // line running along the wall, not a room's own doorway. The House
+    // is hiding this on purpose — clicking it just makes it vanish. No
+    // reveal, no page, nothing. Runs parallel to whichever wall it
+    // landed on: a horizontal wall (axis 'h') gets a horizontal line, a
+    // vertical wall a vertical one.
     if (!house.hiddenDoorPoint) return;
     var el = document.createElement('button');
     el.type = 'button';
-    el.className = 'floorplan-hidden-door ' + (house.hiddenDoorAxis === 'v' ? 'is-horizontal' : 'is-vertical');
+    el.className = 'floorplan-hidden-door ' + (house.hiddenDoorAxis === 'v' ? 'is-vertical' : 'is-horizontal');
     el.style.left = house.hiddenDoorPoint.x + '%';
     el.style.top = house.hiddenDoorPoint.y + '%';
     el.setAttribute('aria-label', 'A door');

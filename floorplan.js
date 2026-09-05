@@ -334,9 +334,19 @@
       };
       rooms.push({
         name: 'Courtyard', rect: cRect, cx: cRect.x + cRect.w / 2, cy: cRect.y + cRect.h / 2,
-        // Touches the ring at the north segment, so it routes through
-        // wandering exactly like any other room opening onto 'top'.
+        // Bordered by all four ring segments, not just one — `doors` gives
+        // wandering a direct exit toward whichever side the destination is
+        // actually on, instead of always leaving north and walking the
+        // long way around the ring no matter where it's actually headed.
+        // doorPoint/seg stay as a plain fallback for anything that isn't
+        // pathing-aware (e.g. the hidden door borrowing a random doorway).
         doorPoint: { x: cRect.x + cRect.w / 2, y: PERIMETER.y0 }, seg: { key: 'top', axis: 'h', pos: PERIMETER.y0 },
+        doors: {
+          top: { x: cRect.x + cRect.w / 2, y: PERIMETER.y0 },
+          bottom: { x: cRect.x + cRect.w / 2, y: PERIMETER.y1 },
+          left: { x: PERIMETER.x0, y: cRect.y + cRect.h / 2 },
+          right: { x: PERIMETER.x1, y: cRect.y + cRect.h / 2 }
+        },
         occupants: []
       });
       return { rooms: rooms, corridorSegments: corridorSegments, segments: segMeta };
@@ -791,14 +801,28 @@
   // segments if they don't. The final hop from the doorway into the
   // room's actual landing slot happens separately, once occupancy for
   // toRoom is finalized.
+  // A room normally opens onto exactly one corridor segment (its own
+  // doorPoint/seg). A room with `doors` (currently just the Courtyard,
+  // bordered by all four ring segments) instead exits toward whichever
+  // side the OTHER room actually sits on — so it never needs corner
+  // routing to reach anywhere, matching that it's reachable from any wall.
+  function effectiveDoor(room, otherRoom) {
+    if (room.doors && otherRoom.seg && room.doors[otherRoom.seg.key]) {
+      return { point: room.doors[otherRoom.seg.key], key: otherRoom.seg.key };
+    }
+    return { point: room.doorPoint, key: room.seg ? room.seg.key : null };
+  }
+
   function buildWanderPath(fromRoom, toRoom, floor) {
-    var points = [fromRoom.doorPoint];
-    if (fromRoom.seg && toRoom.seg && fromRoom.seg.key !== toRoom.seg.key) {
-      findCorridorPath(floor, fromRoom.seg.key, toRoom.seg.key).forEach(function (cname) {
+    var from = effectiveDoor(fromRoom, toRoom);
+    var to = effectiveDoor(toRoom, fromRoom);
+    var points = [from.point];
+    if (from.key && to.key && from.key !== to.key) {
+      findCorridorPath(floor, from.key, to.key).forEach(function (cname) {
         points.push(CORNER_POINTS[cname]);
       });
     }
-    points.push(toRoom.doorPoint);
+    points.push(to.point);
     return points;
   }
 

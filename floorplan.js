@@ -49,6 +49,8 @@
   var FOLLOW_CHANCE_PER_POINT = 0.08; // odds someone left behind tags along, per point of CLOSENESS with whoever just left (e.g. a +9 bond ~= 72%)
   var PAIR_FOLLOW_CHANCE = 0.85;      // Cool S/Clickbaity specifically — a stronger, flatter chance than the closeness math gives anyone else
   var FLEE_CHANCE_PER_POINT = 0.1;    // odds someone already in a room leaves when a disliked arrival shows up, per point of negative CLOSENESS
+  var BLUEMARBLE_BEDROOM_CHANCE = 0.5; // her own override of BEDROOM_STAY_CHANCE — she's the isolated one, so she starts home more than most
+  var BLUEMARBLE_RETREAT_CHANCE = 0.4; // if she's picked to wander on a hangout floor, odds she quietly leaves for her room instead of moving to another one
 
   // --- Residents ---------------------------------------------------------
   // Colors match each resident's existing connection-note color in
@@ -71,7 +73,11 @@
     { slug: 'dream', name: 'Dream', icon: '../images/zoomedicons/dream.webp', color: '#3d2f69' },
     { slug: 'indigo', name: 'Indigo', icon: '../images/zoomedicons/indigo.webp', color: '#2904bd' },
     { slug: 'cassette', name: 'Cassette', icon: '../images/zoomedicons/cassette.webp', color: '#f0a878' },
-    { slug: 'bluemarble', name: 'Blue Marble', icon: '../images/zoomedicons/bluemarble.webp', color: '#a8d4c4' },
+    // Isolated by nature — starts home in her own room more often than
+    // most (bedroomStayChance overrides the general BEDROOM_STAY_CHANCE
+    // just for her), and can also quietly slip away from a hangout back
+    // to her room mid-visit (retreatsHome, handled in tryWander).
+    { slug: 'bluemarble', name: 'Blue Marble', icon: '../images/zoomedicons/bluemarble.webp', color: '#a8d4c4', bedroomStayChance: BLUEMARBLE_BEDROOM_CHANCE, retreatsHome: true },
     { slug: 'ap', name: 'AP', icon: '../images/zoomedicons/ap.webp', color: '#e8a2a8', defaultRoom: 'Bathroom', defaultChance: 0.45 },
     { slug: 'cools', name: 'Cool S', icon: '../images/zoomedicons/cools.webp', color: '#c4b0e8', pair: 'clickbaity' },
     { slug: 'clickbaity', name: 'Clickbaity', icon: '../images/zoomedicons/clickbaity.webp', color: '#c0463c', pair: 'cools' },
@@ -85,6 +91,15 @@
   function findResident(slug) {
     for (var i = 0; i < RESIDENTS.length; i++) if (RESIDENTS[i].slug === slug) return RESIDENTS[i];
     return null;
+  }
+
+  // A resident's own bedroom room object on floor 2, found the same way
+  // generateHouse's internal bedroomOf() does — used outside placement,
+  // by a resident retreating there mid-visit from a hangout floor.
+  function findBedroom(slug) {
+    var r = findResident(slug);
+    if (!r || !house || !house.floors[1]) return null;
+    return house.floors[1].rooms.filter(function (room) { return room.name === r.name + "'s Room"; })[0];
   }
 
   // Every layout function fills slots by walking its room-name list in
@@ -648,7 +663,8 @@
       if (r.pair && placedSlugs[r.pair]) { place(r.slug, placedSlugs[r.pair]); return; }
       if (r.noHangoutDefault) { place(r.slug, bedroomOf(r.slug)); return; } // Dumptruck
 
-      if (Math.random() < BEDROOM_STAY_CHANCE) {
+      var bedroomStayChance = r.bedroomStayChance != null ? r.bedroomStayChance : BEDROOM_STAY_CHANCE;
+      if (Math.random() < bedroomStayChance) {
         var own = bedroomOf(r.slug);
         if (own) { place(r.slug, own); return; }
       }
@@ -1179,6 +1195,47 @@
     return ringPoints;
   }
 
+  // For a resident retreating to their own room instead of another
+  // hangout room — walks toward whichever corner or dead end of the
+  // hallway is reachable, using the exact same corner/segment graph
+  // buildWanderPath routes through between rooms, just ending at the
+  // wall itself (implying a stairwell just past it) instead of another
+  // doorway. A straight floor has no corners at all, just the two open
+  // ends of its one corridor.
+  function buildRetreatPath(fromRoom, floor) {
+    var from = effectiveDoor(fromRoom, {});
+    var corners = [];
+    (floor.segments || []).forEach(function (s) {
+      s.corners.forEach(function (c) { if (corners.indexOf(c) === -1) corners.push(c); });
+    });
+
+    if (!corners.length) {
+      var spine = floor.corridorSegments[0];
+      var y = spine.y + spine.h / 2;
+      var target = Math.random() < 0.5 ? { x: spine.x, y: y } : { x: spine.x + spine.w, y: y };
+      return [from.point, target];
+    }
+
+    var cornerName = corners[Math.floor(Math.random() * corners.length)];
+    var targetPoint = CORNER_POINTS[cornerName];
+    if (!from.key) return [from.point, targetPoint];
+
+    var targetSegKey = null;
+    for (var key in SEGMENT_CORNERS) {
+      if (SEGMENT_CORNERS[key].indexOf(cornerName) !== -1 &&
+        (floor.segments || []).some(function (s) { return s.key === key; })) {
+        targetSegKey = key;
+        break;
+      }
+    }
+    if (!targetSegKey || targetSegKey === from.key) return [from.point, targetPoint];
+
+    var points = [from.point];
+    findCorridorPath(floor, from.key, targetSegKey).forEach(function (cname) { points.push(CORNER_POINTS[cname]); });
+    if (points[points.length - 1] !== targetPoint) points.push(targetPoint);
+    return points;
+  }
+
   // Walks `dot` through `points` in sequence, one CSS transition per leg,
   // timed by actual distance rather than a fixed duration — so a short
   // hop to the room next door doesn't take as long as a trip through two
@@ -1286,6 +1343,36 @@
     });
   }
 
+  // A resident who retreats wanders toward the edge of the hallway and
+  // then simply isn't part of this floor anymore for the rest of the
+  // visit — quietly relocated to their own bedroom instead of another
+  // hangout room. Floor 2 isn't the visible floor right now, so there's
+  // nothing to render there yet — just update the data, accurate
+  // whenever the user actually checks.
+  function retreatToBedroom(dot, fromRoom, floor) {
+    var slug = dot.dataset.slug;
+    var path = buildRetreatPath(fromRoom, floor);
+    dot.classList.add('is-wandering');
+    animateAlongPath(dot, path, function () {
+      fromRoom.occupants = fromRoom.occupants.filter(function (s) { return s !== slug; });
+      var bedroom = findBedroom(slug);
+      if (bedroom && bedroom.occupants.indexOf(slug) === -1) bedroom.occupants.push(slug);
+      dot.remove();
+
+      // Reflow whoever's left in fromRoom now that there's one fewer.
+      var slots = dotSlots(fromRoom, fromRoom.occupants.length);
+      var size = dotSizePercent(fromRoom.occupants.length, fromRoom.rect.h < 12);
+      fromRoom.occupants.forEach(function (occSlug, idx) {
+        var el = layerEl.querySelector('.floorplan-dot[data-slug="' + occSlug + '"]');
+        if (!el) return;
+        el.style.transition = 'left 0.5s ease, top 0.5s ease, width 0.5s ease';
+        el.style.left = slots[idx].x + '%';
+        el.style.top = slots[idx].y + '%';
+        el.style.width = size + '%';
+      });
+    });
+  }
+
   function tryWander() {
     // Floor 2 is presence same as anywhere else now, but a resident's own
     // bedroom wandering into someone else's would read as a real mistake
@@ -1303,6 +1390,12 @@
     var fromRoomName = dot.dataset.room;
     var fromRoom = floor.rooms.filter(function (r) { return r.name === fromRoomName; })[0];
     if (!fromRoom) return;
+
+    var moverResident = findResident(moverSlug);
+    if (moverResident && moverResident.retreatsHome && Math.random() < BLUEMARBLE_RETREAT_CHANCE) {
+      retreatToBedroom(dot, fromRoom, floor);
+      return;
+    }
 
     var others = floor.rooms.filter(function (r) { return r.name !== fromRoomName; });
     if (!others.length) return;

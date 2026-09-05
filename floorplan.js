@@ -655,9 +655,8 @@
 
   // Clickbaity's own object is a hollow red circle — an outline instead
   // of a filled dot for him specifically reads as more "him" than just
-  // another colored disc. Width is a starting guess (roughly 3x the room
-  // rects' own 0.3-unit stroke) — easy to tune further once it's live.
-  var CLICKBAITY_OUTLINE_WIDTH = '2.5px';
+  // another colored disc. Width is 3x the other dots' own 1px border.
+  var CLICKBAITY_OUTLINE_WIDTH = '3px';
 
   function renderDot(resident, room, slot, roomCount) {
     var el = document.createElement('button');

@@ -23,6 +23,7 @@
   var noteOverlay = document.getElementById('note-overlay');
   var noteEl = document.getElementById('note-content');
   var noteBody = document.getElementById('note-body');
+  var noteCloseEl = document.getElementById('note-close');
 
   var SVG_NS = 'http://www.w3.org/2000/svg';
   var HIDDEN_DOOR_KEY = 'thehouse-floorplan-basement-door-found';
@@ -655,8 +656,8 @@
 
   // Clickbaity's own object is a hollow red circle — an outline instead
   // of a filled dot for him specifically reads as more "him" than just
-  // another colored disc. Width is 3x the other dots' own 1px border.
-  var CLICKBAITY_OUTLINE_WIDTH = '3px';
+  // another colored disc.
+  var CLICKBAITY_OUTLINE_WIDTH = '4px';
 
   function renderDot(resident, room, slot, roomCount) {
     var el = document.createElement('button');
@@ -751,9 +752,14 @@
     // feature shouldn't reach into. Lightened rather than the raw dot
     // color — vivid enough to read as a dot, too much as a whole card.
     noteEl.style.background = lightenColor(resident.color, 0.55);
+    noteEl.style.color = '';
+    noteCloseEl.style.color = '';
     noteOverlay.classList.add('open');
   }
 
+  // No name on this one, on purpose — Penny doesn't get identified here,
+  // just glimpsed. Dark gray instead of the usual lightened dot-color
+  // background, since there's no text on top that needs a light ground.
   function openLockedDoorCard() {
     noteBody.innerHTML = '';
     var wrap = document.createElement('div');
@@ -762,14 +768,11 @@
     img.className = 'floorplan-note-portrait';
     img.src = '../images/zoomedicons/penny.webp';
     img.alt = 'Penny';
-    var text = document.createElement('div');
-    var h4 = document.createElement('h4');
-    h4.textContent = 'Penny';
-    text.appendChild(h4);
     wrap.appendChild(img);
-    wrap.appendChild(text);
     noteBody.appendChild(wrap);
-    noteEl.style.background = '';
+    noteEl.style.background = '#3a3a3a';
+    noteEl.style.color = '#e8e4dc';
+    noteCloseEl.style.color = '#e8e4dc';
     noteOverlay.classList.add('open');
   }
 

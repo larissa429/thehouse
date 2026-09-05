@@ -496,6 +496,14 @@
       rowBounds[seg.axis + ':' + Math.round(inwardEdge * 10)] = { from: seg.from + CORNER_INSET, to: seg.to - CORNER_INSET };
     });
 
+    // A gap only needs to be a real seam, not a spacious one — even a
+    // cosmetically tiny one still sits flush against a real room edge,
+    // which beats the fallback (dead-center in the corridor, touching
+    // nothing) every time. Rooms tiling a row edge-to-edge with no slack
+    // left over anywhere is common enough (an 'o' with one room per
+    // side, say) that requiring a generous gap left this triggering the
+    // fallback far more often than intended.
+    var MIN_GAP = 0.1;
     var gaps = [];
     Object.keys(groups).forEach(function (key) {
       var g = groups[key];
@@ -504,10 +512,10 @@
       g.spans.sort(function (a, b) { return a.from - b.from; });
       var cursor = bounds.from;
       g.spans.forEach(function (s) {
-        if (s.from - cursor > 1) gaps.push({ axis: g.axis, edge: g.edge, from: cursor, to: s.from });
+        if (s.from - cursor > MIN_GAP) gaps.push({ axis: g.axis, edge: g.edge, from: cursor, to: s.from });
         cursor = Math.max(cursor, s.to);
       });
-      if (bounds.to - cursor > 1) gaps.push({ axis: g.axis, edge: g.edge, from: cursor, to: bounds.to });
+      if (bounds.to - cursor > MIN_GAP) gaps.push({ axis: g.axis, edge: g.edge, from: cursor, to: bounds.to });
     });
 
     // A segment whose outward row got zero rooms at all doesn't produce

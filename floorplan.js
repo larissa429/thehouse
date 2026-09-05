@@ -457,6 +457,23 @@
       : { x: d0, y: seg.from, w: d1 - d0, h: seg.to - seg.from };
   }
 
+  // Same idea, facing the other way — an inward row (a second row of
+  // rooms facing the corridor from inside the ring) only ever gets
+  // built for one segment per floor, and only when there were spare
+  // rooms to fill it — so most segments, most loads, have this whole
+  // stretch sitting completely empty. Inset by CORNER_INSET like a real
+  // inward row, so it can't reach a shared corner either.
+  function phantomInwardRect(seg) {
+    var rowSign = -seg.outSign;
+    var nearEdge = seg.pos + rowSign * (PERIMETER_HALF + PERIMETER_GAP);
+    var farEdge = nearEdge + rowSign * PERIMETER_DEPTH;
+    var d0 = Math.min(nearEdge, farEdge), d1 = Math.max(nearEdge, farEdge);
+    var from = seg.from + CORNER_INSET, to = seg.to - CORNER_INSET;
+    return seg.axis === 'h'
+      ? { x: from, y: d0, w: to - from, h: d1 - d0 }
+      : { x: d0, y: from, w: d1 - d0, h: to - from };
+  }
+
   // Finds a spot along a corridor wall that isn't actually a room's own
   // doorway — anywhere a room COULD sit but doesn't right now: the
   // margin before the first room or after the last one in a row, the
@@ -515,15 +532,22 @@
       if (bounds.to - cursor > MIN_GAP) gaps.push({ axis: g.axis, edge: g.edge, from: cursor, to: bounds.to });
     });
 
-    // A segment whose outward row got zero rooms at all doesn't produce
-    // a group above (nothing to group) — checked separately using the
-    // same phantom rect, so its edge matches a real room's exactly.
+    // A row with zero rooms at all doesn't produce a group above
+    // (nothing to group) — checked separately using the same phantom
+    // rects, so each edge still matches a real room's exactly. Outward
+    // rows are usually populated (an uneven room count is what leaves
+    // one empty); inward rows are the more common case, since most
+    // segments never get one built at all.
     (floor.segments || []).forEach(function (segMeta) {
       var seg = allSegs[segMeta.key];
       if (!seg) return;
       var outward = wallEdgeOf(phantomOutwardRect(seg), seg);
-      var key = seg.axis + ':' + Math.round(outward.edge * 10);
-      if (!groups[key]) gaps.push({ axis: seg.axis, edge: outward.edge, from: seg.from, to: seg.to });
+      var outKey = seg.axis + ':' + Math.round(outward.edge * 10);
+      if (!groups[outKey]) gaps.push({ axis: seg.axis, edge: outward.edge, from: seg.from, to: seg.to });
+
+      var inward = wallEdgeOf(phantomInwardRect(seg), seg);
+      var inKey = seg.axis + ':' + Math.round(inward.edge * 10);
+      if (!groups[inKey]) gaps.push({ axis: seg.axis, edge: inward.edge, from: seg.from + CORNER_INSET, to: seg.to - CORNER_INSET });
     });
 
     if (!gaps.length) return null;

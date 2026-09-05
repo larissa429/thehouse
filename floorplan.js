@@ -953,9 +953,7 @@
       layerEl.appendChild(empty);
     }
 
-    captionEl.textContent = totalDots === 0
-      ? (isBedroomFloor ? 'Everyone’s out right now.' : 'Quiet in here at the moment.')
-      : (isBedroomFloor ? 'Whoever you see is actually in, right now.' : '');
+    captionEl.textContent = (totalDots === 0 && !isBedroomFloor) ? 'Quiet in here at the moment.' : '';
   }
 
   // Clickbaity's own object is a hollow red circle — an outline instead

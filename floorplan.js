@@ -56,8 +56,8 @@
   // hangout, so it's a coin-flip-ish chance instead.
 
   var RESIDENTS = [
-    { slug: 'journal', name: 'Journal', icon: '../images/zoomedicons/journal.webp', color: '#d9b473', alwaysHome: true },
-    { slug: 'mirror', name: 'Mirror', icon: '../images/zoomedicons/mirror.webp', color: '#cfe0d8', defaultRoom: 'Kitchen' },
+    { slug: 'journal', name: 'Journal', icon: '../images/zoomedicons/journal.webp', color: '#693719', alwaysHome: true },
+    { slug: 'mirror', name: 'Mirror', icon: '../images/zoomedicons/mirror.webp', color: '#d9b473', defaultRoom: 'Kitchen' },
     { slug: 'lp', name: 'LP', icon: '../images/zoomedicons/lp.webp', color: '#cfa8d4' },
     { slug: 'n528', name: '-⁵⁄₂₈', icon: '../images/zoomedicons/n528.webp', color: '#b8d4c9' },
     { slug: 'dream', name: 'Dream', icon: '../images/zoomedicons/dream.webp', color: '#3d2f69' },
@@ -684,6 +684,19 @@
     layerEl.appendChild(el);
   }
 
+  // A resident's color is picked to be vivid and distinct as a small dot,
+  // which makes a lousy full-card background — dark text needs a light
+  // ground under it. Blends the color toward white for the note's
+  // background instead of using it at full strength; the dot itself is
+  // untouched.
+  function lightenColor(hex, amount) {
+    var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    r = Math.round(r + (255 - r) * amount);
+    g = Math.round(g + (255 - g) * amount);
+    b = Math.round(b + (255 - b) * amount);
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
+  }
+
   function openResidentCard(resident, room) {
     noteBody.innerHTML = '';
     var wrap = document.createElement('div');
@@ -706,8 +719,9 @@
     // Inline, not the shared .note[data-color] rules — those use a
     // slightly different slug scheme (e.g. "bm" for Blue Marble) and are
     // shared with every character page's Connections notes, which this
-    // feature shouldn't reach into.
-    noteEl.style.background = resident.color;
+    // feature shouldn't reach into. Lightened rather than the raw dot
+    // color — vivid enough to read as a dot, too much as a whole card.
+    noteEl.style.background = lightenColor(resident.color, 0.55);
     noteOverlay.classList.add('open');
   }
 

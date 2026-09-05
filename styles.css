@@ -1080,12 +1080,12 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
   line-height: 1;
 }
 
-.note[data-color="journal"]  { background: #d9b473; }
+.note[data-color="journal"]  { background: #693719; }
 .note[data-color="ap"]       { background: #e8a2a8; }
 .note[data-color="bm"]       { background: #a8d4c4; }
 .note[data-color="charlie"]  { background: #bcd6ea; }
 .note[data-color="bunny"]    { background: #cfc4d4; }
-.note[data-color="mirror"]   { background: #cfe0d8; }
+.note[data-color="mirror"]   { background: #d9b473; }
 .note[data-color="lp"]       { background: #cfa8d4; }
 .note[data-color="indigo"]   { background: #2904bd; }
 .note[data-color="cassette"] { background: #f0a878; }
@@ -1102,7 +1102,7 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
   .connection-self { display: none; }
 }
 
-.note[data-color="mirror"] { background: #cfe0d8; }
+.note[data-color="mirror"] { background: #d9b473; }
 .note[data-color="n528"]   { background: #b8d4c9; }
 .note[data-color="dream"]  { background: #3d2f69; }
 .note[data-color="liz"]    { background: #f2c6d6; }

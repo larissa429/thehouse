@@ -26,6 +26,14 @@
   var noteBody = document.getElementById('note-body');
   var noteCloseEl = document.getElementById('note-close');
 
+  // A brief full-viewport white pulse for the hidden door breaking —
+  // sits above note-overlay so it flashes over the dark card, not just
+  // behind it. Created once and toggled via class rather than rebuilt
+  // per use, the same way roomTipEl is further down.
+  var flashEl = document.createElement('div');
+  flashEl.className = 'floorplan-flash';
+  document.body.appendChild(flashEl);
+
   var SVG_NS = 'http://www.w3.org/2000/svg';
   var HIDDEN_DOOR_KEY = 'thehouse-floorplan-basement-door-found';
 
@@ -993,11 +1001,12 @@
 
   function renderHiddenDoor() {
     // A rare, unlabeled door built right into the wall itself — a thin
-    // line running along the wall, not a room's own doorway. The House
-    // is hiding this on purpose — clicking it just makes it vanish. No
-    // reveal, no page, nothing. Runs parallel to whichever wall it
-    // landed on: a horizontal wall (axis 'h') gets a horizontal line, a
-    // vertical wall a vertical one.
+    // line running along the wall, not a room's own doorway. Clicking it
+    // brings the door itself up close (openHiddenDoorCard) instead of
+    // reacting right here — trying it is a separate, deliberate second
+    // step. Runs parallel to whichever wall it landed on: a horizontal
+    // wall (axis 'h') gets a horizontal line, a vertical wall a
+    // vertical one.
     if (!house.hiddenDoorPoint) return;
     var el = document.createElement('button');
     el.type = 'button';
@@ -1005,12 +1014,61 @@
     el.style.left = house.hiddenDoorPoint.x + '%';
     el.style.top = house.hiddenDoorPoint.y + '%';
     el.setAttribute('aria-label', 'A door');
-    el.addEventListener('click', function () {
+    el.addEventListener('click', function () { openHiddenDoorCard(); });
+    layerEl.appendChild(el);
+  }
+
+  // Walking up to the door and actually trying it are two different
+  // clicks — this is just the walking up, no caption, just the door
+  // itself close enough to try. Background matches the floor plan's own
+  // stage (--wall) rather than Penny's neutral gray — this is still a
+  // piece of the house, not a separate glimpse into nothing. The image
+  // itself is recolored to read directly against that dark card (see the
+  // CSS) rather than sitting on a light patch of its own.
+  // Closing this card any other way (the ×, the backdrop, Escape) leaves
+  // the door exactly as it was, findable again later — only actually
+  // trying it (clicking the door) below commits to breaking it for good.
+  function openHiddenDoorCard() {
+    noteBody.innerHTML = '';
+    var wrap = document.createElement('div');
+    wrap.className = 'floorplan-door-lightbox';
+    // A masked shape, not an <img> — see the CSS for why: door.png only
+    // supplies the alpha shape here, so there's no image content for
+    // alt text to describe, just an aria-label standing in for one.
+    var shape = document.createElement('div');
+    shape.className = 'floorplan-door-shape';
+    shape.setAttribute('role', 'img');
+    shape.setAttribute('aria-label', 'A door built into the wall');
+    wrap.appendChild(shape);
+    noteBody.appendChild(wrap);
+    noteEl.style.background = 'var(--wall)';
+    noteEl.style.color = '#e8e4dc';
+    noteCloseEl.style.color = '#e8e4dc';
+    noteOverlay.classList.add('open');
+
+    var tried = false;
+    shape.addEventListener('click', function () {
+      if (tried) return;
+      tried = true;
+      breakHiddenDoor();
+    });
+  }
+
+  // The door doesn't budge — it breaks. A screen-wide shake and flash
+  // sell that as the intended outcome instead of a stray click doing
+  // nothing, then the door (and the card showing it) is gone for good,
+  // same as the old single-click removal used to be.
+  function breakHiddenDoor() {
+    noteOverlay.classList.add('is-shaking');
+    flashEl.classList.add('is-flashing');
+    setTimeout(function () {
+      noteOverlay.classList.remove('is-shaking');
+      flashEl.classList.remove('is-flashing');
+      noteOverlay.classList.remove('open');
       house.hiddenDoorPresent = false;
       try { localStorage.setItem(HIDDEN_DOOR_KEY, '1'); } catch (e) {}
       renderAll();
-    });
-    layerEl.appendChild(el);
+    }, 400);
   }
 
   // A resident's color is picked to be vivid and distinct as a small dot,

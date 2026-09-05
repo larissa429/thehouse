@@ -185,6 +185,67 @@
       margin: 0 0 0.2rem;
     }
 
+    .floorplan-door-lightbox {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .floorplan-door-lightbox .floorplan-door-shape {
+      width: 8.5rem;
+      aspect-ratio: 130 / 190;
+      cursor: pointer;
+      /* door.png is fully transparent apart from its dark outline and
+         knob — on a card this dark that outline is invisible either way,
+         and a CSS filter chain on the image itself can only ever
+         approximate a target color, never hit it exactly (it kept
+         reading closer to white than brown no matter how it was tuned).
+         Using the PNG purely as an alpha mask instead — painting a flat
+         background-color through its opaque shape — gives an exact
+         color instead of an approximation: the same --wall-lit used for
+         every room rect on the map itself, one step brighter than this
+         card's own --wall background, same as a room sitting on the
+         corridor behind it. */
+      background-color: var(--wall-lit);
+      -webkit-mask-image: url(../images/door.png);
+      mask-image: url(../images/door.png);
+      -webkit-mask-size: contain;
+      mask-size: contain;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-position: center;
+      transition: transform 0.15s;
+    }
+    .floorplan-door-lightbox .floorplan-door-shape:hover { transform: scale(1.03); }
+    .floorplan-door-lightbox .floorplan-door-shape:active { transform: scale(0.98); }
+
+    @keyframes floorplanDoorShake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+    .note-overlay.is-shaking { animation: floorplanDoorShake 0.4s linear; }
+    @media (prefers-reduced-motion: reduce) {
+      .note-overlay.is-shaking { animation: none; }
+    }
+
+    .floorplan-flash {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 60;
+    }
+    @keyframes floorplanFlash {
+      0% { opacity: 0; }
+      15% { opacity: 0.9; }
+      100% { opacity: 0; }
+    }
+    .floorplan-flash.is-flashing { animation: floorplanFlash 0.4s ease-out; }
+
     .floorplan-caption {
       margin-top: 0.7rem;
       color: var(--ink-soft);

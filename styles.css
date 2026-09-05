@@ -1087,7 +1087,7 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
 .note[data-color="bunny"]    { background: #cfc4d4; }
 .note[data-color="mirror"]   { background: #cfe0d8; }
 .note[data-color="lp"]       { background: #cfa8d4; }
-.note[data-color="indigo"]   { background: #b8a8d4; }
+.note[data-color="indigo"]   { background: #2904bd; }
 .note[data-color="cassette"] { background: #f0a878; }
 .note[data-color="geeky"]    { background: #f0955a; }
 
@@ -1104,7 +1104,7 @@ background: radial-gradient(circle at 35% 30%, #b5453a, #7a2e26 70%, #4a1a15);
 
 .note[data-color="mirror"] { background: #cfe0d8; }
 .note[data-color="n528"]   { background: #b8d4c9; }
-.note[data-color="dream"]  { background: #c7b8d4; }
+.note[data-color="dream"]  { background: #3d2f69; }
 .note[data-color="liz"]    { background: #f2c6d6; }
 .note[data-color="pbc"]    { background: #e8781e; }
 .note[data-color="cools"]     { background: #c4b0e8; }

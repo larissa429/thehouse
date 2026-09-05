@@ -50,8 +50,7 @@
   var PAIR_FOLLOW_CHANCE = 0.85;      // Cool S/Clickbaity specifically — a stronger, flatter chance than the closeness math gives anyone else
   var FLEE_CHANCE_PER_POINT = 0.1;    // odds someone already in a room leaves when a disliked arrival shows up, per point of negative CLOSENESS
   var BLUEMARBLE_BEDROOM_CHANCE = 0.5; // her own override of BEDROOM_STAY_CHANCE — she's the isolated one, so she starts home more than most
-  var RETREAT_HOME_CHANCE = 0.4;   // shared by anyone with retreatsHome: true — if picked to wander on a hangout floor, odds they quietly leave for their room instead of moving to another one
-  var VENTURE_OUT_CHANCE = 0.25;   // shared by anyone with venturesOut: true — each wander check while they're still home in their bedroom, odds they head out to a hangout floor instead
+  var HARD_AVOID_THRESHOLD = -10; // a bond this bad isn't just unlikely to end up in the same room — it never happens at all, placement or wandering, no exceptions
 
   // --- Residents ---------------------------------------------------------
   // Colors match each resident's existing connection-note color in
@@ -76,9 +75,9 @@
     { slug: 'cassette', name: 'Cassette', icon: '../images/zoomedicons/cassette.webp', color: '#f0a878' },
     // Isolated by nature — starts home in her own room more often than
     // most (bedroomStayChance overrides the general BEDROOM_STAY_CHANCE
-    // just for her), and can also quietly slip away from a hangout back
-    // to her room mid-visit (retreatsHome, handled in tryWander).
-    { slug: 'bluemarble', name: 'Blue Marble', icon: '../images/zoomedicons/bluemarble.webp', color: '#a8d4c4', bedroomStayChance: BLUEMARBLE_BEDROOM_CHANCE, retreatsHome: true },
+    // just for her). Wandering itself (including back home) works the
+    // same for her as anyone else now.
+    { slug: 'bluemarble', name: 'Blue Marble', icon: '../images/zoomedicons/bluemarble.webp', color: '#a8d4c4', bedroomStayChance: BLUEMARBLE_BEDROOM_CHANCE },
     { slug: 'ap', name: 'AP', icon: '../images/zoomedicons/ap.webp', color: '#e8a2a8', defaultRoom: 'Bathroom', defaultChance: 0.45 },
     { slug: 'cools', name: 'Cool S', icon: '../images/zoomedicons/cools.webp', color: '#c4b0e8', pair: 'clickbaity' },
     { slug: 'clickbaity', name: 'Clickbaity', icon: '../images/zoomedicons/clickbaity.webp', color: '#c0463c', pair: 'cools' },
@@ -86,10 +85,8 @@
     { slug: 'pbc', name: 'PBC', icon: '../images/zoomedicons/pbc.webp', color: '#e8781e', defaultRoom: 'Bathroom', defaultChance: 0.45 },
     // Starts placed in her own (famously trashed) bedroom every load
     // she's home (noHangoutDefault) — but isn't stuck there for the
-    // whole visit: venturesOut gives her a chance, each wander check
-    // while still home, to head out to a hangout floor, and retreatsHome
-    // lets her wander back once she's out, same as Blue Marble.
-    { slug: 'dumptruck', name: 'Dumptruck', icon: '../images/zoomedicons/dumptruck.webp', color: '#3f6b32', noHangoutDefault: true, venturesOut: true, retreatsHome: true }
+    // whole visit, wandering works the same for her as anyone else now.
+    { slug: 'dumptruck', name: 'Dumptruck', icon: '../images/zoomedicons/dumptruck.webp', color: '#3f6b32', noHangoutDefault: true }
   ];
 
   function findResident(slug) {
@@ -128,7 +125,7 @@
   // placement time. Widening it lets real differences in closeness
   // actually separate people into distinct friend groups instead.
   var CLOSENESS = [
-    ['journal', 'mirror', 4], ['journal', 'n528', 5], ['journal', 'bluemarble', -3], ['journal', 'dumptruck', 3],
+    ['journal', 'mirror', 4], ['journal', 'n528', 5], ['journal', 'bluemarble', -10], ['journal', 'dumptruck', 3],
     ['mirror', 'bluemarble', 6], ['mirror', 'ap', 3],
     ['lp', 'cassette', 9], // dating
     ['cassette', 'indigo', 6], ['cassette', 'bluemarble', 5], ['indigo', 'lp', 6],
@@ -145,6 +142,20 @@
       if ((e[0] === a && e[1] === b) || (e[0] === b && e[1] === a)) return e[2];
     }
     return 0;
+  }
+
+  // Unlike the ordinary soft closeness bias (down-weighted, never
+  // excluded), a bond at or below HARD_AVOID_THRESHOLD removes a room
+  // from consideration entirely — currently only Journal/Blue Marble.
+  // Used by both initial placement and every wander/flee destination
+  // pick, so it holds for the whole visit, not just the first load.
+  // Falls back to the unfiltered list if literally every candidate
+  // would be excluded, rather than leaving nobody anywhere to go.
+  function excludeHardAvoidRooms(slug, rooms) {
+    var safe = rooms.filter(function (room) {
+      return !room.occupants.some(function (occSlug) { return closenessBetween(slug, occSlug) <= HARD_AVOID_THRESHOLD; });
+    });
+    return safe.length ? safe : rooms;
   }
 
   // --- Room pool -----------------------------------------------------
@@ -647,12 +658,29 @@
       placedSlugs[slug] = room;
     }
 
+    // A cast is an author-picked GROUP, not weighted room candidates —
+    // it bypasses the normal closeness-biased pick entirely, so a hard
+    // avoid needs its own separate check here or a cast scene could
+    // still force two people together despite it (Karaoke Bar & Grill's
+    // cast, for one, lists both Journal and Blue Marble). Greedy pass in
+    // list order: whoever's confirmed to attend first stays; anyone
+    // hard-avoiding an already-confirmed attendee sits this one out
+    // instead, rather than skipping the whole scene over one conflict.
+    function withoutHardAvoidConflicts(slugs) {
+      var attending = [];
+      slugs.forEach(function (slug) {
+        var conflict = attending.some(function (other) { return closenessBetween(slug, other) <= HARD_AVOID_THRESHOLD; });
+        if (!conflict) attending.push(slug);
+      });
+      return attending;
+    }
+
     // 1. Rare-room casts get first pick, if their room actually spawned
     //    and (mostly) everyone in it is home.
     hangoutRooms.forEach(function (room) {
       var cast = ROOM_CASTS[room.name];
       if (!cast) return;
-      var homeCast = cast.filter(function (slug) { return home[slug]; });
+      var homeCast = withoutHardAvoidConflicts(cast.filter(function (slug) { return home[slug]; }));
       if (homeCast.length >= Math.ceil(cast.length * 0.6) && Math.random() < CAST_SCENE_CHANCE) {
         homeCast.forEach(function (slug) { place(slug, room); });
       }
@@ -689,7 +717,7 @@
             room.occupants.length < BEDROOM_VISIT_CAP &&
             room.occupants.some(function (slug) { return closenessBetween(r.slug, slug) >= BEDROOM_VISIT_THRESHOLD; });
         });
-        var candidateRooms = hangoutRooms.concat(visitableBedrooms);
+        var candidateRooms = excludeHardAvoidRooms(r.slug, hangoutRooms.concat(visitableBedrooms));
 
         // Closeness-biased pick: weight every room by how positive/negative
         // its current occupants read for this resident, then roll against
@@ -731,6 +759,19 @@
   var house = generateHouse();
   var activeFloor = 0; // index into house.floors (0 = Floor 1, 1 = Floor 2, 2 = Floor 3)
   var wanderTimer = null;
+
+  // Tracks who's currently mid-travelTo, independent of any DOM element
+  // or class — switching floors while someone's animation is still in
+  // flight wipes the whole layer (renderStage rebuilds it from scratch),
+  // destroying that dot's node before its onDone ever fires. The
+  // orphaned animation's callback still runs later and still mutates
+  // the room data correctly, but a freshly re-rendered dot for that
+  // same resident (created next time their floor is viewed) starts
+  // without the is-wandering class, since it's a brand new element that
+  // never got marked — so a DOM-class check alone can't tell a second,
+  // unrelated tick that this resident is still actually mid-move. This
+  // object can, because it isn't tied to any one element's lifetime.
+  var pendingMoveSlugs = {};
 
   function svgText(x, y, content, cls) {
     var t = document.createElementNS(SVG_NS, 'text');
@@ -1229,13 +1270,15 @@
     return ringPoints;
   }
 
-  // For a resident retreating to their own room instead of another
-  // hangout room — walks toward whichever corner or dead end of the
-  // hallway is reachable, using the exact same corner/segment graph
-  // buildWanderPath routes through between rooms, just ending at the
-  // wall itself (implying a stairwell just past it) instead of another
-  // doorway. A straight floor has no corners at all, just the two open
-  // ends of its one corridor.
+  // For any cross-floor departure — leaving for a room on a different
+  // floor of the house entirely, which has no physical corridor
+  // connecting it to this one — walks toward whichever corner or dead
+  // end of the CURRENT floor's own hallway is reachable, using the
+  // exact same corner/segment graph buildWanderPath routes through
+  // between rooms, just ending at the wall itself (implying a
+  // stairwell just past it) instead of another doorway. A straight
+  // floor has no corners at all, just the two open ends of its one
+  // corridor.
   function buildRetreatPath(fromRoom, floor) {
     var from = effectiveDoor(fromRoom, {});
     var corners = [];
@@ -1296,12 +1339,14 @@
     step();
   }
 
-  // Wandering avoids (softly, never absolutely) a room someone has real
-  // friction with — the same CLOSENESS_PLACEMENT_THRESHOLD used for
-  // initial placement, so a passing acquaintance never factors in, only
-  // an actual grudge. Reused for the original random destination, and
-  // for wherever a fleeing resident goes next.
+  // Wandering avoids (softly, never absolutely — except a genuine hard
+  // avoid, filtered out first) a room someone has real friction with,
+  // using the same CLOSENESS_PLACEMENT_THRESHOLD as initial placement,
+  // so a passing acquaintance never factors in, only an actual grudge.
+  // Reused for the original random destination, and for wherever a
+  // fleeing resident goes next.
   function pickRepulsionWeightedRoom(moverSlug, candidates) {
+    candidates = excludeHardAvoidRooms(moverSlug, candidates);
     var weights = candidates.map(function (room) {
       var score = 1;
       room.occupants.forEach(function (occSlug) {
@@ -1317,6 +1362,28 @@
       if (roll <= 0) return candidates[i];
     }
     return candidates[candidates.length - 1];
+  }
+
+  // The full set of rooms a resident could wander to right now, from
+  // wherever they currently are: any hangout room on floor 1 or 3,
+  // their own bedroom, or a close-enough friend's bedroom that's home
+  // and not already full — the same rule initial placement itself uses
+  // to decide a bedroom visit is plausible at all. Excludes fromRoom;
+  // hard-avoid filtering happens later, inside pickRepulsionWeightedRoom,
+  // whichever candidate list this ends up feeding into.
+  function eligibleDestinationRooms(slug, fromRoom) {
+    var ownBedroom = findBedroom(slug);
+    var rooms = house.floors[0].rooms.concat(house.floors[2].rooms);
+    if (ownBedroom) rooms.push(ownBedroom);
+    house.floors[1].rooms.forEach(function (bedroom) {
+      if (bedroom === ownBedroom || bedroom.name === '__locked_door__') return;
+      if (!bedroom.occupants.length || bedroom.occupants.length >= BEDROOM_VISIT_CAP) return;
+      var visitable = bedroom.occupants.some(function (occSlug) {
+        return closenessBetween(slug, occSlug) >= BEDROOM_VISIT_THRESHOLD;
+      });
+      if (visitable) rooms.push(bedroom);
+    });
+    return rooms.filter(function (r) { return r !== fromRoom; });
   }
 
   // Everyone left behind independently rolls whether to tag along —
@@ -1349,153 +1416,110 @@
     });
   }
 
-  // Walks `dot` from fromRoom to toRoom, updates occupancy on arrival,
-  // and reflows every dot now in toRoom so nobody lands on top of
-  // someone already there. Shared by the original mover, anyone
-  // following them out, and anyone fleeing their arrival.
-  function moveResident(dot, fromRoom, toRoom, floor, onDone) {
+  // Moves `dot` from fromRoom to toRoom, wherever each actually is.
+  // fromRoom is always on the CURRENTLY VISIBLE floor (that's the only
+  // place a real dot to animate exists at all) — toRoom might be too
+  // (a normal walk through the shared corridor), or might be on an
+  // entirely different floor of the house, which has no physical
+  // corridor connecting it to this one to walk through. For a same-floor
+  // move, dot stays and gets repositioned. For a cross-floor move, dot
+  // walks to the edge of the CURRENT floor (implying a stairwell just
+  // past it) and then simply vanishes — added to the destination's
+  // occupants directly in the data, since that floor isn't rendered
+  // right now, accurate whenever the user actually checks it.
+  function travelTo(dot, fromRoom, toRoom, floor, onDone) {
+    var slug = dot.dataset.slug;
+    var sameFloor = floor.rooms.indexOf(toRoom) !== -1;
     dot.classList.add('is-wandering');
-    var path = buildWanderPath(fromRoom, toRoom, floor);
+    pendingMoveSlugs[slug] = true;
+    var path = sameFloor ? buildWanderPath(fromRoom, toRoom, floor) : buildRetreatPath(fromRoom, floor);
     animateAlongPath(dot, path, function () {
-      var slug = dot.dataset.slug;
+      delete pendingMoveSlugs[slug];
       fromRoom.occupants = fromRoom.occupants.filter(function (s) { return s !== slug; });
       if (toRoom.occupants.indexOf(slug) === -1) toRoom.occupants.push(slug);
-      dot.dataset.room = toRoom.name;
-      // Every room's invisible tooltip-hit button was appended to layerEl
-      // before that room's own dots, so a dot painted in its original
-      // room sits safely above its own room's hit button — but the dot's
-      // position in the DOM never otherwise changes. Left where it was,
-      // it'd still sit BEFORE whichever other rooms' hit buttons come
-      // later in the document, and later siblings paint on top — so once
-      // settled into a room whose hit button was appended after it, that
-      // invisible button would silently swallow every click meant for the
-      // dot. Re-appending it here makes it the last child, and therefore
-      // topmost, no matter which room it lands in.
-      layerEl.appendChild(dot);
 
-      var slots = dotSlots(toRoom, toRoom.occupants.length);
-      var size = dotSizePercent(toRoom.occupants.length, toRoom.rect.h < 12);
-      toRoom.occupants.forEach(function (occSlug, idx) {
-        var el = occSlug === slug ? dot : layerEl.querySelector('.floorplan-dot[data-slug="' + occSlug + '"]');
-        if (!el) return;
-        el.style.transition = 'left 0.5s ease, top 0.5s ease, width 0.5s ease';
-        el.style.left = slots[idx].x + '%';
-        el.style.top = slots[idx].y + '%';
-        el.style.width = size + '%';
-      });
-      dot.classList.remove('is-wandering');
+      // A floor switch mid-animation wipes layerEl and rebuilds it from
+      // scratch at least once more before this callback runs — that
+      // orphans the original `dot` node, and if the switch lands back on
+      // this same floor before the animation finishes, paints a brand
+      // new node for this slug from the (still pre-move) data. Whichever
+      // node is live right now — not necessarily the one this animation
+      // started on — is the one that has to end up reflecting the data
+      // mutation above; operating on the stale `dot` reference instead
+      // would either re-attach an orphan alongside that fresh node, or
+      // silently update a detached element nobody sees while the fresh
+      // one keeps showing the resident in the room they already left,
+      // ready to be re-selected and duplicated on a later tick.
+      var liveDot = layerEl.querySelector('.floorplan-dot[data-slug="' + slug + '"]');
+
+      if (liveDot) {
+        if (sameFloor) {
+          liveDot.dataset.room = toRoom.name;
+          // Every room's invisible tooltip-hit button was appended to
+          // layerEl before that room's own dots, so a dot painted in its
+          // original room sits safely above its own room's hit button —
+          // but the dot's position in the DOM never otherwise changes.
+          // Left where it was, it'd still sit BEFORE whichever other
+          // rooms' hit buttons come later in the document, and later
+          // siblings paint on top — so once settled into a room whose hit
+          // button was appended after it, that invisible button would
+          // silently swallow every click meant for the dot. Re-appending
+          // it here makes it the last child, and therefore topmost, no
+          // matter which room it lands in.
+          layerEl.appendChild(liveDot);
+
+          var toSlots = dotSlots(toRoom, toRoom.occupants.length);
+          var toSize = dotSizePercent(toRoom.occupants.length, toRoom.rect.h < 12);
+          toRoom.occupants.forEach(function (occSlug, idx) {
+            var el = occSlug === slug ? liveDot : layerEl.querySelector('.floorplan-dot[data-slug="' + occSlug + '"]');
+            if (!el) return;
+            el.style.transition = 'left 0.5s ease, top 0.5s ease, width 0.5s ease';
+            el.style.left = toSlots[idx].x + '%';
+            el.style.top = toSlots[idx].y + '%';
+            el.style.width = toSize + '%';
+          });
+          liveDot.classList.remove('is-wandering');
+        } else {
+          liveDot.remove();
+        }
+
+        // Reflow whoever's left in fromRoom now that there's one fewer —
+        // relevant on-screen only when fromRoom is on the visible floor,
+        // which it always is; harmless no-op if nobody's left there.
+        var fromSlots = dotSlots(fromRoom, fromRoom.occupants.length);
+        var fromSize = dotSizePercent(fromRoom.occupants.length, fromRoom.rect.h < 12);
+        fromRoom.occupants.forEach(function (occSlug, idx) {
+          var el = layerEl.querySelector('.floorplan-dot[data-slug="' + occSlug + '"]');
+          if (!el) return;
+          el.style.transition = 'left 0.5s ease, top 0.5s ease, width 0.5s ease';
+          el.style.left = fromSlots[idx].x + '%';
+          el.style.top = fromSlots[idx].y + '%';
+          el.style.width = fromSize + '%';
+        });
+      }
+
       if (onDone) onDone();
     });
   }
 
-  // A resident who retreats wanders toward the edge of the hallway and
-  // then simply isn't part of this floor anymore for the rest of the
-  // visit — quietly relocated to their own bedroom instead of another
-  // hangout room. Floor 2 isn't the visible floor right now, so there's
-  // nothing to render there yet — just update the data, accurate
-  // whenever the user actually checks.
-  function retreatToBedroom(dot, fromRoom, floor) {
-    var slug = dot.dataset.slug;
-    var path = buildRetreatPath(fromRoom, floor);
-    dot.classList.add('is-wandering');
-    animateAlongPath(dot, path, function () {
-      fromRoom.occupants = fromRoom.occupants.filter(function (s) { return s !== slug; });
-      var bedroom = findBedroom(slug);
-      if (bedroom && bedroom.occupants.indexOf(slug) === -1) bedroom.occupants.push(slug);
-      dot.remove();
-
-      // Reflow whoever's left in fromRoom now that there's one fewer.
-      var slots = dotSlots(fromRoom, fromRoom.occupants.length);
-      var size = dotSizePercent(fromRoom.occupants.length, fromRoom.rect.h < 12);
-      fromRoom.occupants.forEach(function (occSlug, idx) {
-        var el = layerEl.querySelector('.floorplan-dot[data-slug="' + occSlug + '"]');
-        if (!el) return;
-        el.style.transition = 'left 0.5s ease, top 0.5s ease, width 0.5s ease';
-        el.style.left = slots[idx].x + '%';
-        el.style.top = slots[idx].y + '%';
-        el.style.width = size + '%';
-      });
-    });
-  }
-
-  // The reverse trip — someone still safely home in their bedroom
-  // occasionally decides to actually go out, walking toward the edge of
-  // the residential hallway (implying the stairs) and then becoming
-  // part of a hangout floor instead, picked the same repulsion-weighted
-  // way any other wander destination is. Floors 1/3 aren't the visible
-  // floor right now (this only runs while floor 2 is), so there's
-  // nothing to render there yet — just update the data.
-  function ventureToHangout(dot, fromRoom, floor) {
-    var slug = dot.dataset.slug;
-    var path = buildRetreatPath(fromRoom, floor);
-    dot.classList.add('is-wandering');
-    animateAlongPath(dot, path, function () {
-      fromRoom.occupants = fromRoom.occupants.filter(function (s) { return s !== slug; });
-      var hangoutRooms = house.floors[0].rooms.concat(house.floors[2].rooms);
-      if (hangoutRooms.length) {
-        var toRoom = pickRepulsionWeightedRoom(slug, hangoutRooms);
-        if (toRoom.occupants.indexOf(slug) === -1) toRoom.occupants.push(slug);
-      }
-      dot.remove();
-
-      // Reflow whoever's left in fromRoom (their own bedroom) now that
-      // there's one fewer — in practice always empty afterward, but
-      // consistent with retreatToBedroom's own cleanup.
-      var slots = dotSlots(fromRoom, fromRoom.occupants.length);
-      var size = dotSizePercent(fromRoom.occupants.length, fromRoom.rect.h < 12);
-      fromRoom.occupants.forEach(function (occSlug, idx) {
-        var el = layerEl.querySelector('.floorplan-dot[data-slug="' + occSlug + '"]');
-        if (!el) return;
-        el.style.transition = 'left 0.5s ease, top 0.5s ease, width 0.5s ease';
-        el.style.left = slots[idx].x + '%';
-        el.style.top = slots[idx].y + '%';
-        el.style.width = size + '%';
-      });
-    });
-  }
-
-  // Bedrooms otherwise stay put once placed — this is the one exception,
-  // for whoever has venturesOut, checked whenever floor 2 is the visible
-  // floor (the same constraint every wander/retreat check operates
-  // under: it only ever touches whichever floor is currently on screen).
-  function tryVentureOut() {
-    if (Math.random() >= WANDER_CHANCE) return;
-    var floor = house.floors[1];
-    if (!floor) return;
-    // :not(.is-wandering) excludes anyone already mid-transition from an
-    // earlier tick whose animation hasn't finished (and therefore whose
-    // async onDone callback hasn't run yet) — without this, a second
-    // tick can grab the same dot again before the first move actually
-    // lands, and each move's own callback independently pushes the slug
-    // into a different destination room, duplicating them across floors.
-    var dots = Array.prototype.slice.call(layerEl.querySelectorAll('.floorplan-dot[data-slug]:not(.is-wandering)'));
-    var candidates = dots.filter(function (dot) {
-      var r = findResident(dot.dataset.slug);
-      return r && r.venturesOut;
-    });
-    if (!candidates.length) return;
-    var dot = candidates[Math.floor(Math.random() * candidates.length)];
-    if (Math.random() >= VENTURE_OUT_CHANCE) return;
-    var fromRoom = floor.rooms.filter(function (r) { return r.name === dot.dataset.room; })[0];
-    if (!fromRoom) return;
-    ventureToHangout(dot, fromRoom, floor);
-  }
-
   function tryWander() {
-    // Floor 2 is presence same as anywhere else now, but a resident's own
-    // bedroom wandering into someone else's would read as a real mistake
-    // (nobody should end up standing in a room that isn't theirs and isn't
-    // a hangout) — so bedrooms stay put once placed, except for whoever
-    // has venturesOut, who gets their own separate check instead.
-    if (activeFloor === 1) { tryVentureOut(); return; }
     if (Math.random() >= WANDER_CHANCE) return;
     var floor = house.floors[activeFloor];
-    if (!floor || floor.rooms.length < 2) return;
+    if (!floor || !floor.rooms.length) return;
 
-    // :not(.is-wandering) — see the same guard in tryVentureOut for why:
-    // a dot already mid-move can't be re-picked before its own async
-    // arrival lands, or it ends up duplicated into two rooms at once.
-    var dots = Array.prototype.slice.call(layerEl.querySelectorAll('.floorplan-dot:not(.is-wandering)'));
+    // Excludes anyone already mid-transition from an earlier tick whose
+    // animation hasn't finished (and therefore whose async onDone
+    // callback hasn't run yet) — without this, a second tick can grab
+    // the same dot/slug again before the first move actually lands, and
+    // each move's own callback independently pushes the slug into a
+    // different destination room, duplicating them across floors.
+    // pendingMoveSlugs is checked (not just the is-wandering class)
+    // because switching floors mid-animation rebuilds the whole layer,
+    // and a freshly recreated dot for a still-pending resident wouldn't
+    // carry the class over from the element it replaced.
+    var dots = Array.prototype.slice.call(layerEl.querySelectorAll('.floorplan-dot[data-slug]')).filter(function (d) {
+      return !pendingMoveSlugs[d.dataset.slug];
+    });
     if (!dots.length) return;
     var dot = dots[Math.floor(Math.random() * dots.length)];
     var moverSlug = dot.dataset.slug;
@@ -1503,15 +1527,9 @@
     var fromRoom = floor.rooms.filter(function (r) { return r.name === fromRoomName; })[0];
     if (!fromRoom) return;
 
-    var moverResident = findResident(moverSlug);
-    if (moverResident && moverResident.retreatsHome && Math.random() < RETREAT_HOME_CHANCE) {
-      retreatToBedroom(dot, fromRoom, floor);
-      return;
-    }
-
-    var others = floor.rooms.filter(function (r) { return r.name !== fromRoomName; });
-    if (!others.length) return;
-    var toRoom = pickRepulsionWeightedRoom(moverSlug, others);
+    var destinations = eligibleDestinationRooms(moverSlug, fromRoom);
+    if (!destinations.length) return;
+    var toRoom = pickRepulsionWeightedRoom(moverSlug, destinations);
 
     // Snapshot who's on each side of the move BEFORE anyone actually
     // moves — follow/flee reactions are purely about this one move,
@@ -1519,7 +1537,7 @@
     var leftBehind = fromRoom.occupants.filter(function (s) { return s !== moverSlug; });
     var alreadyThere = toRoom.occupants.slice();
 
-    moveResident(dot, fromRoom, toRoom, floor, function () {
+    travelTo(dot, fromRoom, toRoom, floor, function () {
       var followers = rollFollowers(moverSlug, leftBehind);
       var fleers = rollFleers(moverSlug, alreadyThere);
       // leftBehind/alreadyThere are a snapshot from when THIS move
@@ -1527,24 +1545,39 @@
       // fires (after the mover's own animation finishes), an unrelated
       // tick could already have moved one of these people elsewhere, or
       // have them mid-move right now. Re-checking both isn't optional:
-      // skipping it means moveResident gets called twice on the same
-      // dot from two independent async callbacks, and each one pushes
-      // the slug into a different room — duplicating them across floors
-      // instead of just picking the wrong (stale) one.
+      // skipping it means travelTo gets called twice on the same dot
+      // from two independent async callbacks, and each one pushes the
+      // slug into a different room — duplicating them across floors
+      // instead of just picking the wrong (stale) one. A fleer/follower
+      // dot only even exists here if they're on the SAME floor as
+      // fromRoom/toRoom (only the visible floor renders any dots at
+      // all) — someone reacting to an arrival or departure on a floor
+      // that isn't currently open just silently has no dot to move,
+      // which is exactly right: nothing to see, so nothing animates.
       followers.forEach(function (slug) {
+        if (pendingMoveSlugs[slug]) return;
         var followerDot = layerEl.querySelector('.floorplan-dot[data-slug="' + slug + '"]');
-        if (!followerDot || followerDot.classList.contains('is-wandering')) return;
+        if (!followerDot) return;
         if (followerDot.dataset.room !== fromRoom.name) return;
-        moveResident(followerDot, fromRoom, toRoom, floor);
+        // rollFollowers only ever checks the follower's bond with the
+        // MOVER, never who else is already in toRoom — a hard avoid
+        // still applies even when tagging along, so a follower whose
+        // positive bond would normally pull them along simply doesn't
+        // follow this particular time if toRoom already contains
+        // someone they can never share a room with.
+        var hardBlocked = toRoom.occupants.some(function (occSlug) { return closenessBetween(slug, occSlug) <= HARD_AVOID_THRESHOLD; });
+        if (hardBlocked) return;
+        travelTo(followerDot, fromRoom, toRoom, floor);
       });
       fleers.forEach(function (slug) {
+        if (pendingMoveSlugs[slug]) return;
         var fleerDot = layerEl.querySelector('.floorplan-dot[data-slug="' + slug + '"]');
-        if (!fleerDot || fleerDot.classList.contains('is-wandering')) return;
+        if (!fleerDot) return;
         if (fleerDot.dataset.room !== toRoom.name) return;
-        var fleeCandidates = floor.rooms.filter(function (r) { return r !== toRoom; });
+        var fleeCandidates = eligibleDestinationRooms(slug, toRoom);
         if (!fleeCandidates.length) return;
         var fleeTo = pickRepulsionWeightedRoom(slug, fleeCandidates);
-        moveResident(fleerDot, toRoom, fleeTo, floor);
+        travelTo(fleerDot, toRoom, fleeTo, floor);
       });
     });
   }

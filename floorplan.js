@@ -431,6 +431,32 @@
     return buildCorridorFloor(names, { corridorHalf: 4, marginX: 3, marginY: 6, gap: 0.9, doorGap: 0.8, depth: 9 });
   }
 
+  // A room's near edge (the boundary facing the corridor, where a door
+  // actually is) and its footprint along the wall — shared by real rooms
+  // and by a phantom rect below, so an empty stretch's computed edge is
+  // guaranteed to land exactly where a real room's own edge would.
+  function wallEdgeOf(rect, seg) {
+    if (seg.axis === 'h') {
+      var cy = rect.y + rect.h / 2;
+      return { edge: cy < seg.pos ? rect.y + rect.h : rect.y, from: rect.x, to: rect.x + rect.w };
+    }
+    var cx = rect.x + rect.w / 2;
+    return { edge: cx < seg.pos ? rect.x + rect.w : rect.x, from: rect.y, to: rect.y + rect.h };
+  }
+
+  // A phantom outward-row room spanning a whole segment, built with the
+  // exact near/far-edge math layoutPerimeterRow itself uses for a real
+  // one — never rendered, just a stand-in so an empty segment's door
+  // lines up with where a real room's wall would actually be.
+  function phantomOutwardRect(seg) {
+    var nearEdge = seg.pos + seg.outSign * (PERIMETER_HALF + PERIMETER_GAP);
+    var farEdge = nearEdge + seg.outSign * PERIMETER_DEPTH;
+    var d0 = Math.min(nearEdge, farEdge), d1 = Math.max(nearEdge, farEdge);
+    return seg.axis === 'h'
+      ? { x: seg.from, y: d0, w: seg.to - seg.from, h: d1 - d0 }
+      : { x: d0, y: seg.from, w: d1 - d0, h: seg.to - seg.from };
+  }
+
   // Finds a spot along a corridor wall that isn't actually a room's own
   // doorway — anywhere a room COULD sit but doesn't right now: the
   // margin before the first room or after the last one in a row, the
@@ -442,23 +468,18 @@
     var groups = {};
     floor.rooms.forEach(function (room) {
       if (!room.seg || !room.rect) return;
-      var seg = room.seg, edge, from, to;
-      if (seg.axis === 'h') {
-        var cy = room.rect.y + room.rect.h / 2;
-        edge = cy < seg.pos ? room.rect.y + room.rect.h : room.rect.y;
-        from = room.rect.x; to = room.rect.x + room.rect.w;
-      } else {
-        var cx = room.rect.x + room.rect.w / 2;
-        edge = cx < seg.pos ? room.rect.x + room.rect.w : room.rect.x;
-        from = room.rect.y; to = room.rect.y + room.rect.h;
-      }
-      var key = seg.axis + ':' + Math.round(edge * 10);
-      (groups[key] = groups[key] || { axis: seg.axis, edge: edge, spans: [] }).spans.push({ from: from, to: to });
+      var e = wallEdgeOf(room.rect, room.seg);
+      var key = room.seg.axis + ':' + Math.round(e.edge * 10);
+      (groups[key] = groups[key] || { axis: room.seg.axis, edge: e.edge, spans: [] }).spans.push({ from: e.from, to: e.to });
     });
 
-    // Every row's own full length — the straight floor's single shared
+    // Every row's own real length — the straight floor's single shared
     // spine for both its rows, or (for a bent floor) whichever perimeter
-    // segment, outward or inward row alike, a given edge value matches.
+    // segment a given edge value belongs to. The outward row spans the
+    // segment's full length; the inward row (if any) is inset from both
+    // ends so it can never reach a shared corner — using the outward
+    // row's wider bounds for it would "find" a gap in that reserved
+    // corner buffer, which isn't a real wall at all.
     var rowBounds = {};
     if (floor.corridorSegments && floor.corridorSegments.length && !floor.segments) {
       var spine = floor.corridorSegments[0];
@@ -468,10 +489,11 @@
     (floor.segments || []).forEach(function (segMeta) {
       var seg = allSegs[segMeta.key];
       if (!seg) return;
-      [seg.outSign, -seg.outSign].forEach(function (rowSign) {
-        var edge = seg.pos + rowSign * (PERIMETER_HALF + PERIMETER_GAP);
-        rowBounds[seg.axis + ':' + Math.round(edge * 10)] = { from: seg.from, to: seg.to };
-      });
+      var outward = wallEdgeOf(phantomOutwardRect(seg), seg);
+      rowBounds[seg.axis + ':' + Math.round(outward.edge * 10)] = { from: seg.from, to: seg.to };
+
+      var inwardEdge = seg.pos - seg.outSign * (PERIMETER_HALF + PERIMETER_GAP);
+      rowBounds[seg.axis + ':' + Math.round(inwardEdge * 10)] = { from: seg.from + CORNER_INSET, to: seg.to - CORNER_INSET };
     });
 
     var gaps = [];
@@ -488,16 +510,15 @@
       if (bounds.to - cursor > 1) gaps.push({ axis: g.axis, edge: g.edge, from: cursor, to: bounds.to });
     });
 
-    // A segment that got zero rooms at all doesn't produce a group above
-    // (nothing to group), so it needs its own separate check here — its
-    // outward row's near edge is still exactly computable even with no
-    // actual rooms placed on it, and the whole span counts as one gap.
+    // A segment whose outward row got zero rooms at all doesn't produce
+    // a group above (nothing to group) — checked separately using the
+    // same phantom rect, so its edge matches a real room's exactly.
     (floor.segments || []).forEach(function (segMeta) {
       var seg = allSegs[segMeta.key];
       if (!seg) return;
-      var edge = seg.pos + seg.outSign * (PERIMETER_HALF + PERIMETER_GAP);
-      var key = seg.axis + ':' + Math.round(edge * 10);
-      if (!groups[key]) gaps.push({ axis: seg.axis, edge: edge, from: seg.from, to: seg.to });
+      var outward = wallEdgeOf(phantomOutwardRect(seg), seg);
+      var key = seg.axis + ':' + Math.round(outward.edge * 10);
+      if (!groups[key]) gaps.push({ axis: seg.axis, edge: outward.edge, from: seg.from, to: seg.to });
     });
 
     if (!gaps.length) return null;

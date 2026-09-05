@@ -802,7 +802,11 @@
       var prevY = parseFloat(dot.style.top) || p.y;
       var dist = Math.hypot(p.x - prevX, p.y - prevY);
       var dur = Math.max(WANDER_MIN_LEG_MS, Math.min(WANDER_MAX_LEG_MS, dist * WANDER_MS_PER_UNIT));
-      dot.style.transition = 'left ' + dur + 'ms ease-in-out, top ' + dur + 'ms ease-in-out';
+      // linear, not ease-in-out — easing decelerates to a full stop at
+      // the end of every leg (and re-accelerates from a stop at the
+      // start of the next), which is exactly what reads as "stopping at
+      // the points" instead of one continuous walk through the bends.
+      dot.style.transition = 'left ' + dur + 'ms linear, top ' + dur + 'ms linear';
       dot.style.left = p.x + '%';
       dot.style.top = p.y + '%';
       setTimeout(step, dur);

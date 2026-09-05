@@ -487,7 +487,7 @@
       if (!room.seg || !room.rect) return;
       var e = wallEdgeOf(room.rect, room.seg);
       var key = room.seg.axis + ':' + Math.round(e.edge * 10);
-      (groups[key] = groups[key] || { axis: room.seg.axis, edge: e.edge, spans: [] }).spans.push({ from: e.from, to: e.to });
+      (groups[key] = groups[key] || { axis: room.seg.axis, edge: e.edge, centerline: room.seg.pos, spans: [] }).spans.push({ from: e.from, to: e.to });
     });
 
     // Every row's own real length — the straight floor's single shared
@@ -526,10 +526,10 @@
       g.spans.sort(function (a, b) { return a.from - b.from; });
       var cursor = bounds.from;
       g.spans.forEach(function (s) {
-        if (s.from - cursor > MIN_GAP) gaps.push({ axis: g.axis, edge: g.edge, from: cursor, to: s.from });
+        if (s.from - cursor > MIN_GAP) gaps.push({ axis: g.axis, edge: g.edge, centerline: g.centerline, from: cursor, to: s.from });
         cursor = Math.max(cursor, s.to);
       });
-      if (bounds.to - cursor > MIN_GAP) gaps.push({ axis: g.axis, edge: g.edge, from: cursor, to: bounds.to });
+      if (bounds.to - cursor > MIN_GAP) gaps.push({ axis: g.axis, edge: g.edge, centerline: g.centerline, from: cursor, to: bounds.to });
     });
 
     // A row with zero rooms at all doesn't produce a group above
@@ -543,11 +543,11 @@
       if (!seg) return;
       var outward = wallEdgeOf(phantomOutwardRect(seg), seg);
       var outKey = seg.axis + ':' + Math.round(outward.edge * 10);
-      if (!groups[outKey]) gaps.push({ axis: seg.axis, edge: outward.edge, from: seg.from, to: seg.to });
+      if (!groups[outKey]) gaps.push({ axis: seg.axis, edge: outward.edge, centerline: seg.pos, from: seg.from, to: seg.to });
 
       var inward = wallEdgeOf(phantomInwardRect(seg), seg);
       var inKey = seg.axis + ':' + Math.round(inward.edge * 10);
-      if (!groups[inKey]) gaps.push({ axis: seg.axis, edge: inward.edge, from: seg.from + CORNER_INSET, to: seg.to - CORNER_INSET });
+      if (!groups[inKey]) gaps.push({ axis: seg.axis, edge: inward.edge, centerline: seg.pos, from: seg.from + CORNER_INSET, to: seg.to - CORNER_INSET });
     });
 
     if (!gaps.length) return null;
@@ -556,9 +556,15 @@
     var span = pick.to - pick.from;
     var margin = span > 0.1 ? Math.min(2, span / 2 - 0.01) : 0;
     var t = margin > 0 ? pick.from + margin + Math.random() * (span - 2 * margin) : (pick.from + pick.to) / 2;
+    // pick.edge is a ROOM's own near edge — flush with the corridor
+    // itself sits PERIMETER_GAP closer to the centerline than that (the
+    // same small buffer every room keeps from the hallway). Straight
+    // floors use the same 1.2 for their own doorGap, so one constant
+    // covers both.
+    var corridorEdge = pick.edge > pick.centerline ? pick.edge - PERIMETER_GAP : pick.edge + PERIMETER_GAP;
     return pick.axis === 'h'
-      ? { x: t, y: pick.edge, axis: 'h' }
-      : { x: pick.edge, y: t, axis: 'v' };
+      ? { x: t, y: corridorEdge, axis: 'h' }
+      : { x: corridorEdge, y: t, axis: 'v' };
   }
 
   // --- Whole-house generation --------------------------------------------

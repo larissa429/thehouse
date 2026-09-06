@@ -21,6 +21,7 @@
   var svgEl = document.getElementById('floorplanSvg');
   var layerEl = document.getElementById('floorplanLayer');
   var captionEl = document.getElementById('floorplanCaption');
+  var awayEl = document.getElementById('floorplanAway');
   var noteOverlay = document.getElementById('note-overlay');
   var noteEl = document.getElementById('note-content');
   var noteBody = document.getElementById('note-body');
@@ -764,12 +765,18 @@
       place(r.slug, candidate);
     });
 
+    // Whoever rolled absent this load, in roster order — separate from
+    // any floor, since not-home means not placed anywhere at all, not
+    // just off the currently visible one.
+    var awaySlugs = RESIDENTS.filter(function (r) { return !home[r.slug]; }).map(function (r) { return r.slug; });
+
     return {
       floors: [floor1, floor2, floor3],
       hiddenDoorPresent: hiddenDoorPresent,
       hiddenDoorPoint: hiddenDoorPoint,
       hiddenDoorAxis: hiddenDoorAxis,
-      lockedDoorPresent: lockedDoorPresent
+      lockedDoorPresent: lockedDoorPresent,
+      awaySlugs: awaySlugs
     };
   }
 
@@ -1243,9 +1250,21 @@
     if (roomTipPinned && !e.target.closest('.floorplan-room-hit')) hideRoomTip();
   });
 
+  // Absence is house-wide, not floor-specific — someone not home isn't
+  // hiding on another floor, they're just not placed anywhere this
+  // load — so this renders once, independent of whichever floor tab is
+  // active, rather than being recomputed per floor like the caption is.
+  function renderAway() {
+    if (!awayEl) return;
+    if (!house.awaySlugs.length) { awayEl.textContent = ''; return; }
+    var names = house.awaySlugs.map(function (slug) { var r = findResident(slug); return r ? r.name : slug; });
+    awayEl.textContent = 'Not home right now: ' + names.join(', ') + '.';
+  }
+
   function renderAll() {
     renderTabs();
     renderStage();
+    renderAway();
   }
 
   // --- Ambient wandering -----------------------------------------------

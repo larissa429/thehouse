@@ -1631,37 +1631,25 @@
     var alreadyThere = toRoom.occupants.slice();
 
     travelTo(dot, fromRoom, toRoom, floor, function () {
-      var followers = rollFollowers(moverSlug, leftBehind);
+      // Fleeing is a reaction to the ARRIVAL — it only makes sense once
+      // the disliked person is actually standing there, so this stays
+      // gated on the mover's own animation finishing.
+      //
+      // alreadyThere is a snapshot from when THIS move started, not from
+      // just now — by the time this callback actually fires (after the
+      // mover's own animation finishes), an unrelated tick could already
+      // have moved one of these people elsewhere, or have them mid-move
+      // right now. Re-checking isn't optional: skipping it means
+      // travelTo gets called twice on the same dot from two independent
+      // async callbacks, and each one pushes the slug into a different
+      // room — duplicating them across floors instead of just picking
+      // the wrong (stale) one. A fleer dot only even exists here if
+      // they're on the SAME floor as toRoom (only the visible floor
+      // renders any dots at all) — someone reacting to an arrival on a
+      // floor that isn't currently open just silently has no dot to
+      // move, which is exactly right: nothing to see, so nothing
+      // animates.
       var fleers = rollFleers(moverSlug, alreadyThere);
-      // leftBehind/alreadyThere are a snapshot from when THIS move
-      // started, not from just now — by the time this callback actually
-      // fires (after the mover's own animation finishes), an unrelated
-      // tick could already have moved one of these people elsewhere, or
-      // have them mid-move right now. Re-checking both isn't optional:
-      // skipping it means travelTo gets called twice on the same dot
-      // from two independent async callbacks, and each one pushes the
-      // slug into a different room — duplicating them across floors
-      // instead of just picking the wrong (stale) one. A fleer/follower
-      // dot only even exists here if they're on the SAME floor as
-      // fromRoom/toRoom (only the visible floor renders any dots at
-      // all) — someone reacting to an arrival or departure on a floor
-      // that isn't currently open just silently has no dot to move,
-      // which is exactly right: nothing to see, so nothing animates.
-      followers.forEach(function (slug) {
-        if (pendingMoveSlugs[slug]) return;
-        var followerDot = layerEl.querySelector('.floorplan-dot[data-slug="' + slug + '"]');
-        if (!followerDot) return;
-        if (followerDot.dataset.room !== fromRoom.name) return;
-        // rollFollowers only ever checks the follower's bond with the
-        // MOVER, never who else is already in toRoom — a hard avoid
-        // still applies even when tagging along, so a follower whose
-        // positive bond would normally pull them along simply doesn't
-        // follow this particular time if toRoom already contains
-        // someone they can never share a room with.
-        var hardBlocked = toRoom.occupants.some(function (occSlug) { return closenessBetween(slug, occSlug) <= HARD_AVOID_THRESHOLD; });
-        if (hardBlocked) return;
-        travelTo(followerDot, fromRoom, toRoom, floor);
-      });
       fleers.forEach(function (slug) {
         if (pendingMoveSlugs[slug]) return;
         var fleerDot = layerEl.querySelector('.floorplan-dot[data-slug="' + slug + '"]');
@@ -1672,6 +1660,29 @@
         var fleeTo = pickRepulsionWeightedRoom(slug, fleeCandidates);
         travelTo(fleerDot, toRoom, fleeTo, floor);
       });
+    });
+
+    // Following, in contrast, is a reaction to the DEPARTURE — tagging
+    // along means walking out together, not watching the mover leave,
+    // waiting for them to fully arrive, and only then deciding to catch
+    // up. Rolled and started in the same tick as the mover's own
+    // travelTo (nothing async in between, so leftBehind can't have gone
+    // stale) rather than nested in their onDone.
+    var followers = rollFollowers(moverSlug, leftBehind);
+    followers.forEach(function (slug) {
+      if (pendingMoveSlugs[slug]) return;
+      var followerDot = layerEl.querySelector('.floorplan-dot[data-slug="' + slug + '"]');
+      if (!followerDot) return;
+      if (followerDot.dataset.room !== fromRoom.name) return;
+      // rollFollowers only ever checks the follower's bond with the
+      // MOVER, never who else is already in toRoom — a hard avoid still
+      // applies even when tagging along, so a follower whose positive
+      // bond would normally pull them along simply doesn't follow this
+      // particular time if toRoom already contains someone they can
+      // never share a room with.
+      var hardBlocked = toRoom.occupants.some(function (occSlug) { return closenessBetween(slug, occSlug) <= HARD_AVOID_THRESHOLD; });
+      if (hardBlocked) return;
+      travelTo(followerDot, fromRoom, toRoom, floor);
     });
   }
 

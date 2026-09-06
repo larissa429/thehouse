@@ -51,7 +51,7 @@
   var WANDER_MS_PER_UNIT = 45;     // walking speed — ms per viewBox unit of distance
   var WANDER_MIN_LEG_MS = 350;     // floor, so a short hop isn't instant
   var WANDER_MAX_LEG_MS = 1800;    // ceiling, so a long hallway leg isn't glacial
-  var CLOSENESS_PLACEMENT_THRESHOLD = 5; // a bond weaker than this (either direction) is just noise — placement ignores it entirely instead of giving every mild acquaintance or minor friction a say
+  var CLOSENESS_PLACEMENT_THRESHOLD = 3; // a bond weaker than this (either direction) is just noise — placement ignores it entirely instead of giving every mild acquaintance or minor friction a say
   var BEDROOM_VISIT_THRESHOLD = 6; // a real bond, positive only — this is "close enough to actually hang out in their room," not just "close enough to notice"
   var BEDROOM_VISIT_CAP = 3;       // a bedroom stops being visitable once this many people are already in it
   var FOLLOW_CHANCE_PER_POINT = 0.08; // odds someone left behind tags along, per point of CLOSENESS with whoever just left (e.g. a +9 bond ~= 72%)
@@ -74,7 +74,15 @@
   // hangout, so it's a coin-flip-ish chance instead.
 
   var RESIDENTS = [
-    { slug: 'journal', name: 'Journal', icon: '../images/zoomedicons/journal.webp', color: '#693719', alwaysHome: true },
+    // Doesn't really dislike anyone — even Blue Marble, his worst bond
+    // numerically, is closer to something SHE can't stand about being
+    // near HIM than the reverse. tolerant means his own placement and
+    // wandering never treat a disliked-by-others room as somewhere to
+    // avoid, and he never rolls to flee an arrival, no matter the bond.
+    // Someone else's dislike of him (PBC's -7, Blue Marble's hard avoid)
+    // still works exactly as it always has — this only ever suppresses
+    // HIS side of a reaction, never theirs.
+    { slug: 'journal', name: 'Journal', icon: '../images/zoomedicons/journal.webp', color: '#693719', alwaysHome: true, tolerant: true },
     { slug: 'mirror', name: 'Mirror', icon: '../images/zoomedicons/mirror.webp', color: '#d9b473', defaultRoom: 'Kitchen' },
     { slug: 'lp', name: 'LP', icon: '../images/zoomedicons/lp.webp', color: '#cfa8d4' },
     { slug: 'n528', name: '-⁵⁄₂₈', icon: '../images/zoomedicons/n528.webp', color: '#b8d4c9' },
@@ -734,10 +742,13 @@
         // CLOSENESS_PLACEMENT_THRESHOLD doesn't count at all here — only
         // real closeness or real friction should ever bias where someone
         // lands; anything weaker is placed as if there were no bond.
+        // Someone tolerant never lets friction push them away from a
+        // room — only the positive side of a bond ever counts for them.
         var weights = candidateRooms.map(function (room) {
           var score = 1;
           room.occupants.forEach(function (slug) {
             var c = closenessBetween(r.slug, slug);
+            if (r.tolerant && c < 0) return;
             if (Math.abs(c) >= CLOSENESS_PLACEMENT_THRESHOLD) score += c;
           });
           return Math.max(0.15, score);
@@ -1399,12 +1410,16 @@
   // avoid, filtered out first) a room someone has real friction with,
   // using the same CLOSENESS_PLACEMENT_THRESHOLD as initial placement,
   // so a passing acquaintance never factors in, only an actual grudge.
+  // Someone tolerant skips this downweighting entirely — friction with
+  // whoever's in a room never steers them away from it.
   // Reused for the original random destination, and for wherever a
   // fleeing resident goes next.
   function pickRepulsionWeightedRoom(moverSlug, candidates) {
     candidates = excludeHardAvoidRooms(moverSlug, candidates);
+    var mover = findResident(moverSlug);
     var weights = candidates.map(function (room) {
       var score = 1;
+      if (mover && mover.tolerant) return score;
       room.occupants.forEach(function (occSlug) {
         var c = closenessBetween(moverSlug, occSlug);
         if (c <= -CLOSENESS_PLACEMENT_THRESHOLD) score += c;
@@ -1463,9 +1478,12 @@
   // Same idea in reverse — everyone already in the room independently
   // rolls whether the new arrival is enough to make them leave, based
   // only on their own bond with whoever just walked in, never on
-  // whether anyone else in the room also flees.
+  // whether anyone else in the room also flees. Someone tolerant never
+  // rolls to flee at all — whoever just walked in, they're staying put.
   function rollFleers(moverSlug, presentSlugs) {
     return presentSlugs.filter(function (slug) {
+      var resident = findResident(slug);
+      if (resident && resident.tolerant) return false;
       var c = closenessBetween(moverSlug, slug);
       if (c > -CLOSENESS_PLACEMENT_THRESHOLD) return false;
       return Math.random() < Math.abs(c) * FLEE_CHANCE_PER_POINT;

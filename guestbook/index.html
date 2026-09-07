@@ -111,10 +111,7 @@
 
     <div class="guestbook-gallery">
       <h2 class="guestbook-gallery-title">Gallery</h2>
-      <div class="gallery-wall" id="guestbookWall">
-        <!-- populated by JS from Firestore; falls back to an example
-             piece (gimmick.png) if nothing's been submitted yet -->
-      </div>
+      <div class="gallery-wall" id="guestbookWall"></div>
     </div>
     </div>
 
@@ -135,7 +132,6 @@
   <script src="../components.js" defer></script>
 
   <script type="module">
-    // 1. Import Firebase from the official Google CDN
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, addDoc, serverTimestamp, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -157,17 +153,13 @@
     signInAnonymously(auth)
       .then(() => {
         console.log("Logged in anonymously!");
-        loadGallery(); // wait for auth so Firestore rules requiring a
-                        // signed-in (even anonymous) user pass on load
+        loadGallery();
       })
       .catch((error) => console.error("Anonymous login failed: ", error));
 
-    // --- GALLERY: the right-hand wall of submitted drawings ---
     const EXAMPLE_ENTRY = { name: 'Straw', imageUrl: '../images/gimmick.png', example: true };
     const galleryWall = document.getElementById('guestbookWall');
 
-    // entries only ever had one flat reply before hostReplies existed —
-    // treat that as a one-item list so nothing already saved disappears
     function getReplies(entry) {
       if (Array.isArray(entry.hostReplies) && entry.hostReplies.length) return entry.hostReplies;
       if (entry.hostReply) {
@@ -191,8 +183,6 @@
         frame.dataset.message = entry.message || '';
         frame.dataset.replies = JSON.stringify(replies);
 
-        // text-only submissions (no drawing) get a note card instead of
-        // an <img> — there's nothing to show a picture of
         if (entry.imageUrl) {
           const img = document.createElement('img');
           img.src = entry.imageUrl;
@@ -210,15 +200,10 @@
         plate.className = 'gallery-plate';
         const plateText = entry.example ? entry.name + ' (example)' : entry.name;
         plate.textContent = plateText;
-        // long names would otherwise wrap to two left-leaning lines —
-        // shrink the font a bit instead so most names still fit on one
         if (plateText.length > 10) plate.style.fontSize = '0.7rem';
         frame.appendChild(plate);
 
         if (replies.length) {
-          // one emoji per distinct character, not one per message — a
-          // back-and-forth between the same two residents still only
-          // shows two icons up top
           const uniqueCharacters = [...new Map(replies.map(r => [r.character, r])).values()];
           const badge = document.createElement('span');
           badge.className = 'gallery-reply-badge';
@@ -231,7 +216,6 @@
       });
     }
 
-    // --- LIGHTBOX: click a drawing to see its name + message full-size ---
     const guestbookOverlay = document.getElementById('guestbookOverlay');
     const guestbookOverlayImg = document.getElementById('guestbookOverlayImg');
     const guestbookOverlayName = document.getElementById('guestbookOverlayName');
@@ -251,10 +235,6 @@
 
     const guestbookOverlayReply = document.getElementById('guestbookOverlayReply');
 
-    // minimal, safe markdown for the host reply only: escape everything
-    // first, then turn **bold** and *italic* into real tags — the input
-    // is admin-only (Firestore rules restrict writes to the admin email)
-    // but we escape anyway so nothing weird can slip through
     function formatHostReply(text) {
       const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       return escaped
@@ -288,9 +268,6 @@
 
     async function loadGallery() {
       try {
-        // only ever show entries a moderator has approved — new
-        // submissions start as "pending" and are invisible here until
-        // then (see the review page for approving/rejecting them)
         const q = query(
           collection(db, 'guestbook'),
           where('status', '==', 'approved'),
@@ -306,31 +283,25 @@
         renderGalleryEntries(entries);
       } catch (error) {
         console.error('Could not load gallery: ', error);
-        renderGalleryEntries([EXAMPLE_ENTRY]); // don't leave the wall empty on error either
+        renderGalleryEntries([EXAMPLE_ENTRY]);
       }
     }
 
-    // --- DRAWING CANVAS LOGIC ---
     const canvas = document.getElementById('artCanvas');
     const ctx = canvas.getContext('2d');
     const clearBtn = document.getElementById('clearBtn');
     const submitBtn = document.getElementById('submitBtn');
     let isDrawing = false;
-    let hasDrawn = false; // tracks whether anything's actually been drawn/stamped
+    let hasDrawn = false;
 
     ctx.lineCap = 'round';
 
-    // the canvas's white background is only CSS on the <canvas> element
-    // itself — the actual pixel bitmap starts fully transparent, so
-    // toDataURL() would export a transparent PNG unless we explicitly
-    // paint white into the real pixel data first
     function fillWhite() {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     fillWhite();
 
-    // --- PALETTE GROUPS: click a group's label to expand/collapse its row ---
     const paletteToggles = document.querySelectorAll('.guestbook-palette-toggle');
     paletteToggles.forEach(toggle => {
       toggle.addEventListener('click', () => {
@@ -348,9 +319,8 @@
       });
     });
 
-    // --- COLOR SWATCH LOGIC (delegated, since swatches live across 3 rows) ---
-    let strokeColor = '#000000'; // Default drawing color (black)
-    let previousColor = '#000000'; // Stores last color used
+    let strokeColor = '#000000';
+    let previousColor = '#000000';
 
     function allSwatches() {
       return document.querySelectorAll('.guestbook-swatch');
@@ -359,9 +329,6 @@
     function selectColor(color, swatchEl) {
       isEraser = false;
       eraserBtn.classList.remove('active');
-      // deliberately NOT calling setStamp(null) here — picking a new
-      // color should update the stamp's fill without kicking you back
-      // to the pen tool
 
       allSwatches().forEach(s => s.classList.remove('active'));
       if (swatchEl) swatchEl.classList.add('active');
@@ -377,7 +344,6 @@
       selectColor(swatch.getAttribute('data-color'), swatch);
     });
 
-    // --- RECENT COLOR HISTORY ---
     const historyEl = document.getElementById('colorHistory');
     const colorHistory = [];
     const MAX_HISTORY = 8;
@@ -404,15 +370,11 @@
     historyEl.addEventListener('click', (e) => {
       const swatch = e.target.closest('.guestbook-history-swatch');
       if (!swatch) return;
-      // find a matching live palette swatch to mark active, if the color
-      // happens to be in a currently-visible palette — otherwise just
-      // set the color with nothing else marked active
       const color = swatch.getAttribute('data-color');
       const match = Array.from(allSwatches()).find(s => s.getAttribute('data-color') === color && s !== swatch);
       selectColor(color, match);
     });
 
-    // --- BRUSH SIZE SLIDER ---
     const sizeSlider = document.getElementById('sizeSlider');
     const sizeValue = document.getElementById('sizeValue');
     let strokeWidth = parseInt(sizeSlider.value, 10);
@@ -422,7 +384,6 @@
       sizeValue.textContent = strokeWidth + 'px';
     });
 
-    // --- ERASER TOOL LOGIC ---
     const eraserBtn = document.getElementById('eraserBtn');
     let isEraser = false;
 
@@ -432,7 +393,7 @@
         setStamp(null);
         eraserBtn.classList.add('active');
         allSwatches().forEach(s => s.classList.remove('active'));
-        strokeColor = '#ffffff'; // Painting with canvas background color (white)
+        strokeColor = '#ffffff';
       } else {
         eraserBtn.classList.remove('active');
         strokeColor = previousColor;
@@ -441,9 +402,6 @@
       }
     });
 
-    // --- STAMPS: house/star/heart/circle shapes, drawn as vector paths
-    // (no image assets needed) — clicking the canvas while a stamp is
-    // selected places one shape instead of drawing a freehand line ---
     const stampBtns = document.querySelectorAll('.guestbook-stamp-btn[data-stamp]');
     const stampOffBtn = document.getElementById('stampOffBtn');
     let currentStamp = null;
@@ -468,23 +426,20 @@
 
       if (type === 'house') {
         const halfW = s / 2;
-        const roofOverhang = halfW * 1.35; // roof eaves stick out past the walls
+        const roofOverhang = halfW * 1.35;
         const bodyTop = cy;
         const bodyBottom = cy + s * 0.6;
         const lw = Math.max(1, s * 0.05);
         ctx.beginPath();
-        ctx.moveTo(cx, cy - s * 0.55);          // roof apex
-        ctx.lineTo(cx + roofOverhang, bodyTop);  // down the roof's right slope, past the wall
-        ctx.lineTo(cx + halfW, bodyTop);         // in to the right wall
-        ctx.lineTo(cx + halfW, bodyBottom);      // down the right wall
-        ctx.lineTo(cx - halfW, bodyBottom);      // across the bottom
-        ctx.lineTo(cx - halfW, bodyTop);         // up the left wall
-        ctx.lineTo(cx - roofOverhang, bodyTop);  // out to the left roof eave
+        ctx.moveTo(cx, cy - s * 0.55);
+        ctx.lineTo(cx + roofOverhang, bodyTop);
+        ctx.lineTo(cx + halfW, bodyTop);
+        ctx.lineTo(cx + halfW, bodyBottom);
+        ctx.lineTo(cx - halfW, bodyBottom);
+        ctx.lineTo(cx - halfW, bodyTop);
+        ctx.lineTo(cx - roofOverhang, bodyTop);
         ctx.closePath();
         ctx.fill();
-        // doorway — overshoots past the bottom edge so it fully clips
-        // through the outline stroke instead of leaving a thin line
-        // across the opening
         ctx.beginPath();
         ctx.rect(cx - s * 0.11, bodyBottom - s * 0.32, s * 0.22, s * 0.32 + lw);
         ctx.fillStyle = '#ffffff';
@@ -531,12 +486,6 @@
 
     function getCoordinates(e) {
       const rect = canvas.getBoundingClientRect();
-      // the canvas's internal bitmap is a fixed 400x400, but CSS renders
-      // it at whatever size the layout gives it (much smaller than 400
-      // on a phone) — without this scale factor, raw CSS-pixel offsets
-      // get used directly as bitmap coordinates, so the drawing point
-      // drifts away from the actual finger position the smaller the
-      // canvas is rendered on screen
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -547,7 +496,6 @@
       };
     }
 
-    // --- UNDO / REDO (snapshot-based) ---
     const undoBtn = document.getElementById('undoBtn');
     const redoBtn = document.getElementById('redoBtn');
     const undoStack = [];
@@ -560,7 +508,7 @@
     function pushUndoSnapshot() {
       undoStack.push(snapshot());
       if (undoStack.length > MAX_HISTORY_STATES) undoStack.shift();
-      redoStack.length = 0; // a new stroke invalidates the redo history
+      redoStack.length = 0;
     }
 
     undoBtn.addEventListener('click', () => {
@@ -578,7 +526,7 @@
       if (currentStamp) {
         const { x, y } = getCoordinates(e);
         stampAt(x, y);
-        return; // stamps place once per click, no continuous drawing
+        return;
       }
       pushUndoSnapshot();
       isDrawing = true;
@@ -595,8 +543,8 @@
       if (!isDrawing) return;
       const { x, y } = getCoordinates(e);
 
-      ctx.strokeStyle = strokeColor; // Use selected color (or white for eraser)
-      ctx.lineWidth = strokeWidth;   // Use selected size (applies to both pen and eraser)
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = strokeWidth;
 
       ctx.lineTo(x, y);
       ctx.stroke();
@@ -619,9 +567,6 @@
       hasDrawn = false;
     });
 
-    // --- UPLOAD: drop a photo onto the canvas to draw over, scaled to
-    // fit inside the 400x400 bitmap without stretching (contain-fit,
-    // centered) so it always lands proportionally correct ---
     const uploadBtn = document.getElementById('uploadBtn');
     const uploadInput = document.getElementById('uploadInput');
 
@@ -648,10 +593,9 @@
       };
       reader.readAsDataURL(file);
 
-      uploadInput.value = ''; // allow re-selecting the same file later
+      uploadInput.value = '';
     });
 
-    // --- EXPORT (save locally before submitting) ---
     const exportBtn = document.getElementById('exportBtn');
     exportBtn.addEventListener('click', () => {
       const link = document.createElement('a');
@@ -660,12 +604,6 @@
       link.click();
     });
 
-    // --- SUBMISSION LOGIC ---
-    // The drawing is saved as a Base64 data URL directly inside the
-    // Firestore document instead of a separate Cloud Storage upload — a
-    // 400x400 canvas encodes to roughly ~30KB of text, well under
-    // Firestore's 1MB-per-document limit, so this skips Storage (and
-    // its billing requirement) entirely for a guestbook this size.
     submitBtn.addEventListener('click', async () => {
       const name = document.getElementById('visitorName').value.trim();
       const message = document.getElementById('visitorMessage').value.trim();
@@ -683,13 +621,10 @@
       submitBtn.innerText = "Submitting...";
 
       try {
-        // text-only entries skip the image entirely — a blank canvas
-        // has nothing worth saving, and forcing one in kept producing
-        // an all-white square with no information in it
         const entry = {
           name: name,
           message: message,
-          status: 'pending', // a moderator has to approve it before it's public
+          status: 'pending',
           submittedAt: serverTimestamp()
         };
         if (hasDrawn) {
@@ -706,7 +641,7 @@
         hasDrawn = false;
         undoStack.length = 0;
         redoStack.length = 0;
-        loadGallery(); // show the new entry on the wall right away
+        loadGallery();
 
       } catch (error) {
         console.error("Error submitting entry:", error);

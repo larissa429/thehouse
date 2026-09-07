@@ -42,7 +42,7 @@
     'Red', 'Orange', 'Yellow', 'Green', 'Brown', 'White', 'Purple', 'Black', 'Clear'
   ];
 
-  var WORDS = [
+  var ALL_WORDS = [
     { name: 'Lemonade', tags: ['Sour', 'Sweet', 'Drink', 'Yellow'] },
     { name: 'Cherry', tags: ['Sweet', 'Fruity', 'Food', 'Red'] },
     { name: 'Basil', tags: ['Earthy', 'Floral', 'Spice/Condiment', 'Green'] },
@@ -67,7 +67,32 @@
     { name: 'Berry', tags: ['Sweet', 'Sour', 'Fruity', 'Food', 'Purple'] },
     { name: 'Smoked Paprika', tags: ['Smoky', 'Spicy', 'Food', 'Spice/Condiment', 'Red'] },
     { name: 'Wine', tags: ['Fruity', 'Bitter', 'Drink', 'Purple', 'Rich'] },
-    { name: 'Tea', tags: ['Floral', 'Bitter', 'Drink', 'Brown'] }
+    { name: 'Tea', tags: ['Floral', 'Bitter', 'Drink', 'Brown'] },
+    { name: 'Lime', tags: ['Sour', 'Fruity', 'Green'] },
+    { name: 'Honey', tags: ['Sweet', 'Floral', 'Rich', 'Yellow'] },
+    { name: 'Garlic', tags: ['Savory', 'Spicy', 'Spice/Condiment', 'White'] },
+    { name: 'Onion', tags: ['Savory', 'Sour', 'White'] },
+    { name: 'Blackberry', tags: ['Sour', 'Fruity', 'Food', 'Earthy', 'Purple'] },
+    { name: 'Clove', tags: ['Spicy', 'Earthy', 'Spice/Condiment', 'Brown'] },
+    { name: 'Rosemary', tags: ['Earthy', 'Bitter', 'Spice/Condiment', 'Green'] },
+    { name: 'Molasses', tags: ['Sweet', 'Bitter', 'Smoky', 'Brown'] },
+    { name: 'Lavender', tags: ['Floral', 'Sweet', 'Purple'] },
+    { name: 'Chocolate', tags: ['Sweet', 'Bitter', 'Rich', 'Food', 'Brown'] },
+    { name: 'Butter', tags: ['Creamy', 'Rich', 'Savory', 'Yellow'] },
+    { name: 'Yogurt', tags: ['Sour', 'Creamy', 'White', 'Food'] },
+    { name: 'Cinnamon', tags: ['Spicy', 'Sweet', 'Rich', 'Brown'] },
+    { name: 'Cardamom', tags: ['Spicy', 'Floral', 'Spice/Condiment', 'Green'] },
+    { name: 'Pineapple', tags: ['Sweet', 'Sour', 'Fruity', 'Food', 'Yellow'] },
+    { name: 'Beet', tags: ['Earthy', 'Sweet', 'Food', 'Purple'] },
+    { name: 'Kale', tags: ['Earthy', 'Bitter', 'Food', 'Green'] },
+    { name: 'Milk', tags: ['Creamy', 'Sweet', 'Drink', 'White'] },
+    { name: 'Soda Water', tags: ['Sour', 'Drink', 'Clear'] },
+    { name: 'Whiskey', tags: ['Bitter', 'Smoky', 'Drink', 'Brown', 'Rich'] },
+    { name: 'Orange Zest', tags: ['Sour', 'Fruity', 'Spice/Condiment', 'Orange'] },
+    { name: 'Turmeric', tags: ['Earthy', 'Bitter', 'Spice/Condiment', 'Yellow'] },
+    { name: 'Maple Syrup', tags: ['Sweet', 'Rich', 'Brown'] },
+    { name: 'Olive', tags: ['Salty', 'Savory', 'Bitter', 'Food', 'Black'] },
+    { name: 'Curry Powder', tags: ['Spicy', 'Earthy', 'Spice/Condiment', 'Yellow'] }
   ];
 
   var MENU = [
@@ -136,11 +161,6 @@
     return wrap;
   }
 
-  var GLOBAL_TAG_FREQUENCY = {};
-  WORDS.forEach(function (w) {
-    w.tags.forEach(function (t) { GLOBAL_TAG_FREQUENCY[t] = (GLOBAL_TAG_FREQUENCY[t] || 0) + 1; });
-  });
-
   var MENU_TAG_FREQUENCY = {};
   MENU.forEach(function (m) {
     m.tags.forEach(function (t) { MENU_TAG_FREQUENCY[t] = (MENU_TAG_FREQUENCY[t] || 0) + 1; });
@@ -168,6 +188,8 @@
   var seenSymbols;
   var asksSinceGuess;
   var hasGuessedOnce;
+  var WORDS;
+  var GLOBAL_TAG_FREQUENCY;
 
   function symbolFor(tag) { return symbolMap[tag]; }
 
@@ -225,6 +247,12 @@
     symbolMap = {};
     var symbolIds = SYMBOL_ICONS.map(function (_, i) { return i; });
     shuffle(symbolIds).forEach(function (id, i) { symbolMap[TAGS[i]] = id; });
+
+    WORDS = shuffle(ALL_WORDS).slice(0, 25);
+    GLOBAL_TAG_FREQUENCY = {};
+    WORDS.forEach(function (w) {
+      w.tags.forEach(function (t) { GLOBAL_TAG_FREQUENCY[t] = (GLOBAL_TAG_FREQUENCY[t] || 0) + 1; });
+    });
 
     targets = shuffle(MENU).slice(0, TARGET_COUNT);
     currentIdx = 0;

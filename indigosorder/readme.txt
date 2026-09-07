@@ -103,11 +103,15 @@ DATA DESIGN NOTES
 - Every tag lives in one flat pool — flavor, type, and color are not
   separate axes, just different flavors (so to speak) of the same kind
   of fact about a word or menu item.
-- The 25 askable words are deliberately ambiguous — most carry a tag
-  they share with several other words, so no single ask ever fully pins
-  anything down on its own. No two words share an identical tag set
-  (checked explicitly — Cream/Coconut originally collided and Coconut
-  was changed to fix it).
+- The askable words are drawn from a pool of 50 (ALL_WORDS); each game
+  randomly picks 25 of them (WORDS) at startGame() time, so the exact
+  word list — and the tag-frequency table used for the ask mechanic's
+  rarity tie-breaking — differs every playthrough. They're deliberately
+  ambiguous — most carry a tag they share with several other words, so
+  no single ask ever fully pins anything down on its own. No two words
+  in the full 50-word pool share an identical tag set (checked
+  explicitly — several near-collisions, like Cream/Coconut and
+  Caramel/Molasses, were caught and fixed this way).
 - The 25-item menu is real, recognizable dishes/drinks/condiments — the
   menu itself is completely ordinary, only Indigo's way of pointing at
   it is strange. Every tag combination is unique. Each description is

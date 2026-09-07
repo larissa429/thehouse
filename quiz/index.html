@@ -309,13 +309,6 @@
   <script src="../components.js" defer></script>
 
   <script>
-    // Wrong answers cost a life instead of just retrying in place — run
-    // out of lives and it's back to question 1, Impossible-Quiz style.
-    // Mostly genuine House lore, with a few trick questions mixed in
-    // (the "obviously right" answer isn't always the right one).
-    //
-    // This is a starter set, not the full 50 yet — add more objects to
-    // this array over time; nothing else needs to change to grow it.
     const QUESTIONS = [
       {
         q: "What does D.A.I.S.Y. actually stand for?",
@@ -663,16 +656,11 @@
     ];
 
     const LIVES_START = 3;
-    const PASSWORD_ANSWER = "allpages"; // matches the hash in pass/
+    const PASSWORD_ANSWER = "allpages";
 
     let current = 0;
     let lives = LIVES_START;
 
-    // Telly-style glitch text for the "who's in the basement" options — same
-    // weighted-scramble technique as the name glitch on telly/index.html
-    // (mostly noise, with the real character showing through occasionally),
-    // rather than glitch.js's fully-redacted version. Tracked per-render so
-    // old intervals get cleared instead of piling up as questions advance.
     const GLITCH_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789!@#$%&*<>?/\\|=+~';
     const GLITCH_REAL_WEIGHT = 8;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -685,8 +673,8 @@
 
     function startGlitchText(el, realText, ariaText) {
       el.textContent = realText;
-      el.setAttribute('aria-label', ariaText || realText); // real text for screen readers
-      if (reduceMotion) return; // static and legible — every option is correct anyway
+      el.setAttribute('aria-label', ariaText || realText);
+      if (reduceMotion) return;
 
       const id = setInterval(() => {
         let out = '';
@@ -737,9 +725,6 @@
       return copy;
     }
 
-    // an "All of the above" option only makes sense sitting after the
-    // others, so it's pinned to the end instead of shuffling with them —
-    // detected automatically by text, no per-question flag needed
     function shuffleOptions(question) {
       const indices = question.options.map((_, i) => i);
       const pinnedIndex = indices.find(i => question.options[i].trim().toLowerCase() === 'all of the above');
@@ -748,10 +733,6 @@
       return pinnedIndex === undefined ? shuffledRest : [...shuffledRest, pinnedIndex];
     }
 
-    // Bonus lives are tied to the 3 interactive question types themselves
-    // (not a fixed "every 15th question" count) so removing or adding
-    // regular questions elsewhere in the set never knocks these out of
-    // alignment with the puzzle/sort/anagram questions they're meant to reward.
     const LIVES_CHECKPOINT_POSITIONS = new Set(
       QUESTIONS.reduce((positions, q, i) => {
         if (q.type === 'puzzle' || q.type === 'sort' || q.type === 'anagram') positions.push(i + 1);
@@ -766,7 +747,7 @@
         lives++;
         renderLives();
         lifePopupEl.classList.remove('show');
-        void lifePopupEl.offsetWidth; // restart animation if it's already mid-run
+        void lifePopupEl.offsetWidth;
         lifePopupEl.classList.add('show');
       }
 
@@ -834,11 +815,6 @@
       });
     }
 
-    // Answer is compared letters-only (spaces/punctuation/case ignored) so
-    // formatting quirks in what someone types don't matter. A fresh scramble
-    // is generated every render (not a fixed list) — regenerated letter-by-
-    // letter each time, so it's effectively unlimited variety rather than a
-    // canned batch.
     let currentAnagramAnswer = '';
 
     function normalizeAnagramText(str) {
@@ -896,10 +872,6 @@
       }
     });
 
-    // Splits q.image into pieces scattered (and rotated) below an empty
-    // board; drag each piece onto its spot to place it, straightening it out.
-    // Solving costs no lives — it's a breather puzzle, not a quiz question
-    // with a wrong answer.
     const PUZZLE_COLS = 4;
     const PUZZLE_ROWS = 3;
 
@@ -910,9 +882,6 @@
       puzzleSolvedEl.hidden = true;
     }
 
-    // Uses pixel-based background-size/position (measured off the actual
-    // rendered board) rather than percentage tricks, so crops line up
-    // exactly regardless of borders/gaps.
     function applyPieceBackground(piece, pieceIndex, image, gridSize) {
       const col = pieceIndex % PUZZLE_COLS;
       const row = Math.floor(pieceIndex / PUZZLE_COLS);
@@ -925,7 +894,7 @@
     }
 
     function randomRotation() {
-      return Math.random() * 40 - 20; // -20..20 deg
+      return Math.random() * 40 - 20;
     }
 
     function renderPuzzle(q) {
@@ -933,7 +902,6 @@
 
       const pieceCount = PUZZLE_COLS * PUZZLE_ROWS;
 
-      // Empty board slots — piece with index N belongs in slot N.
       const slots = [];
       for (let i = 0; i < pieceCount; i++) {
         const slot = document.createElement('div');
@@ -948,10 +916,6 @@
       const tileW = gridSize.width / PUZZLE_COLS;
       const tileH = gridSize.height / PUZZLE_ROWS;
 
-      // Give the scatter zone enough room for a rough grid of the pieces
-      // beneath the board, then measure everything relative to the stage
-      // (pieces are positioned absolutely against the stage so they can
-      // move freely between the scatter zone and the board).
       const scatterRows = Math.ceil(pieceCount / PUZZLE_COLS);
       puzzleScatterEl.style.height = (scatterRows * tileH * 1.4) + 'px';
 
@@ -967,8 +931,8 @@
         return { x: r.left - stageRect.left, y: r.top - stageRect.top };
       });
 
-      const slotOccupant = new Array(pieceCount).fill(null); // slot -> piece
-      const piecePlacement = new Array(pieceCount).fill(null); // piece -> slot
+      const slotOccupant = new Array(pieceCount).fill(null);
+      const piecePlacement = new Array(pieceCount).fill(null);
       const pieceEls = new Array(pieceCount);
 
       const spawnOrder = shuffleArray(Array.from({ length: pieceCount }, (_, i) => i));
@@ -1011,9 +975,6 @@
         }
       }
 
-      // Moves a bumped-out piece to a specific spot (and rotation) rather
-      // than a random one — used so a displaced piece lands exactly where
-      // the piece that took its place came from.
       function returnToSpot(piece, pieceIndex, spot) {
         piecePlacement[pieceIndex] = null;
         piece.style.left = spot.left + 'px';
@@ -1021,10 +982,6 @@
         piece.style.transform = spot.transform;
       }
 
-      // Finds which slot a stage-relative point falls inside, by coordinates
-      // rather than document.elementFromPoint — a slot that already has a
-      // piece in it is visually covered by that piece, so hit-testing the
-      // DOM would find the occupying piece instead of the slot underneath.
       function slotAt(stageX, stageY) {
         for (let i = 0; i < slotPositions.length; i++) {
           const pos = slotPositions[i];
@@ -1035,9 +992,6 @@
         return null;
       }
 
-      // origin is where the incoming piece was dragged from (its spot in the
-      // scatter zone, or null if it was already on the board) — a bumped
-      // occupant gets sent there instead of to a random scatter position.
       function placeAt(piece, pieceIndex, slotIndex, origin) {
         const prevSlot = piecePlacement[pieceIndex];
         if (prevSlot !== null) slotOccupant[prevSlot] = null;
@@ -1045,7 +999,6 @@
         const occupant = slotOccupant[slotIndex];
         if (occupant !== null && occupant !== pieceIndex) {
           if (prevSlot !== null) {
-            // Both pieces were already on the board — swap them properly.
             placeAt(pieceEls[occupant], occupant, prevSlot, null);
           } else {
             returnToSpot(pieceEls[occupant], occupant, origin);
@@ -1111,13 +1064,7 @@
       });
     }
 
-    // Drag-to-sort question: a vertical list of items the player reorders
-    // by dragging, checked against q.items (already given oldest-first)
-    // when they hit submit. Unlike other question types, a wrong submit
-    // doesn't reshuffle back to a fresh layout — the player's current
-    // arrangement stays put so they can adjust it, and items already in
-    // the right slot flash green even if the overall order is still wrong.
-    const SORT_ITEM_GAP = 10; // px between stacked rows
+    const SORT_ITEM_GAP = 10;
 
     function renderSort(q) {
       sortListEl.innerHTML = '';
@@ -1141,10 +1088,6 @@
     }
 
     function attachSortDrag(itemEls) {
-      // `order` is the source of truth for display position (index 0 = top
-      // "oldest" slot) — every item's top offset is derived from its index
-      // here, not from DOM order, so a mid-drag reorder is just an array
-      // move followed by a re-layout pass.
       let order = itemEls.slice();
       let itemH = 0;
       let dragEl = null;
@@ -1272,9 +1215,6 @@
           }, 900);
         } else {
           feedbackEl.textContent = "Wrong. " + lives + " " + (lives === 1 ? "life" : "lives") + " left. Try this one again.";
-          // Reset in place rather than a full renderQuestion() — a fresh
-          // render would reshuffle multiple-choice order, which made it
-          // easy to misclick right after a wrong answer.
           setTimeout(() => {
             btn.classList.remove('wrong-flash');
             resetFn();

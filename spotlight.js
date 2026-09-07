@@ -1,12 +1,4 @@
-/* ============================================================
-   spotlight.js — "Center Stage", an idle clicker starring Abstract
-   Painting, who is (in her own mind) the main character of The House.
 
-   Stage 1 only for now: manual clicking, and the first automation
-   tier ("Dramatic Sigh"). UPGRADES is written to extend cleanly —
-   add another entry to the array and it shows up in the shop
-   automatically once its unlock threshold is reached.
-   ============================================================ */
 (function () {
   var root = document.getElementById('spotlightGame');
   if (!root) return;
@@ -67,19 +59,10 @@
 
   var SAVE_KEY = 'spotlight-save';
 
-  // Shown before the first click (and after Reset) so the bubble is
-  // never empty — an empty bubble collapses to almost no height, which
-  // made its speech-bubble tail render as a stray floating square
-  // instead of looking attached to anything.
   var IDLE_LINE = { es: '¿A qué esperas? No va a hacer clic solo.', en: "What are you waiting for? It's not gonna click itself." };
 
-  // Shown right after prestiging, instead of IDLE_LINE.
   var SEQUEL_LINE = { es: 'Ah, la secuela. Siempre es superior a la original.', en: 'Ah, the sequel. Always superior to the original.' };
 
-  // She delivers every line in (Castilian) Spanish, subtitled — because
-  // of course she does. `es` is what's said, `en` is the dim subtitle.
-  // Translations by an actual native speaker (AP's creator, from Spain) —
-  // reviewed and corrected from the earlier machine-ish first pass.
   var CLICK_LINES = [
     { es: 'Nací para este momento.', en: 'I was born for this moment.' },
     { es: '¿Lo has sentido? Eso ha sido desarrollo de personaje.', en: 'Did you feel that? That was character development.' },
@@ -93,7 +76,6 @@
     { es: 'Alguien debería estar grabando esto.', en: 'Someone should really be filming this.' }
   ];
 
-  // Rare (5% per click) — bigger payout, bigger reaction.
   var CRIT_LINES = [
     { es: '¡Aplausos y ovaciones a mí!', en: 'Praises and glory to me!' },
     { es: '¡Bravo, bravo!', en: 'Bravo, bravo!' },
@@ -101,7 +83,6 @@
     { es: '¡El público la ama!', en: 'The audience adores her!' }
   ];
 
-  // Shown sometimes (40% chance) right after buying an upgrade.
   var BUY_LINES = [
     { es: 'Por fin. Ya me cansaba de hacerlo yo misma.', en: 'Finally. I was tired of doing this myself.' },
     { es: 'Una inversión inteligente, la verdad.', en: 'A smart investment, honestly.' },
@@ -109,24 +90,8 @@
     { es: 'Ahora sí. Empecemos de verdad.', en: 'Now, yes. Now we truly begin.' }
   ];
 
-  // Add another tier by adding another entry here — unlockAt is measured
-  // in total Spotlight ever earned, baseCost/costMultiplier control the
-  // classic "each purchase costs ~15% more" idle-game curve, and
-  // ratePerMinute is per single owned copy of that upgrade. Cost and
-  // rate both scale up roughly 6x per tier, same shape as most idle games.
-  // `kind` decides which shop section an upgrade renders in and which
-  // effect it has: 'building' adds passive ratePerMinute, 'click' adds
-  // flat clickBonus to every manual click, 'discount' multiplies the
-  // cost of every 'building' purchase by (1 - discountPerOwn) per copy
-  // owned, capped at maxOwned so it can't approach free.
-  // Grouped by kind (all Production together, all Preparation-click
-  // together, etc.) rather than by when each tier was added — the shop
-  // renders in this exact array order per section (see
-  // renderShopSection), so upgrades of the same kind physically sitting
-  // apart here meant scrolling back and forth between related tiers in
-  // the actual list.
   var UPGRADES = [
-    // --- Production (passive rate) --------------------------------------
+
     {
       id: 'sigh',
       kind: 'building',
@@ -207,10 +172,7 @@
       costMultiplier: 1.18,
       ratePerMinute: 260000
     },
-    // --- post-Sequel Production: requires at least 1 Legacy point to even
-    // see. Picks up right where the pre-prestige tiers left off in both
-    // cost and rate, so a fresh Sequel run still has somewhere to grow
-    // past Cinematic Universe once it's earned enough again.
+
     {
       id: 'worldTour',
       kind: 'building',
@@ -222,8 +184,7 @@
       ratePerMinute: 1600000,
       minPrestige: 1
     },
-    // Passive income kept going stale by mid-late game too — these three
-    // keep the curve meaningful well past World Tour.
+
     {
       id: 'franchiseDeal',
       kind: 'building',
@@ -257,10 +218,7 @@
       ratePerMinute: 700000000,
       minPrestige: 1
     },
-    // --- minPrestige: 3 — a second Legacy-gated tier, past the first
-    // Sequel's own tier above. Everything so far only ever asked for one
-    // prestige; this is the first thing that actually rewards going
-    // multiple runs deep instead of just banking Legacy passively.
+
     {
       id: 'globalDistribution',
       kind: 'building',
@@ -273,7 +231,6 @@
       minPrestige: 3
     },
 
-    // --- Preparation (click power) ---------------------------------------
     {
       id: 'confidence',
       kind: 'click',
@@ -334,7 +291,7 @@
       costMultiplier: 1.21,
       clickBonus: 2200
     },
-    // --- post-Sequel Preparation, same deal as post-Sequel Production above.
+
     {
       id: 'legendStatus',
       kind: 'click',
@@ -390,7 +347,7 @@
       clickBonus: 25000000,
       minPrestige: 1
     },
-    // Same minPrestige: 3 deal as Global Distribution Deal above.
+
     {
       id: 'methodBeyondMethod',
       kind: 'click',
@@ -402,10 +359,7 @@
       clickBonus: 180000000,
       minPrestige: 3
     },
-    // A flat multiplier on top of everything else clickPower() already
-    // adds up (base + every clickBonus upgrade above) — unlike those, this
-    // doesn't have its own number, it just makes the total hit harder.
-    // Grouped here with the rest of click power rather than off on its own.
+
     {
       id: 'starPower',
       kind: 'clickPowerMult',
@@ -418,7 +372,6 @@
       maxOwned: 10
     },
 
-    // --- cost discounts ---------------------------------------------------
     {
       id: 'connections',
       kind: 'discount',
@@ -444,7 +397,6 @@
       maxOwned: 10
     },
 
-    // --- critical clicks ---------------------------------------------------
     {
       id: 'timing',
       kind: 'critChance',
@@ -457,7 +409,6 @@
       maxOwned: 10
     },
 
-    // --- paparazzi event ---------------------------------------------------
     {
       id: 'paparazzi',
       kind: 'paparazzi',
@@ -504,9 +455,7 @@
       multiplierBonus: 2,
       maxOwned: 5
     },
-    // Passive income normally ignores the paparazzi window entirely (it's
-    // built around manual clicks) — this makes it benefit too, automatically,
-    // no clicking required. See the passive-tick interval below.
+
     {
       id: 'publicist',
       kind: 'paparazziPassive',
@@ -518,8 +467,7 @@
       costMultiplier: 1,
       maxOwned: 1
     },
-    // Stretches the 5-second window itself rather than the payout —
-    // more time to actually land clicks during it.
+
     {
       id: 'extendedCut',
       kind: 'paparazziDuration',
@@ -533,11 +481,6 @@
       maxOwned: 5
     },
 
-    // --- other post-Sequel-only upgrades ------------------------------------
-    // Spends Spotlight (not Legacy) to permanently boost the per-point
-    // Legacy bonus itself — a multiplier on the multiplier, so it's most
-    // valuable the more Legacy is already banked. Requires having
-    // prestiged at least once, same as the rest of this tier.
     {
       id: 'directorsCut',
       kind: 'legacyMult',
@@ -550,8 +493,7 @@
       maxOwned: 10,
       minPrestige: 1
     },
-    // Stacks with Director's Cut — minPrestige: 3, same second tier as
-    // the two above.
+
     {
       id: 'auteurStatus',
       kind: 'legacyMult',
@@ -564,10 +506,7 @@
       maxOwned: 10,
       minPrestige: 3
     },
-    // Extends how long an absence can be credited for offline gains (see
-    // OFFLINE_CAP_MS) — the 12h base cap is a deliberate anti-exploit
-    // limit, not a technical one, so it's fair game to buy past. Not
-    // actually Legacy-gated (minPrestige unset) — unlike the above.
+
     {
       id: 'standingArrangement',
       kind: 'offlineCap',
@@ -581,15 +520,6 @@
     }
   ];
 
-  // A skill tree spent in Legacy points themselves rather than Spotlight
-  // — bought with doPrestige()'s payout, on top of (not instead of) the
-  // usual +2%/point passive bonus. Unspent points still sit in the
-  // Legacy counter earning that bonus as always; spending them here
-  // converts some of them into a specific permanent buff instead, on top
-  // of whatever bonus the ones you keep are still generating. Costs are
-  // small flat integers (this is a few-points-per-prestige currency, not
-  // a Spotlight-scale one) — no cost curve/discount interactions with
-  // the regular shop at all.
   var LEGACY_SKILLS = [
     {
       id: 'encore',
@@ -645,8 +575,7 @@
       freqReduction: 0.08,
       maxOwned: 5
     },
-    // Starts each new run with a head start instead of a hard zero —
-    // applied once, right when startNewRun() actually resets Spotlight.
+
     {
       id: 'generationalWealth',
       kind: 'legacySkillStartingSpotlight',
@@ -656,9 +585,7 @@
       startingSpotlightBonus: 500,
       maxOwned: 5
     },
-    // The crit MULTIPLIER itself, not the chance — a lever nothing else
-    // in the game touches, so it stays meaningful even once crit chance
-    // is already near its practical ceiling.
+
     {
       id: 'iconic',
       kind: 'legacySkillCritMult',
@@ -668,8 +595,7 @@
       critMultBonus: 1,
       maxOwned: 5
     },
-    // A capstone, not a tier — expensive, one-time, meant to be a savings
-    // goal in its own right rather than something bought early and forgotten.
+
     {
       id: 'hallOfFame',
       kind: 'legacySkillClick',
@@ -681,13 +607,6 @@
     }
   ];
 
-  // Achievements are permanent once unlocked — checked against whatever
-  // the CURRENT run's state looks like, never re-evaluated after that.
-  // Each grants a small permanent multiplier (`bonusType` + `bonusValue`,
-  // applied in clickPower()/totalRatePerMinute()) on top of the badge, so
-  // completing them is a real (if minor) part of progression, not purely
-  // cosmetic. `check` reads live `state` — keep conditions cheap, they
-  // run every second.
   var ACHIEVEMENTS = [
     {
       id: 'firstClick',
@@ -823,11 +742,7 @@
       bonusValue: 0.1,
       check: function () { return state.prestigeCount >= 5; }
     },
-    // A meta-achievement — references ACHIEVEMENTS itself, which is fine
-    // since check() only actually runs (from checkAchievements(), every
-    // second) long after this whole array literal has finished
-    // evaluating, by which point the outer `ACHIEVEMENTS` binding it
-    // closes over is fully populated.
+
     {
       id: 'womanOfManyTalents',
       name: 'A Woman of Many Talents',
@@ -839,11 +754,7 @@
           .every(function (a) { return state.unlockedAchievements[a.id]; });
       }
     },
-    // Cookie Clicker's "Lucky!" — no state condition at all, just a coin
-    // flip re-rolled every second (checkAchievements() already runs
-    // check() once per second for every not-yet-unlocked achievement,
-    // so a random-odds check() gets "once per second" for free). Purely
-    // luck-based, same as the real thing.
+
     {
       id: 'lucky',
       name: 'Lucky',
@@ -874,23 +785,6 @@
   UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
   LEGACY_SKILLS.forEach(function (s) { state.legacySkills[s.id] = 0; });
   loadSave();
-  // Loading real save data happens THIS early — immediately, right after
-  // `state` exists — on purpose, before any of the hundred-plus
-  // .addEventListener/DOM-wiring calls later in this file get a chance
-  // to run. This function is a hoisted declaration, so calling it before
-  // its own text appears below is fine. The reason: if a future deploy
-  // ever serves a stale cached copy of this script against a newer
-  // index.html (a real, repeatedly-observed failure mode with this
-  // site's hosting — element IDs get renamed/removed across commits),
-  // some later line here WILL throw a null-reference error and halt the
-  // rest of this script's execution. Previously that meant loadSave()
-  // (called at the very bottom) never ran at all — `state` stayed at
-  // its all-zero defaults, and the very next autosave (the 5s interval,
-  // a click, backgrounding the tab) permanently overwrote the player's
-  // real save with those zeros. Loading first means a later crash can
-  // still break some feature's wiring, but it can no longer destroy
-  // anyone's progress — whatever `state` holds in memory by the time
-  // anything gets saved is already their real data, correct or not.
 
   function loadSave() {
     try {
@@ -899,9 +793,7 @@
       var parsed = JSON.parse(raw);
       if (typeof parsed.spotlight === 'number') state.spotlight = parsed.spotlight;
       if (typeof parsed.totalEarned === 'number') state.totalEarned = parsed.totalEarned;
-      // Backfill for saves from before lifetimeEarned existed: best
-      // guess is at least this run's total (can't recover prior runs'
-      // totals, but it should never show less than what's visibly true).
+
       state.lifetimeEarned = state.totalEarned;
       if (typeof parsed.lifetimeEarned === 'number') state.lifetimeEarned = parsed.lifetimeEarned;
       if (typeof parsed.reducedEffects === 'boolean') state.reducedEffects = parsed.reducedEffects;
@@ -920,9 +812,7 @@
       if (parsed.unlockedAchievements) {
         ACHIEVEMENTS.forEach(function (a) {
           if (parsed.unlockedAchievements[a.id]) {
-            // Saves from before this tracked timestamps just have `true` —
-            // keep that as-is (still counts as unlocked, just no known
-            // time) rather than fabricating a fake "unlocked right now".
+
             state.unlockedAchievements[a.id] = parsed.unlockedAchievements[a.id];
           }
         });
@@ -937,7 +827,7 @@
           if (typeof parsed.legacySkills[s.id] === 'number') state.legacySkills[s.id] = parsed.legacySkills[s.id];
         });
       }
-    } catch (e) { /* corrupt or missing save — just start fresh */ }
+    } catch (e) {  }
   }
 
   function save() {
@@ -945,10 +835,6 @@
     localStorage.setItem(SAVE_KEY, JSON.stringify(state));
   }
 
-  // --- Legacy skill tree ------------------------------------------------
-  // Bought with Legacy points themselves (see LEGACY_SKILLS above), not
-  // Spotlight — separate `state.legacySkills` tracker, separate `cost`
-  // field (a flat integer, not upgradeCost()'s curve).
   function legacySkillCost(s) {
     return s.cost;
   }
@@ -965,8 +851,7 @@
     renderPrestige();
     renderCount();
     refreshShopAffordability();
-    // Keep the running total in the Between Runs summary in sync as
-    // points get spent, not just the number shown at the moment it opened.
+
     if (!betweenRunsOverlayEl.hidden) betweenRunsSummaryEl.textContent = formatNumber(state.legacy) + ' Legacy remaining.';
   }
 
@@ -1024,10 +909,6 @@
     }, 0);
   }
 
-  // `target` picks which upgrade kind a discount applies to — 'building'
-  // for Producer Connections, 'click' for Acting Coach. Each is computed
-  // independently so they never affect each other's costs. Old Pro (the
-  // Legacy skill) applies on top of both, regardless of target.
   function discountFactor(target) {
     var factor = legacySkillDiscountFactor();
     UPGRADES.forEach(function (u) {
@@ -1060,7 +941,7 @@
   function clickPower() {
     var base = UPGRADES.reduce(function (sum, u) {
       return u.kind === 'click' ? sum + state.owned[u.id] * u.clickBonus : sum;
-    }, 1) + legacySkillClickBonus(); // base of 1 per click, plus Encore's flat bonus
+    }, 1) + legacySkillClickBonus();
     return base * starPowerMultiplier() * achievementBonusMultiplier('clickPower');
   }
 
@@ -1072,15 +953,10 @@
     }, CRIT_CHANCE_BASE) + legacySkillCritBonus();
   }
 
-  // --- paparazzi event ---------------------------------------------------
-  // A random ~5s window where manual clicks are worth several times
-  // normal. Dormant entirely until the base 'paparazzi' upgrade is
-  // bought; 'paparazziFreq' upgrades shorten the average wait between
-  // visits, 'paparazziMult' upgrades raise the payout multiplier.
   var PAPARAZZI_WINDOW_MS = 5000;
   var PAPARAZZI_BASE_MULTIPLIER = 5;
   var PAPARAZZI_MIN_WAIT_MS = 40000;
-  var PAPARAZZI_WAIT_RANGE_MS = 40000; // baseline wait: 40-80s, before frequency upgrades shrink it
+  var PAPARAZZI_WAIT_RANGE_MS = 40000;
   var PAPARAZZI_LINES = [
     { es: '¡Los paparazzi! ¡Que no se escape la mejor foto!', en: 'The paparazzi! Get the shot while it lasts!' },
     { es: '¡Mi fan más grande ha llegado!', en: 'My biggest fan has arrived!' },
@@ -1113,7 +989,7 @@
 
   function schedulePaparazzi() {
     clearTimeout(paparazziTimer);
-    if (state.owned.paparazzi <= 0) return; // not unlocked
+    if (state.owned.paparazzi <= 0) return;
     var wait = (PAPARAZZI_MIN_WAIT_MS + Math.random() * PAPARAZZI_WAIT_RANGE_MS) * paparazziFreqFactor();
     paparazziTimer = setTimeout(triggerPaparazzi, wait);
   }
@@ -1143,21 +1019,8 @@
     paparazziBadgeEl.hidden = true;
   }
 
-  // --- prestige ("The Sequel") -------------------------------------------
-  // Legacy is permanent — it survives this reset (unlike the plain Reset
-  // button, which wipes everything including Legacy) and its bonus
-  // applies to every future run. Gained amount uses a square-root curve
-  // so it takes quadratically more lifetime total for each extra point,
-  // the standard shape for a prestige currency. Any upgrade added after
-  // this point should set `minPrestige: N` to require N Legacy ever
-  // earned before it's purchasable — see the check in renderShopSection.
   var LEGACY_DIVISOR = 1000000;
-  // Each completed prestige raises the divisor by 50% of the base, so
-  // the same Legacy payout costs progressively more totalEarned every
-  // time — first prestige (prestigeCount 0) is unaffected, second costs
-  // 1.5x, third 2x, and so on. Without this, an auto-clicker (or just
-  // getting good at the early game) can chain prestiges far faster than
-  // intended, since totalEarned resets but the base threshold never grew.
+
   var LEGACY_DIVISOR_GROWTH_PER_PRESTIGE = 0.5;
 
   function legacyDivisor() {
@@ -1183,11 +1046,6 @@
     }
   }
 
-  // Prestiging is now two steps: doPrestige() banks the Legacy gain and
-  // opens the "Between Runs" screen (the ONLY place the Legacy skill
-  // shop is reachable — see renderLegacyShop()/legacyShopEl), and
-  // startNewRun() (triggered by that screen's own button) actually
-  // performs the run wipe once they're done spending.
   function doPrestige() {
     var gain = legacyGainPreview();
     if (gain < 1) return;
@@ -1209,9 +1067,7 @@
     var keepReducedEffects = state.reducedEffects;
     var keepShorthandNumbers = state.shorthandNumbers;
     var keepColorfulText = state.colorfulText;
-    // Lifetime stats (play time, clicks, offline earnings) are about the
-    // save file as a whole, not any one run — they survive a prestige the
-    // same way Legacy does, unlike Spotlight/totalEarned/owned.
+
     var keepPlayTimeMs = state.playTimeMs;
     var keepTotalClicks = state.totalClicks;
     var keepTotalCrits = state.totalCrits;
@@ -1220,18 +1076,15 @@
     var keepUnlockedAchievements = state.unlockedAchievements;
     var keepPaparazziEventsSeen = state.paparazziEventsSeen;
     var keepOfflineClaimsCount = state.offlineClaimsCount;
-    var keepPrestigeCount = state.prestigeCount + 1; // this run wipe IS the prestige completing
-    // Both the Legacy total (gain already applied in doPrestige) and
-    // whatever skills were just bought on the Between Runs screen carry
-    // over into the new run.
+    var keepPrestigeCount = state.prestigeCount + 1;
+
     var keepLegacy = state.legacy;
     var keepLegacySkills = state.legacySkills;
     cancelPaparazzi();
     state = { spotlight: 0, totalEarned: 0, lifetimeEarned: keepLifetimeEarned, owned: {}, legacySkills: keepLegacySkills, reducedEffects: keepReducedEffects, legacy: keepLegacy, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: keepPlayTimeMs, totalClicks: keepTotalClicks, totalCrits: keepTotalCrits, totalOfflineEarned: keepTotalOfflineEarned, paparazziEventsSeen: keepPaparazziEventsSeen, offlineClaimsCount: keepOfflineClaimsCount, prestigeCount: keepPrestigeCount, unlockedAchievements: keepUnlockedAchievements };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     LEGACY_SKILLS.forEach(function (s) { if (typeof state.legacySkills[s.id] !== 'number') state.legacySkills[s.id] = 0; });
-    // Generational Wealth: start the new run with a head start instead
-    // of a hard zero, if bought.
+
     state.spotlight = legacySkillStartingSpotlightBonus();
     save();
     lastLine = null;
@@ -1245,20 +1098,11 @@
   prestigeBtn.addEventListener('click', doPrestige);
   startNewRunBtn.addEventListener('click', startNewRun);
 
-  // Plain comma-formatted under 10,000 (still easy to read at a glance);
-  // abbreviated with a K/M/B/T suffix above that, where the full digit
-  // count starts getting unwieldy — trims trailing zeros so "1.00M"
-  // shows as "1M" but "1.25M" keeps its precision. The Shorthand
-  // Numbers setting can turn the abbreviation off entirely.
   function formatNumber(n) {
     n = Math.floor(n);
     var abs = Math.abs(n);
     if (abs < 10000 || !state.shorthandNumbers) return n.toLocaleString();
-    // Capped at Trillion before — a long-idle save can genuinely blow
-    // past that (compounding passive income + upgrades), which just
-    // showed as an ugly "10,944.93T" instead of rolling over. Extended
-    // with the standard short-scale names, generous headroom past
-    // anything remotely reachable right now.
+
     var units = [
       [1e42, 'Td'], [1e39, 'Dd'], [1e36, 'Ud'], [1e33, 'Dc'], [1e30, 'No'],
       [1e27, 'Oc'], [1e24, 'Sp'], [1e21, 'Sx'], [1e18, 'Qi'], [1e15, 'Qa'],
@@ -1275,13 +1119,7 @@
 
   function renderCount() {
     countEl.textContent = formatNumber(state.spotlight);
-    // totalRatePerMinute()/clickPower() don't include the Legacy bonus —
-    // earnSpotlight() applies it separately, at the moment income
-    // actually lands, so every source (clicks, crits, paparazzi, passive)
-    // gets it from one place instead of each having to remember to. That
-    // means these previews need to multiply it back in themselves, or
-    // they'd quietly undersell the real per-click/per-minute gain to
-    // anyone sitting on Legacy points.
+
     var rate = totalRatePerMinute() * legacyMultiplier();
     if (rate > 0) {
       rateEl.hidden = false;
@@ -1298,9 +1136,9 @@
     UPGRADES.forEach(function (u) {
       if (kinds.indexOf(u.kind) === -1) return;
       var owned = state.owned[u.id];
-      if (state.totalEarned < u.unlockAt && owned === 0) return; // not unlocked yet
-      if (u.requires && state.owned[u.requires] === 0) return; // prerequisite not owned yet
-      if ((u.minPrestige || 0) > state.legacy) return; // needs Legacy from a past Sequel
+      if (state.totalEarned < u.unlockAt && owned === 0) return;
+      if (u.requires && state.owned[u.requires] === 0) return;
+      if ((u.minPrestige || 0) > state.legacy) return;
       var maxedOut = u.maxOwned && owned >= u.maxOwned;
 
       var cost = upgradeCost(u);
@@ -1341,10 +1179,6 @@
     });
   }
 
-  // Mirrors renderShopSection's markup/classes for a consistent look, but
-  // simpler: no unlockAt/requires/minPrestige gating, and cost/currency
-  // are Legacy points via legacySkillCost()/state.legacy instead of
-  // upgradeCost()/state.spotlight.
   function renderLegacyShop() {
     legacyShopEl.innerHTML = '';
     LEGACY_SKILLS.forEach(function (s) {
@@ -1392,10 +1226,7 @@
   function renderShop() {
     renderShopSection(shopEl, ['building']);
     renderShopSection(boostShopEl, ['click', 'clickPowerMult', 'discount', 'critChance', 'paparazzi', 'paparazziFreq', 'paparazziMult', 'paparazziPassive', 'paparazziDuration', 'legacyMult', 'offlineCap']);
-    // The shop's height just potentially changed (an upgrade unlocked,
-    // maxed out, etc.) — the pinned column's floor depends on where the
-    // shop column's bottom edge actually is, so re-measure it. No-op
-    // before the pin machinery further down the file has initialized.
+
     if (typeof updatePinnedLayout === 'function' && spotlightLeftEl) updatePinnedLayout();
   }
 
@@ -1404,19 +1235,10 @@
     return null;
   }
 
-  // How many upgrades are currently visible in the shop (unlocked, or
-  // already owned) — used to detect whether the passive-income tick
-  // needs a full rebuild (something just unlocked) or can get away
-  // with the cheaper in-place refresh below.
   function unlockedCount() {
     return UPGRADES.filter(function (u) { return state.totalEarned >= u.unlockAt || state.owned[u.id] > 0; }).length;
   }
 
-  // Updates existing buttons' disabled/cost/owned text without touching
-  // the DOM nodes themselves — the full rebuild in renderShopSection
-  // was running 4x/second off the passive-income tick, which meant a
-  // rapid click could land right as its target button got torn down
-  // and replaced, silently eating the click.
   function refreshShopAffordability() {
     [shopEl, boostShopEl].forEach(function (container) {
       Array.prototype.forEach.call(container.querySelectorAll('.spotlight-upgrade'), function (btn) {
@@ -1441,30 +1263,17 @@
     var beforeUnlocked = unlockedCount();
     state.spotlight -= cost;
     state.owned[u.id] += 1;
-    if (u.id === 'paparazzi') schedulePaparazzi(); // first purchase starts the event loop
+    if (u.id === 'paparazzi') schedulePaparazzi();
     if (Math.random() < 0.4) showLine(BUY_LINES[Math.floor(Math.random() * BUY_LINES.length)]);
     checkAchievements();
     save();
     renderCount();
-    // Rebuild only if this purchase crossed an unlock threshold — a full
-    // rebuild (innerHTML='') tears down and recreates every button,
-    // including the one just tapped. On mobile that mid-tap DOM swap
-    // makes the browser lose track of what was focused and auto-scroll
-    // the list back toward the middle of the viewport — exactly the
-    // "scrolls to the middle after buying" report. In-place updates
-    // (already used for the passive-income tick, same reasoning) don't
-    // touch the DOM nodes at all, so there's nothing for the browser to
-    // lose its place over.
+
     if (unlockedCount() !== beforeUnlocked) renderShop();
     else refreshShopAffordability();
     renderPrestige();
   }
 
-  // Her four face colors (the portrait's red circle, blue rectangle,
-  // gold accent, green triangle) — each word of her dialogue gets one
-  // at random, reassigned fresh whenever the line changes (not on every
-  // render, or it'd flicker/reshuffle constantly while the same line
-  // sits on screen).
   var AP_WORD_COLORS = ['#bd1b0d', '#132DB4', '#e3a94e', '#077c0c'];
 
   function renderBubbleLine(el, text) {
@@ -1515,10 +1324,6 @@
     setTimeout(function () { el.remove(); }, 900);
   }
 
-  // Permanent, from past prestiges — +2% to every source of income
-  // (clicks, crits, paparazzi, passive) per Legacy point, forever. The
-  // per-point rate itself can be boosted further by 'legacyMult' upgrades
-  // (Director's Cut), each a post-Sequel-only multiplier on this rate.
   var LEGACY_BONUS_PER_POINT = 0.02;
 
   function legacyBonusRate() {
@@ -1533,33 +1338,22 @@
     return 1 + state.legacy * legacyBonusRate();
   }
 
-  // The single place income actually lands in spotlight/totalEarned —
-  // applies the Legacy bonus once, here, so every earning path (click,
-  // crit, paparazzi, passive tick) gets it automatically instead of
-  // needing to remember to multiply it in separately. Returns the final
-  // (post-bonus) amount so callers can display the real number earned.
   var MILLION_MILESTONE = 1000000;
 
   function earnSpotlight(rawAmount) {
     var amount = rawAmount * legacyMultiplier();
     state.spotlight += amount;
-    state.totalEarned += amount; // this run only — resets on prestige, feeds the Legacy gain calc
-    state.lifetimeEarned += amount; // never resets on prestige, only on a full Reset
+    state.totalEarned += amount;
+    state.lifetimeEarned += amount;
     if (!state.seenMillion && state.totalEarned >= MILLION_MILESTONE) {
-      state.seenMillion = true; // marks the moment as "happened" even if Reduce Effects hides the visual
+      state.seenMillion = true;
       spawnConfettiBurst();
     }
     return amount;
   }
 
-  // --- offline gains -------------------------------------------------
-  // Passive Production keeps "earning" while the tab's closed, credited
-  // in one lump sum on return. Capped so leaving it closed for a week
-  // isn't a free-money exploit, and skipped entirely below a minimum gap
-  // so a quick page refresh doesn't pop a modal for a few seconds' worth
-  // of Spotlight.
-  var OFFLINE_CAP_BASE_MS = 12 * 60 * 60 * 1000; // 12 hours max credited, before Standing Arrangement
-  var OFFLINE_MIN_MS = 60 * 1000; // ignore gaps under a minute
+  var OFFLINE_CAP_BASE_MS = 12 * 60 * 60 * 1000;
+  var OFFLINE_MIN_MS = 60 * 1000;
 
   function offlineCapMs() {
     var bonusHours = UPGRADES.reduce(function (sum, u) {
@@ -1602,9 +1396,6 @@
 
   var CRIT_MULTIPLIER_BASE = 10;
 
-  // Iconic (Legacy skill) adds flat +1x per copy on top of the base 10x —
-  // a lever nothing else in the game touches, kept separate from
-  // critChance() (which controls how OFTEN, not how hard).
   function critMultiplier() {
     return CRIT_MULTIPLIER_BASE + legacySkillCritMultBonus();
   }
@@ -1618,20 +1409,13 @@
     if (isCrit) showLine(CRIT_LINES[Math.floor(Math.random() * CRIT_LINES.length)]);
     else showQuote();
     portraitEl.classList.remove('is-clicked');
-    void portraitEl.offsetWidth; // restart the pop animation if it's mid-run
+    void portraitEl.offsetWidth;
     portraitEl.classList.add('is-clicked');
     var point = e.touches && e.touches[0] ? e.touches[0] : e;
     spawnFloatingPlusOne(point.clientX, point.clientY, amount, isCrit);
     checkAchievements();
     renderCount();
-    // Same reasoning as buyUpgrade(): only rebuild the shop DOM (which
-    // also re-runs the pin positioning) if this click actually crossed
-    // an unlock threshold. Rebuilding on every single tap — which is
-    // what "a click can be what crosses an unlock threshold" led to
-    // before — meant tapping her at all triggered the exact same
-    // mid-interaction DOM-replacement/scroll-jump bug buying an upgrade
-    // had, just far more often since it fired on every click instead of
-    // only on purchases.
+
     if (unlockedCount() !== beforeUnlockedClick) renderShop();
     else refreshShopAffordability();
     renderPrestige();
@@ -1646,12 +1430,10 @@
       '(Reset does not keep Legacy — The Sequel does, if that\'s what you meant to do instead).'
     );
     if (!confirmed) return;
-    var keepReducedEffects = state.reducedEffects; // a display preference, not progress — survives Reset
+    var keepReducedEffects = state.reducedEffects;
     var keepShorthandNumbers = state.shorthandNumbers;
     var keepColorfulText = state.colorfulText;
-    // Unlike prestiging, the plain Reset button is a full wipe — Legacy
-    // included. It's the "start completely over" button; The Sequel is
-    // the one that keeps Legacy around.
+
     state = { spotlight: 0, totalEarned: 0, lifetimeEarned: 0, owned: {}, legacySkills: {}, reducedEffects: keepReducedEffects, legacy: 0, shorthandNumbers: keepShorthandNumbers, colorfulText: keepColorfulText, seenMillion: false, lastSeen: Date.now(), playTimeMs: 0, totalClicks: 0, totalCrits: 0, totalOfflineEarned: 0, paparazziEventsSeen: 0, offlineClaimsCount: 0, prestigeCount: 0, unlockedAchievements: {} };
     UPGRADES.forEach(function (u) { state.owned[u.id] = 0; });
     LEGACY_SKILLS.forEach(function (s) { state.legacySkills[s.id] = 0; });
@@ -1669,26 +1451,18 @@
     shopEl.hidden = tab !== 'production';
     tabBoostBtn.classList.toggle('is-active', tab === 'boost');
     tabProductionBtn.classList.toggle('is-active', tab === 'production');
-    // Preparation/Production can be very different lengths — the pinned
-    // column's floor needs to know the newly-visible list's real height.
+
     if (typeof updatePinnedLayout === 'function' && spotlightLeftEl) updatePinnedLayout();
   }
   tabBoostBtn.addEventListener('click', function () { setTab('boost'); });
   tabProductionBtn.addEventListener('click', function () { setTab('production'); });
 
-  // --- ambient fame effects ---------------------------------------------
-  // Purely decorative — confetti and bouquets get more frequent as her
-  // lifetime total climbs, plus camera flashes at the highest tier.
-  // Camera flashes are the one effect the "Reduce Effects" toggle
-  // suppresses entirely — they're the only flashing effect here, so
-  // that's the actual photosensitivity concern; confetti/flowers keep
-  // going either way since they don't strobe.
   var FX_TYPES = {
     confetti: { emojis: ['🎉', '🎊', '✨'] },
     flower: { emojis: ['💐', '🌹', '🌸'] },
     camera: { emojis: ['📷', '📸'] }
   };
-  var FX_TIER_CHANCE = [0, 0.15, 0.25, 0.35, 0.5]; // indexed by fameTier()
+  var FX_TIER_CHANCE = [0, 0.15, 0.25, 0.35, 0.5];
 
   function fameTier() {
     if (state.totalEarned >= 100000) return 4;
@@ -1728,12 +1502,6 @@
 
   setInterval(maybeSpawnFx, 1200);
 
-  // --- million-Spotlight confetti burst -----------------------------
-  // A bigger, viewport-wide moment distinct from the small ambient FX
-  // above — real SVG confetti scraps blasting in from off-screen edges,
-  // easing toward center, then drifting down and off the bottom.
-  // Fires once guaranteed at the 1,000,000 milestone (see earnSpotlight),
-  // then only very rarely afterward. Fully suppressed by Reduce Effects.
   var CONFETTI_COLORS = ['#e74c3c', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#e67e22', '#ff6fae', '#1abc9c'];
   var CONFETTI_PIECE_COUNT = 36;
   var CONFETTI_SVG_NS = 'http://www.w3.org/2000/svg';
@@ -1760,20 +1528,7 @@
     return svg;
   }
 
-  // Real physics, computed continuously every frame instead of stitched
-  // CSS keyframes — no hand-authored waypoint for velocity to
-  // discontinuously reset at. Two things layered on top of plain
-  // projectile motion to make it read as a paper-confetti *burst*
-  // instead of a steady stream shooting out of a hose:
-  //   1. Horizontal (and the initial vertical kick) velocity decays with
-  //      drag — a closed-form exponential — so pieces launch fast and
-  //      ease OUT as they slow, rather than cruising at constant speed
-  //      forever. v(t) = v0 * e^(-k*t); position is the integral of that.
-  //   2. The fall settles into a gentle terminal velocity (drag balances
-  //      gravity) instead of accelerating forever like heavy rain, plus a
-  //      slow side-to-side sine sway — that's what reads as "floaty"
-  //      paper drifting down instead of a stream of drops.
-  var CONFETTI_TERMINAL_VY = 14; // vh/s — gentle drifting-down speed, not a plummet
+  var CONFETTI_TERMINAL_VY = 14;
   var confettiPieces = [];
   var confettiRafId = null;
 
@@ -1784,30 +1539,18 @@
       p = confettiPieces[i];
       if (!p.node) continue;
       t = (now - p.start) / 1000;
-      if (t < 0) { stillActive = true; continue; } // hasn't launched yet (delay)
+      if (t < 0) { stillActive = true; continue; }
 
       var x, y;
       if (p.gravity) {
-        // Original plain-projectile-motion easter-egg pieces: constant
-        // horizontal velocity, real constant downward acceleration.
-        // x = x0 + vx*t, y = y0 + vy0*t + 0.5*g*t^2 — the exact formula
-        // from the first rAF rewrite (commit 07ee1a9), kept byte-for-byte
-        // since that's specifically the version that got a laugh.
+
         x = p.x0 + p.vx * t;
         y = p.y0 + p.vy0 * t + 0.5 * CONFETTI_STREAM_GRAVITY * t * t;
       } else {
-        // Horizontal: pure drag decay — eases out from the launch speed
-        // toward a standstill, integral of v0*e^(-k*t). Each piece carries
-        // its own drag constant (see spawnConfettiBurst) instead of one
-        // shared value, so 36 pieces don't all finish slowing down at the
-        // same instant — that synchronized stop was what read as "one
-        // condensed batch" no matter how the single constant was tuned.
+
         var xDecay = (1 - Math.exp(-p.drag * t)) / p.drag;
         x = p.x0 + p.vx0 * xDecay + p.swayAmp * Math.sin(t * p.swayFreq + p.swayPhase);
 
-        // Vertical: eases from the launch kick toward a gentle terminal
-        // fall speed instead of accelerating without limit — the integral
-        // of vTerm + (v0 - vTerm)*e^(-k*t).
         var yDecay = (1 - Math.exp(-p.fallDrag * t)) / p.fallDrag;
         y = p.y0 + p.vyTerm * t + (p.vy0 - p.vyTerm) * yDecay;
       }
@@ -1837,12 +1580,8 @@
   function spawnConfettiBurst(force) {
     if (state.reducedEffects && !force) return;
 
-    // One shared origin per burst, live on a random viewport edge — a
-    // confetti-cannon shot, not pieces independently converging on center.
-    // Coordinates are offsets from viewport CENTER (the piece's own
-    // left:50%/top:50% base), so ±50 on either axis reaches that edge.
-    var edge = Math.floor(Math.random() * 4); // 0 left, 1 right, 2 top, 3 bottom
-    var originX, originY, outX, outY; // outX/outY: direction the cone points
+    var edge = Math.floor(Math.random() * 4);
+    var originX, originY, outX, outY;
     if (edge === 0) { originX = -50; originY = Math.random() * 100 - 50; outX = 1; outY = 0; }
     else if (edge === 1) { originX = 50; originY = Math.random() * 100 - 50; outX = -1; outY = 0; }
     else if (edge === 2) { originX = Math.random() * 100 - 50; originY = -50; outX = 0; outY = 1; }
@@ -1855,12 +1594,6 @@
       var node = makeConfettiPiece(color, Math.random() < 0.5);
       confettiLayerEl.appendChild(node);
 
-      // Launch speed along the cone direction, plus a much wider
-      // perpendicular spread component — this decays via each piece's
-      // own drag (see stepConfetti), so it's a punchy initial burst that
-      // eases out, not a constant-speed stream, and the wide spread
-      // fans pieces out across most of the screen instead of a narrow
-      // clump.
       var speed = 80 + Math.random() * 90;
       var spreadSpeed = (Math.random() * 140 - 70);
       var vx0, vy0;
@@ -1873,18 +1606,16 @@
         y0: originY,
         vx0: vx0,
         vy0: vy0,
-        drag: 1.2 + Math.random() * 2.2, // per-piece, so decel isn't synchronized across the batch
+        drag: 1.2 + Math.random() * 2.2,
         fallDrag: 0.7 + Math.random() * 1.0,
-        vyTerm: CONFETTI_TERMINAL_VY + Math.random() * 8, // gentle drift, slight variance so pieces don't fall in lockstep
+        vyTerm: CONFETTI_TERMINAL_VY + Math.random() * 8,
         swayAmp: 2 + Math.random() * 5,
         swayFreq: 1.2 + Math.random() * 1.6,
         swayPhase: Math.random() * Math.PI * 2,
         rot0: Math.random() * 360,
         rotSpeed: (Math.random() * 200 - 100),
         lifetime: 3.2 + Math.random() * 1.2,
-        // Nearly-simultaneous launch (small stagger just to avoid a
-        // perfectly robotic pop) — a real burst goes off all at once,
-        // not trickling out over half a second like a stream.
+
         start: now + Math.random() * 90
       });
     }
@@ -1894,15 +1625,8 @@
     }
   }
 
-  // A little Easter egg: the exact confetti physics from the first rAF
-  // rewrite (commit 07ee1a9) — plain constant-velocity-plus-gravity
-  // projectile motion with a wide random launch delay, which in
-  // practice reads as a slow, narrow, continuous stream rather than a
-  // punchy burst. A friend found it hilarious, so it's kept around as a
-  // rare thing you can only stumble into by mashing the Blow Confetti
-  // button — never on the real milestone/sporadic bursts.
-  var CONFETTI_STREAM_GRAVITY = 220; // vh/s^2 — same value as 07ee1a9
-  var CONFETTI_STREAM_PIECE_COUNT = CONFETTI_PIECE_COUNT * 2; // twice the confetti
+  var CONFETTI_STREAM_GRAVITY = 220;
+  var CONFETTI_STREAM_PIECE_COUNT = CONFETTI_PIECE_COUNT * 2;
   function spawnConfettiStream() {
     var edge = Math.floor(Math.random() * 4);
     var originX, originY, outX, outY;
@@ -1933,8 +1657,8 @@
         vy0: vy0,
         rot0: Math.random() * 360,
         rotSpeed: (Math.random() * 240 - 120),
-        lifetime: 5.2 + Math.random() * 2.0, // twice as long as the original 2.6-3.6s
-        start: now + Math.random() * 900 // twice the launch stagger, so it trickles twice as long
+        lifetime: 5.2 + Math.random() * 2.0,
+        start: now + Math.random() * 900
       });
     }
 
@@ -1943,8 +1667,6 @@
     }
   }
 
-  // Very sporadic after the first guaranteed burst — low chance, checked
-  // infrequently, so it reads as a rare treat rather than a repeating cycle.
   var CONFETTI_SPORADIC_CHANCE = 0.03;
   setInterval(function () {
     if (state.totalEarned < MILLION_MILESTONE) return;
@@ -1952,10 +1674,6 @@
     spawnConfettiBurst();
   }, 60000);
 
-  // --- stats panel ----------------------------------------------------
-  // Pure readout, no gameplay effect — everything here is recomputed
-  // live from state/the existing modifier functions rather than tracked
-  // separately, so it can never drift out of sync with the real numbers.
   function formatPercent(mult) {
     return (Math.round((mult - 1) * 1000) / 10) + '%';
   }
@@ -1971,8 +1689,7 @@
     statPaparazziEventsEl.textContent = state.paparazziEventsSeen.toLocaleString();
     statPrestigeCountEl.textContent = state.prestigeCount.toLocaleString();
     statLegacyMultEl.textContent = legacyMultiplier().toFixed(2) + 'x';
-    // Same Legacy-multiplier catch-up as renderCount() — clickPower()/
-    // totalRatePerMinute() don't include it themselves.
+
     statClickPowerEl.textContent = formatNumber(clickPower() * legacyMultiplier()) + ' / click';
     statRateEl.textContent = formatNumber(totalRatePerMinute() * legacyMultiplier()) + ' / min';
     statCritChanceEl.textContent = (Math.round(critChance() * 1000) / 10) + '%';
@@ -1985,41 +1702,34 @@
     statsPanelEl.hidden = !open;
     statsToggleBtn.setAttribute('aria-expanded', String(open));
     if (open) renderStats();
-    updatePinnedLayout(); // the panel lives inside the pinned column now — its height just changed
+    updatePinnedLayout();
   });
 
-  // Ticks every second the tab is actually visible — "time spent in tab"
-  // means genuinely looking at it, not just having it open in a
-  // background tab somewhere.
   setInterval(function () {
     if (!document.hidden) state.playTimeMs += 1000;
     if (!statsPanelEl.hidden) renderStats();
     checkAchievements();
   }, 1000);
 
-  // --- achievements -----------------------------------------------------
   var toastTimer = null;
   function showAchievementToast(name) {
     clearTimeout(toastTimer);
     achievementToastEl.textContent = '🏆 ' + name + ' unlocked!';
     achievementToastEl.hidden = false;
-    void achievementToastEl.offsetWidth; // force layout so the transition below actually animates
+    void achievementToastEl.offsetWidth;
     achievementToastEl.classList.add('is-shown');
     toastTimer = setTimeout(function () {
       achievementToastEl.classList.remove('is-shown');
-      setTimeout(function () { achievementToastEl.hidden = true; }, 350); // matches the CSS transition duration
+      setTimeout(function () { achievementToastEl.hidden = true; }, 350);
     }, 3000);
   }
 
-  // Runs every second (see the tick above) plus right after clicks/buys
-  // for snappier feedback. Only ever unlocks — never re-locks — so it's
-  // safe to call this often and cheaply.
   function checkAchievements() {
     var unlockedAny = false;
     ACHIEVEMENTS.forEach(function (a) {
       if (state.unlockedAchievements[a.id]) return;
       if (!a.check()) return;
-      state.unlockedAchievements[a.id] = Date.now(); // real timestamp, not just true — so idle unlocks (Lucky!) show when they actually happened
+      state.unlockedAchievements[a.id] = Date.now();
       unlockedAny = true;
       showAchievementToast(a.name);
     });
@@ -2055,9 +1765,7 @@
       info.appendChild(name);
       info.appendChild(desc);
       info.appendChild(bonus);
-      // Only real numeric timestamps get a date shown — saves from
-      // before this tracked timestamps just have a bare `true`, so
-      // there's genuinely no time to show for those.
+
       if (typeof state.unlockedAchievements[a.id] === 'number') {
         var unlockedAt = document.createElement('span');
         unlockedAt.className = 'spotlight-achievement-unlocked-at';
@@ -2098,7 +1806,7 @@
     save();
     renderNumberFormatToggle();
     renderCount();
-    refreshShopAffordability(); // re-formats every visible cost immediately
+    refreshShopAffordability();
   });
 
   function renderColorfulTextToggle() {
@@ -2109,7 +1817,7 @@
     state.colorfulText = !state.colorfulText;
     save();
     renderColorfulTextToggle();
-    renderQuote(lastLine || IDLE_LINE); // re-render whatever's currently on screen with the new setting
+    renderQuote(lastLine || IDLE_LINE);
   });
 
   settingsToggleBtn.addEventListener('click', function () {
@@ -2119,16 +1827,15 @@
     updatePinnedLayout();
   });
 
-  var CONFETTI_STREAM_CHANCE = 0.05; // easter egg, only reachable via this button
+  var CONFETTI_STREAM_CHANCE = 0.05;
   confettiTestBtn.addEventListener('click', function () {
     if (Math.random() < CONFETTI_STREAM_CHANCE) {
       spawnConfettiStream();
     } else {
-      spawnConfettiBurst(true); // force, bypassing Reduce Effects — this is an on-demand "show me" click
+      spawnConfettiBurst(true);
     }
   });
-  // Gold while actually pressed, back to normal on release — not a timed
-  // flash, so it tracks the real press/release rather than a fixed duration.
+
   confettiTestBtn.addEventListener('pointerdown', function () {
     confettiTestBtn.classList.add('is-active');
   });
@@ -2138,9 +1845,6 @@
     });
   });
 
-  // Passive income ticks 4x/second for a smooth-feeling counter, adding
-  // a quarter of the per-second rate each time rather than waiting a
-  // full minute to add a lump sum.
   setInterval(function () {
     var perSecond = totalRatePerMinute() / 60;
     if (perSecond <= 0) return;
@@ -2149,62 +1853,31 @@
     earnSpotlight((perSecond / 4) * passivePaparazziBonus);
     renderCount();
     renderPrestige();
-    // Rebuild only if passive income just crossed an unlock threshold —
-    // otherwise just update existing buttons in place (see comment on
-    // refreshShopAffordability for why).
+
     if (unlockedCount() !== beforeUnlocked) renderShop();
     else refreshShopAffordability();
   }, 250);
 
-  // Autosave on an interval too, not just on click/buy, so passive
-  // income earned while idle isn't lost if the tab closes uncleanly.
   setInterval(save, 5000);
-  // Also save right as the tab goes away (close, refresh, switch tabs) so
-  // lastSeen is as fresh as possible for the next offline-gains check —
-  // the 5s interval alone could leave up to a 5s gap uncredited.
+
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) save();
   });
   window.addEventListener('beforeunload', save);
 
-  // --- pin the portrait/bubble column while the shop list scrolls -----
-  // Keeps her visible while the (often long) shop scrolls past: desktop
-  // centers her vertically in the viewport, mobile pins her to the very
-  // top (full-width, like a sticky header) so the shop scrolls
-  // underneath. Both are clamped between a ceiling (desktop: never
-  // above where she naturally starts, so she can't float up over the
-  // page heading on a short/fresh page; mobile: never above the
-  // viewport top, i.e. 0) and a floor (never below the bottom of the
-  // shop list, so she doesn't end up floating over the footer either).
-  // Tried plain position:sticky first — reliable in general, but this
-  // site sets overflow-x:hidden on <html>/<body> site-wide (deliberate,
-  // load-bearing, protects against horizontal-pan bugs elsewhere) and
-  // that combination is a known way to silently break sticky. So this
-  // measures the column's natural, in-flow position and the shop
-  // column's bottom edge, then applies true position:fixed with `top`
-  // computed and clamped on every scroll.
   var spotlightLeftEl = document.querySelector('.spotlight-left');
   var spotlightRightEl = document.querySelector('.spotlight-right');
   var PIN_BREAKPOINT = window.matchMedia('(min-width: 641px)');
-  var pinnedNaturalDocTop = 0; // her un-pinned top, in absolute document coordinates
-  var pinnedContainerDocBottom = 0; // the shop column's bottom, in absolute document coordinates
+  var pinnedNaturalDocTop = 0;
+  var pinnedContainerDocBottom = 0;
 
   function computePinnedTop() {
     if (!spotlightLeftEl.classList.contains('is-pinned')) return;
     var elH = spotlightLeftEl.offsetHeight;
     var ceiling = PIN_BREAKPOINT.matches ? (window.innerHeight - elH) / 2 : 0;
-    var naturalTopNow = pinnedNaturalDocTop - window.scrollY; // where she'd be on screen if still in flow
-    var floorTopNow = pinnedContainerDocBottom - elH - window.scrollY; // lowest she's allowed to sit
-    // Floor wins if it conflicts with the ceiling — not covering the
-    // footer matters more than sitting exactly at the ideal centered
-    // position. (An earlier version had an exception that reverted to
-    // naturalTopNow instead whenever the shop was short, which defeated
-    // the floor almost any time the shop was shorter than her box.) The
-    // real fix for "floor clamps her before there's any real reason to"
-    // is in updatePinnedLayout() below — reserving real vertical space
-    // for her on desktop, not patching the clamp math here, since the
-    // floor is only ever wrong when the page itself doesn't actually
-    // have room for her, and that's a layout problem, not a clamping one.
+    var naturalTopNow = pinnedNaturalDocTop - window.scrollY;
+    var floorTopNow = pinnedContainerDocBottom - elH - window.scrollY;
+
     var top = Math.min(Math.max(ceiling, naturalTopNow), floorTopNow);
     spotlightLeftEl.style.top = top + 'px';
   }
@@ -2218,8 +1891,7 @@
 
   function updatePinnedLayout() {
     if (!spotlightLeftEl || !spotlightRightEl) return;
-    // Unpin first so the measurement below reflects normal flow, not
-    // whatever fixed position was set last time.
+
     spotlightLeftEl.classList.remove('is-pinned');
     spotlightLeftEl.style.left = '';
     spotlightLeftEl.style.width = '';
@@ -2231,62 +1903,23 @@
     var rect = spotlightLeftEl.getBoundingClientRect();
     pinnedNaturalDocTop = rect.top + window.scrollY;
     spotlightLeftEl.style.left = rect.left + 'px';
-    spotlightLeftEl.style.width = rect.width + 'px'; // mobile's media-query !important overrides this to 100%
+    spotlightLeftEl.style.width = rect.width + 'px';
     spotlightLeftEl.classList.add('is-pinned');
-    // Reserve the space she used to occupy in flow — desktop stacks the
-    // columns side by side (push the shop right), mobile stacks them
-    // vertically (push the shop down). Mobile specifically re-measures
-    // AFTER applying is-pinned rather than reusing the pre-pin `rect`:
-    // the mobile media query changes her width (100% instead of the
-    // narrower unpinned column) and adds padding, both of which can
-    // shift her real rendered height — reusing the old measurement left
-    // a gap between the pinned header and the shop content underneath.
+
     if (PIN_BREAKPOINT.matches) {
       var gapPx = parseFloat(getComputedStyle(spotlightRightEl.parentElement).gap) || 0;
       spotlightRightEl.style.marginLeft = (rect.width + gapPx) + 'px';
-      // Being position:fixed, she no longer contributes any height to
-      // the row — normally fine (the shop naturally grows taller than
-      // her), but when the shop is short (freshly unlocked, or right
-      // after Reset/Sequel) the row — and everything below it,
-      // including the footer — collapses down to the shop's height
-      // alone. Her fixed box then geometrically overlaps the footer
-      // regardless of scroll position, since nothing ever reserved
-      // room for her. Giving the row a min-height matching her real
-      // size fixes that at the source instead of trying to clamp
-      // around it after the fact.
+
       spotlightRightEl.parentElement.style.minHeight = spotlightLeftEl.offsetHeight + 'px';
     } else {
-      // +13px (~0.8rem) of actual breathing room below the pinned
-      // header's own border-bottom, matching the gap below the tabs —
-      // without this, the shop starts exactly where her box ends and
-      // the tabs visibly touch the border line.
+
       spotlightRightEl.style.marginTop = (spotlightLeftEl.offsetHeight + 13) + 'px';
     }
-    // Measured off .spotlight-columns itself, not spotlightRightEl — on
-    // desktop the row has align-items:flex-start, so giving the ROW a
-    // min-height (above) doesn't stretch the shop ITEM to fill it; the
-    // shop's own getBoundingClientRect().bottom stays at its short
-    // natural content height regardless, which would silently undo the
-    // min-height reservation for this measurement's purposes. Also
-    // measured last, after marginTop/marginLeft/minHeight actually
-    // landed — doing this earlier captured the row's bottom edge at its
-    // old, un-reserved position, which is what let her genuinely clip
-    // down past the real bottom of the page with a short shop list.
+
     pinnedContainerDocBottom = spotlightRightEl.parentElement.getBoundingClientRect().bottom + window.scrollY;
     computePinnedTop();
   }
 
-  // Mobile browsers fire 'resize' when the address bar collapses/expands
-  // during an ordinary scroll — window.innerHeight changes, innerWidth
-  // doesn't. A naive resize handler doing the full unpin/remeasure/
-  // repin cycle (which briefly zeroes marginTop before reapplying it)
-  // then fires mid-scroll, right when that's most likely: scrolled all
-  // the way down, address bar re-expands as you start scrolling back up
-  // — and the transient zeroed margin yanks the page's scroll position
-  // with it. Only the real thing (a width change — rotation, browser
-  // window resize, crossing the mobile/desktop breakpoint) needs the
-  // full rebuild; a height-only change just needs computePinnedTop()
-  // re-run with the current height, which doesn't touch the DOM at all.
   var lastPinnedWidth = window.innerWidth;
   window.addEventListener('resize', function () {
     if (window.innerWidth !== lastPinnedWidth) {
@@ -2298,19 +1931,11 @@
   });
   window.addEventListener('scroll', queuePinnedScrollUpdate);
   if (PIN_BREAKPOINT.addEventListener) PIN_BREAKPOINT.addEventListener('change', updatePinnedLayout);
-  // The very first updatePinnedLayout() call (at the bottom of this file)
-  // runs before the portrait image has necessarily finished loading —
-  // her box has no explicit width/height, so it measures much shorter
-  // than its real size until the image arrives, baking in a wrong
-  // ceiling/floor that nothing then corrects (she's already out of flow
-  // by that point). Re-measure once the image, fonts, and everything
-  // else has actually settled.
+
   portraitEl.addEventListener('load', updatePinnedLayout);
   window.addEventListener('load', updatePinnedLayout);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(updatePinnedLayout);
 
-  // loadSave() already ran, way up near where `state` is declared — see
-  // the comment there for why.
   checkOfflineGains();
   checkAchievements();
   renderQuote(IDLE_LINE);
@@ -2320,6 +1945,6 @@
   renderNumberFormatToggle();
   renderColorfulTextToggle();
   renderPrestige();
-  schedulePaparazzi(); // no-op if not owned yet
+  schedulePaparazzi();
   updatePinnedLayout();
 })();

@@ -104,9 +104,15 @@ DATA DESIGN NOTES
   separate axes, just different flavors (so to speak) of the same kind
   of fact about a word or menu item.
 - The askable words are drawn from a pool of 50 (ALL_WORDS); each game
-  randomly picks 25 of them (WORDS) at startGame() time, so the exact
-  word list — and the tag-frequency table used for the ask mechanic's
-  rarity tie-breaking — differs every playthrough. They're deliberately
+  picks 25 of them (WORDS) at startGame() time via pickWords(), so the
+  exact word list — and the tag-frequency table used for the ask
+  mechanic's rarity tie-breaking — differs every playthrough. The pick
+  isn't a flat random draw: it first guarantees at least 4 words each
+  tagged Food, Drink, and Spice/Condiment (pulled randomly within each
+  type), then fills the remaining slots randomly from whatever's left.
+  Plain random sampling could otherwise leave a playthrough with zero
+  Drinks (only 7 exist in the full 50), which would make "is it a
+  drink?" a dead question for that whole game. They're deliberately
   ambiguous — most carry a tag they share with several other words, so
   no single ask ever fully pins anything down on its own. No two words
   in the full 50-word pool share an identical tag set (checked

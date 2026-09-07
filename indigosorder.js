@@ -175,6 +175,32 @@
     return a;
   }
 
+  var WORD_TYPE_TAGS = ['Food', 'Drink', 'Spice/Condiment'];
+  var WORD_TYPE_MINIMUM = 4;
+
+  function pickWords(pool, count) {
+    var picked = [];
+    var pickedNames = {};
+
+    WORD_TYPE_TAGS.forEach(function (tag) {
+      var candidates = pool.filter(function (w) {
+        return !pickedNames[w.name] && w.tags.indexOf(tag) !== -1;
+      });
+      shuffle(candidates).slice(0, WORD_TYPE_MINIMUM).forEach(function (w) {
+        picked.push(w);
+        pickedNames[w.name] = true;
+      });
+    });
+
+    var rest = pool.filter(function (w) { return !pickedNames[w.name]; });
+    shuffle(rest).slice(0, count - picked.length).forEach(function (w) {
+      picked.push(w);
+      pickedNames[w.name] = true;
+    });
+
+    return shuffle(picked);
+  }
+
   var symbolMap;
   var targets;
   var currentIdx;
@@ -248,7 +274,7 @@
     var symbolIds = SYMBOL_ICONS.map(function (_, i) { return i; });
     shuffle(symbolIds).forEach(function (id, i) { symbolMap[TAGS[i]] = id; });
 
-    WORDS = shuffle(ALL_WORDS).slice(0, 25);
+    WORDS = pickWords(ALL_WORDS, 25);
     GLOBAL_TAG_FREQUENCY = {};
     WORDS.forEach(function (w) {
       w.tags.forEach(function (t) { GLOBAL_TAG_FREQUENCY[t] = (GLOBAL_TAG_FREQUENCY[t] || 0) + 1; });

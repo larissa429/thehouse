@@ -189,7 +189,11 @@ UI NOTES
   flashes or re-shuffles when it's dismissed; "I'm Ready" just unpauses
   it. Clicking RESTART (mid-game or on the end screen) skips the rules
   overlay entirely and jumps straight into a fresh game, since at that
-  point the player already knows how to play.
+  point the player already knows how to play. A separate "How to Play"
+  button next to Restart re-opens the same overlay mid-game to pause
+  and re-read the rules — this does NOT reset anything (same words,
+  same order, same notes), it just freezes the timer/interactivity
+  until "I'm Ready" is clicked again.
 
 DEFERRED / NOT YET DONE
 - Real symbol art beyond the current icon set, if desired.

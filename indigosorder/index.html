@@ -37,8 +37,13 @@
     }
     .it-hud strong { color: var(--ink); font-family: var(--label); }
     .it-timer.is-low strong { color: var(--urgent); }
-    .it-restart {
+    .it-hud-actions {
       margin-left: auto;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .it-restart,
+    .it-howtoplay {
       font-family: var(--label);
       font-size: 0.7rem;
       letter-spacing: 0.06em;
@@ -687,7 +692,10 @@
         <div class="it-hud">
           <span class="it-timer" id="itTimer">Time elapsed: <strong id="itTimerValue">0:00</strong></span>
           <span>Orders solved: <strong id="itProgress">0/3</strong></span>
-          <button type="button" class="it-restart" id="itRestart">Restart</button>
+          <div class="it-hud-actions">
+            <button type="button" class="it-howtoplay" id="itHowToPlay">How to Play</button>
+            <button type="button" class="it-restart" id="itRestart">Restart</button>
+          </div>
         </div>
 
         <div class="it-section">

@@ -27,6 +27,7 @@
   var overlayRestartBtn = document.getElementById('itOverlayRestart');
   var startOverlayEl = document.getElementById('itStartOverlay');
   var startBtn = document.getElementById('itStartBtn');
+  var howToPlayBtn = document.getElementById('itHowToPlay');
   var symbolPickerEl = document.getElementById('itSymbolPicker');
   var symbolPickerTagEl = document.getElementById('itSymbolPickerTag');
   var symbolPickerGridEl = document.getElementById('itSymbolPickerGrid');
@@ -335,6 +336,14 @@
     tickTimer(true);
     if (timerId) clearInterval(timerId);
     timerId = setInterval(function () { tickTimer(false); }, 1000);
+    updatePhaseUI();
+  }
+
+  function pauseForRules() {
+    if (!running) return;
+    running = false;
+    if (timerId) clearInterval(timerId);
+    startOverlayEl.hidden = false;
     updatePhaseUI();
   }
 
@@ -655,6 +664,7 @@
   restartBtn.addEventListener('click', function () { startGame(true); });
   overlayRestartBtn.addEventListener('click', function () { startGame(true); });
   startBtn.addEventListener('click', beginRound);
+  howToPlayBtn.addEventListener('click', pauseForRules);
   askBtn.addEventListener('click', askIndigo);
 
   symbolPickerClearBtn.addEventListener('click', function () {

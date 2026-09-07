@@ -195,6 +195,12 @@
     return Math.max(1, negated ? freq : MENU.length - freq);
   }
 
+  function weightedPick(pool, n) {
+    pool.forEach(function (c) { c.key = Math.pow(Math.random(), 1 / c.weight); });
+    pool.sort(function (a, b) { return b.key - a.key; });
+    return pool.slice(0, n);
+  }
+
   function rollReveal(target) {
     var candidates = target.tags.map(function (tag) {
       return { tag: tag, negated: false, weight: eliminationValue(tag, false) };
@@ -207,10 +213,12 @@
       });
     }
 
-    candidates.forEach(function (c) { c.key = Math.pow(Math.random(), 1 / c.weight); });
-    candidates.sort(function (a, b) { return b.key - a.key; });
+    var seen = candidates.filter(function (c) { return seenSymbols.indexOf(symbolFor(c.tag)) !== -1; });
+    var unseen = candidates.filter(function (c) { return seenSymbols.indexOf(symbolFor(c.tag)) === -1; });
+    var picked = weightedPick(seen, 3);
+    if (picked.length < 3) picked = picked.concat(weightedPick(unseen, 3 - picked.length));
 
-    return candidates.slice(0, 3).map(function (c) { return { tag: c.tag, negated: c.negated }; });
+    return picked.map(function (c) { return { tag: c.tag, negated: c.negated }; });
   }
 
   function startGame() {

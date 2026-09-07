@@ -51,30 +51,38 @@ Same true symbol for that tag either way; only the yes/no framing
 differs, so a negation still teaches the player the tag-symbol mapping
 just as much as a real one does.
 
-Rather than a flat chance of showing a negative, every candidate reveal
-(each of the order's true tags, plus — after the player's first guess —
-every tag it lacks) is weighted by how many of the 25 menu items it
-would actually rule out, then 3 are drawn without replacement weighted
-by that value:
+Every candidate reveal (each of the order's true tags, plus — after the
+player's first guess — every tag it lacks) is weighted by how many of
+the 25 menu items it would actually rule out:
   - Revealing "the order HAS tag T" rules out every item that lacks T
     (rarer tags rule out more, since fewer items have them).
   - Revealing "the order does NOT have tag T" rules out every item that
     HAS T (commoner tags rule out more, since more items have them).
-Indigo isn't rolling dice on whether to say "no" — he leans toward
-whichever fact, positive or negative, narrows things down the most,
-while still leaving room for a weaker signal to come up sometimes
-instead of the same three "best" facts every round. (Weighted sampling
-without replacement, Efraimidis-Spirakis method: give every candidate a
-random key skewed by its own weight, take the top 3 keys.)
+
+But before reaching for that elimination-value weighting, Indigo first
+tries to reuse symbols the player has already been shown at all (see
+seenSymbols): candidates are split into "already seen" and "brand new",
+and the 3 reveal slots are filled from the seen pool first (weighted by
+elimination value within that pool), only spilling into brand-new
+symbols for whatever slots are left over. Playtesting showed constant
+new-symbol churn made it feel like trial-and-error guessing rather than
+real deduction — a negated symbol you've never seen before tells you
+nothing, since you don't know what tag it even represents yet. This
+also means a "NOT X" reveal is now far more likely to name a symbol
+you've already encountered somewhere (an ask response or an earlier
+positive reveal), so it's actually decodable. (Weighted sampling
+without replacement within each pool, Efraimidis-Spirakis method: give
+every candidate a random key skewed by its own weight, take the top
+keys.)
 
 Negatives are withheld entirely before the player's first guess of the
-whole playthrough — playtesting showed the seen-symbols list ballooning
-too fast once negatives (drawn from all 20+ tags NOT in the order,
-versus only the 5-6 that are) started mixing in from turn one.
-Withholding them during that same early window as the ASKS_PER_GUESS
-buffer (below) gives the player a small, honest set of real symbols to
-get their footing on before the pool of "seen" symbols starts growing
-faster.
+whole playthrough — even with the seen-first preference above, playtesting
+showed the seen-symbols list still ballooning too fast once negatives
+(drawn from all 20+ tags NOT in the order, versus only the 5-6 that are)
+started mixing in from turn one. Withholding them during that same early
+window as the ASKS_PER_GUESS buffer (below) gives the player a small,
+honest set of real symbols to get their footing on before the pool of
+"seen" symbols starts growing faster.
 
 GUESS BUFFER (ASKS_PER_GUESS)
 A guess only unlocks once the player has asked ASKS_PER_GUESS (3) times

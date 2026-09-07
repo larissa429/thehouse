@@ -59,10 +59,10 @@ the 25 menu items it would actually rule out:
   - Revealing "the order does NOT have tag T" rules out every item that
     HAS T (commoner tags rule out more, since more items have them).
 
-But before reaching for that elimination-value weighting, Indigo first
+Before reaching for that elimination-value weighting, Indigo first
 tries to reuse symbols the player has already been shown at all (see
 seenSymbols): candidates are split into "already seen" and "brand new",
-and the 3 reveal slots are filled from the seen pool first (weighted by
+and each reveal slot is filled from the seen pool first (weighted by
 elimination value within that pool), only spilling into brand-new
 symbols for whatever slots are left over. Playtesting showed constant
 new-symbol churn made it feel like trial-and-error guessing rather than
@@ -74,6 +74,17 @@ positive reveal), so it's actually decodable. (Weighted sampling
 without replacement within each pool, Efraimidis-Spirakis method: give
 every candidate a random key skewed by its own weight, take the top
 keys.)
+
+Separately, at most MAX_NEGATIONS_PER_REVEAL (1) of the 3 slots in any
+single reveal can be a negation — the rest are always positives. A
+reveal used to draw all 3 slots from one combined pool of positives and
+negatives, which meant two or even three negations could land in the
+same reveal. Playtesting showed that was too much to decode at once:
+each negated symbol is a brand new unknown-until-decoded fact, and with
+several in play simultaneously (plus everything already accumulated
+from earlier rounds) there was no way to isolate which one meant what.
+Capping it to 1 keeps each reveal from introducing more than a single
+new "NOT" fact to untangle.
 
 Negatives are withheld entirely before the player's first guess of the
 whole playthrough — even with the seen-first preference above, playtesting

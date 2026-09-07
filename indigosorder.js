@@ -249,22 +249,32 @@
     return pool.slice(0, n);
   }
 
+  var MAX_NEGATIONS_PER_REVEAL = 1;
+
+  function pickFromPool(pool, n) {
+    var seen = pool.filter(function (c) { return seenSymbols.indexOf(symbolFor(c.tag)) !== -1; });
+    var unseen = pool.filter(function (c) { return seenSymbols.indexOf(symbolFor(c.tag)) === -1; });
+    var picked = weightedPick(seen, n);
+    if (picked.length < n) picked = picked.concat(weightedPick(unseen, n - picked.length));
+    return picked;
+  }
+
   function rollReveal(target) {
-    var candidates = target.tags.map(function (tag) {
+    var positives = target.tags.map(function (tag) {
       return { tag: tag, negated: false, weight: eliminationValue(tag, false) };
     });
+    var negatives = [];
     if (hasGuessedOnce) {
       TAGS.forEach(function (tag) {
         if (target.tags.indexOf(tag) === -1) {
-          candidates.push({ tag: tag, negated: true, weight: eliminationValue(tag, true) });
+          negatives.push({ tag: tag, negated: true, weight: eliminationValue(tag, true) });
         }
       });
     }
 
-    var seen = candidates.filter(function (c) { return seenSymbols.indexOf(symbolFor(c.tag)) !== -1; });
-    var unseen = candidates.filter(function (c) { return seenSymbols.indexOf(symbolFor(c.tag)) === -1; });
-    var picked = weightedPick(seen, 3);
-    if (picked.length < 3) picked = picked.concat(weightedPick(unseen, 3 - picked.length));
+    var negPicked = negatives.length ? pickFromPool(negatives, MAX_NEGATIONS_PER_REVEAL) : [];
+    var posPicked = pickFromPool(positives, 3 - negPicked.length);
+    var picked = posPicked.concat(negPicked);
 
     return picked.map(function (c) { return { tag: c.tag, negated: c.negated }; });
   }

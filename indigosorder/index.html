@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Indigo's Order (Prototype) &middot; The House</title>
+  <title>Indigo's Order &middot; The House</title>
   <meta name="description" content="The House &middot; an object show" />
   <meta name="robots" content="noindex" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -657,6 +657,19 @@
       padding: 0.6rem 1.2rem;
       cursor: pointer;
     }
+    .it-overlay-card.is-rules {
+      max-width: 32rem;
+      text-align: left;
+    }
+    .it-overlay-card.is-rules h2 { text-align: center; }
+    .it-overlay-card.is-rules p {
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .it-overlay-card.is-rules button {
+      display: block;
+      margin: 0 auto;
+    }
   </style>
 </head>
 <body>
@@ -750,6 +763,18 @@
       <h2 id="itOverlayTitle"></h2>
       <p id="itOverlayText"></p>
       <button type="button" id="itOverlayRestart">Try Again</button>
+    </div>
+  </div>
+
+  <div class="it-overlay" id="itStartOverlay">
+    <div class="it-overlay-card is-rules">
+      <h2>How to Play</h2>
+      <p>You're working your first shift at the Replay, and just before your shift ends, Indigo enters! You think he's shouting...? He has no mouth, but he's making these noises that suggest he's in a hurry. How are you supposed to understand him?</p>
+      <p>He knows what he wants — you don't. Use the selection of foods, drinks, and other items to request the symbol for a common trait between them. Indigo will answer honestly with his best guess as to what you're looking for, and give you the symbol.</p>
+      <p>Watch his order: after each ask, he shows a few symbols about what he currently wants — a crossed-out symbol means his order does <strong>not</strong> have that trait.</p>
+      <p>After a few asks, he'll want an answer. Click a menu item to guess his order. Right or wrong, you'll keep asking and narrowing it down until you get it.</p>
+      <p>Keep track of what you've worked out in Your Notes.</p>
+      <button type="button" id="itStartBtn">I'm Ready</button>
     </div>
   </div>
 

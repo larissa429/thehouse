@@ -25,6 +25,8 @@
   var overlayTitleEl = document.getElementById('itOverlayTitle');
   var overlayTextEl = document.getElementById('itOverlayText');
   var overlayRestartBtn = document.getElementById('itOverlayRestart');
+  var startOverlayEl = document.getElementById('itStartOverlay');
+  var startBtn = document.getElementById('itStartBtn');
   var symbolPickerEl = document.getElementById('itSymbolPicker');
   var symbolPickerTagEl = document.getElementById('itSymbolPickerTag');
   var symbolPickerGridEl = document.getElementById('itSymbolPickerGrid');
@@ -279,7 +281,7 @@
     return picked.map(function (c) { return { tag: c.tag, negated: c.negated }; });
   }
 
-  function startGame() {
+  function startGame(skipRulesGate) {
     symbolMap = {};
     var symbolIds = SYMBOL_ICONS.map(function (_, i) { return i; });
     shuffle(symbolIds).forEach(function (id, i) { symbolMap[TAGS[i]] = id; });
@@ -296,7 +298,7 @@
 
     selectedWords = [];
     elapsedSeconds = 0;
-    running = true;
+    running = !!skipRulesGate;
     roundPhase = 'ask';
     currentReveal = [];
     seenSymbols = [];
@@ -306,6 +308,7 @@
     logEl.innerHTML = '<p class="it-log-empty">Nothing yet — ask him something.</p>';
     answerSymbolsEl.innerHTML = '';
     overlayEl.hidden = true;
+    startOverlayEl.hidden = !!skipRulesGate;
     orderFeedbackEl.textContent = '';
     orderFeedbackEl.className = 'it-order-feedback';
     renderSeenSymbols();
@@ -320,7 +323,19 @@
     tickTimer(true);
 
     if (timerId) clearInterval(timerId);
+    if (running) {
+      timerId = setInterval(function () { tickTimer(false); }, 1000);
+    }
+  }
+
+  function beginRound() {
+    if (running) return;
+    running = true;
+    startOverlayEl.hidden = true;
+    tickTimer(true);
+    if (timerId) clearInterval(timerId);
     timerId = setInterval(function () { tickTimer(false); }, 1000);
+    updatePhaseUI();
   }
 
   function tickTimer(skipIncrement) {
@@ -637,8 +652,9 @@
     overlayEl.hidden = false;
   }
 
-  restartBtn.addEventListener('click', startGame);
-  overlayRestartBtn.addEventListener('click', startGame);
+  restartBtn.addEventListener('click', function () { startGame(true); });
+  overlayRestartBtn.addEventListener('click', function () { startGame(true); });
+  startBtn.addEventListener('click', beginRound);
   askBtn.addEventListener('click', askIndigo);
 
   symbolPickerClearBtn.addEventListener('click', function () {
@@ -651,7 +667,7 @@
   });
 
   setupNotesFloat();
-  startGame();
+  startGame(false);
 
   function setupNotesFloat() {
     var panel = notesFloatEl;

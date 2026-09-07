@@ -181,6 +181,15 @@ UI NOTES
   before they've even learned the system would add frustration on top
   of a mechanic not yet proven fun. It counts up and never ends the
   round on its own; the win screen just reports how long it took.
+- A "How to Play" overlay covers the board (dimmed underneath) on first
+  load, so the stopwatch and the board itself both stay inert until the
+  player clicks "I'm Ready" — reading the rules shouldn't already be
+  costing them time. The whole game is fully set up underneath while
+  the overlay is up (words, menu, decoder already rendered) so nothing
+  flashes or re-shuffles when it's dismissed; "I'm Ready" just unpauses
+  it. Clicking RESTART (mid-game or on the end screen) skips the rules
+  overlay entirely and jumps straight into a fresh game, since at that
+  point the player already knows how to play.
 
 DEFERRED / NOT YET DONE
 - Real symbol art beyond the current icon set, if desired.

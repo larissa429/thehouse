@@ -124,6 +124,17 @@ DATA DESIGN NOTES
   written like real menu copy and only ever mentions PART of an item's
   actual tags on purpose — reading the whole menu should never be enough
   to solve an order outright, just help narrow it down.
+- The menu list is grouped into three sections (Entrees / Drinks / On
+  the Side), matching each item's Food, Drink, or Spice/Condiment tag
+  one-to-one. This is deliberately NOT a mystery — like a word's own
+  tags in the ask grid, an item's basic category is common knowledge,
+  so a hint like "his order is Food" should never be ambiguous just
+  because a condiment could read as food or not in real life. This
+  means those three type tags can never appear together on one item
+  (a condiment like mustard is tagged Spice/Condiment only, not also
+  Food) — clean one-section-per-item was chosen deliberately over
+  double-tagging, since a menu section can't show an item in two
+  places at once anyway.
 - A word's own tags are shown right on its button in the word grid —
   they're meant to be common knowledge, not part of the mystery. The
   only real unknown is which of Indigo's symbols means which tag.

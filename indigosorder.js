@@ -111,10 +111,10 @@
     { name: 'Irish Coffee', tags: ['Bitter', 'Sweet', 'Rich', 'Brown', 'Drink'], desc: 'Hot coffee with whiskey and cream, rich and just sweet enough.', img: 'irishcoffee.jpg' },
     { name: 'Piña Colada', tags: ['Sweet', 'Creamy', 'Fruity', 'White', 'Drink'], desc: 'A creamy, sweet blend of coconut and pineapple.', img: 'pinacolada.jpg' },
     { name: 'Whiskey Sour', tags: ['Sour', 'Sweet', 'Bitter', 'Brown', 'Drink'], desc: 'Whiskey shaken with lemon for a sharp, sour finish.', img: 'whiskeysour.jpg' },
-    { name: 'Hot Sauce', tags: ['Spicy', 'Savory', 'Red', 'Spice/Condiment', 'Food'], desc: 'A spicy, savory condiment — a few drops go a long way.', img: 'hotsauce.jpg' },
-    { name: 'Garlic Butter', tags: ['Savory', 'Rich', 'Creamy', 'Yellow', 'Spice/Condiment', 'Food'], desc: 'A rich, savory butter that melts into whatever it touches.', img: 'garlicbutter.jpg' },
-    { name: 'Pico de Gallo', tags: ['Spicy', 'Savory', 'Sour', 'Red', 'Spice/Condiment', 'Food'], desc: 'Fresh chopped tomato and onion with a spicy, sour bite.', img: 'picodegallo.jpg' },
-    { name: 'Whole Grain Mustard', tags: ['Savory', 'Sour', 'Spicy', 'Brown', 'Spice/Condiment', 'Food'], desc: 'A coarse, sour mustard with a spicy bite.', img: 'wholegrainmustard.jpg' },
+    { name: 'Hot Sauce', tags: ['Spicy', 'Savory', 'Red', 'Spice/Condiment'], desc: 'A spicy, savory condiment — a few drops go a long way.', img: 'hotsauce.jpg' },
+    { name: 'Garlic Butter', tags: ['Savory', 'Rich', 'Creamy', 'Yellow', 'Spice/Condiment'], desc: 'A rich, savory butter that melts into whatever it touches.', img: 'garlicbutter.jpg' },
+    { name: 'Pico de Gallo', tags: ['Spicy', 'Savory', 'Sour', 'Red', 'Spice/Condiment'], desc: 'Fresh chopped tomato and onion with a spicy, sour bite.', img: 'picodegallo.jpg' },
+    { name: 'Whole Grain Mustard', tags: ['Savory', 'Sour', 'Spicy', 'Brown', 'Spice/Condiment'], desc: 'A coarse, sour mustard with a spicy bite.', img: 'wholegrainmustard.jpg' },
     { name: 'Pesto Pasta', tags: ['Nutty', 'Earthy', 'Floral', 'Green', 'Food'], desc: 'Pasta tossed in a nutty, earthy basil pesto.', img: 'pestopasta.jpg' },
     { name: 'Blueberry Cobbler', tags: ['Sweet', 'Fruity', 'Purple', 'Rich', 'Food'], desc: 'Warm, sweet blueberries under a golden, rich crust.', img: 'blueberrycobbler.jpg' },
     { name: 'Squid Ink Pasta', tags: ['Savory', 'Salty', 'Black', 'Food'], desc: 'A savory, salty pasta dyed black with squid ink.', img: 'squidinkpasta.jpg' },
@@ -457,31 +457,47 @@
     });
   }
 
+  var MENU_SECTIONS = [
+    { tag: 'Food', label: 'Entrees' },
+    { tag: 'Drink', label: 'Drinks' },
+    { tag: 'Spice/Condiment', label: 'On the Side' }
+  ];
+
   function renderMenuList() {
     menuListEl.innerHTML = '';
-    shuffle(MENU).forEach(function (m) {
-      var card = document.createElement('button');
-      card.type = 'button';
-      card.className = 'it-menu-card';
-      var thumb = document.createElement('img');
-      thumb.className = 'it-menu-card-thumb';
-      thumb.src = '../images/menu/' + m.img;
-      thumb.alt = '';
-      thumb.loading = 'lazy';
-      var text = document.createElement('span');
-      text.className = 'it-menu-card-text';
-      var title = document.createElement('span');
-      title.className = 'it-menu-card-title';
-      title.textContent = m.name;
-      var desc = document.createElement('span');
-      desc.className = 'it-menu-card-desc';
-      desc.textContent = m.desc;
-      text.appendChild(title);
-      text.appendChild(desc);
-      card.appendChild(thumb);
-      card.appendChild(text);
-      card.addEventListener('click', function () { submitGuess(m.name, card); });
-      menuListEl.appendChild(card);
+    MENU_SECTIONS.forEach(function (section) {
+      var items = MENU.filter(function (m) { return m.tags.indexOf(section.tag) !== -1; });
+      if (!items.length) return;
+
+      var header = document.createElement('h4');
+      header.className = 'it-menu-section-header';
+      header.textContent = section.label;
+      menuListEl.appendChild(header);
+
+      shuffle(items).forEach(function (m) {
+        var card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'it-menu-card';
+        var thumb = document.createElement('img');
+        thumb.className = 'it-menu-card-thumb';
+        thumb.src = '../images/menu/' + m.img;
+        thumb.alt = '';
+        thumb.loading = 'lazy';
+        var text = document.createElement('span');
+        text.className = 'it-menu-card-text';
+        var title = document.createElement('span');
+        title.className = 'it-menu-card-title';
+        title.textContent = m.name;
+        var desc = document.createElement('span');
+        desc.className = 'it-menu-card-desc';
+        desc.textContent = m.desc;
+        text.appendChild(title);
+        text.appendChild(desc);
+        card.appendChild(thumb);
+        card.appendChild(text);
+        card.addEventListener('click', function () { submitGuess(m.name, card); });
+        menuListEl.appendChild(card);
+      });
     });
   }
 

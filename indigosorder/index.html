@@ -431,6 +431,30 @@
     }
     .it-menu-card:hover:not(:disabled) { border-color: var(--lamp); }
     .it-menu-card:disabled { opacity: 0.4; cursor: default; }
+    @keyframes itCardFlashCorrect {
+      0%, 100% { background: var(--wall-lit); border-color: rgba(157, 133, 112, 0.28); }
+      15%, 75% { background: var(--lamp); border-color: var(--lamp); }
+    }
+    @keyframes itCardFlashWrong {
+      0%, 100% { background: var(--wall-lit); border-color: rgba(157, 133, 112, 0.28); }
+      15%, 75% { background: var(--urgent); border-color: var(--urgent); }
+    }
+    .it-menu-card.is-flash-correct,
+    .it-menu-card.is-flash-wrong {
+      opacity: 1 !important;
+    }
+    .it-menu-card.is-flash-correct {
+      animation: itCardFlashCorrect 2s ease-in-out;
+    }
+    .it-menu-card.is-flash-wrong {
+      animation: itCardFlashWrong 2s ease-in-out;
+    }
+    .it-menu-card.is-flash-correct .it-menu-card-title,
+    .it-menu-card.is-flash-correct .it-menu-card-desc,
+    .it-menu-card.is-flash-wrong .it-menu-card-title,
+    .it-menu-card.is-flash-wrong .it-menu-card-desc {
+      color: var(--shadow);
+    }
     .it-menu-card-thumb {
       width: 3.4rem;
       height: 3.4rem;

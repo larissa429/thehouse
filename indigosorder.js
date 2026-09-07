@@ -426,16 +426,27 @@
       text.appendChild(desc);
       card.appendChild(thumb);
       card.appendChild(text);
-      card.addEventListener('click', function () { submitGuess(m.name); });
+      card.addEventListener('click', function () { submitGuess(m.name, card); });
       menuListEl.appendChild(card);
     });
   }
 
-  function submitGuess(itemName) {
+  function flashMenuCard(card, correct) {
+    if (!card) return;
+    card.classList.remove('is-flash-correct', 'is-flash-wrong');
+    void card.offsetWidth;
+    card.classList.add(correct ? 'is-flash-correct' : 'is-flash-wrong');
+    setTimeout(function () {
+      card.classList.remove('is-flash-correct', 'is-flash-wrong');
+    }, 2000);
+  }
+
+  function submitGuess(itemName, cardEl) {
     if (!running || roundPhase !== 'guess') return;
     hasGuessedOnce = true;
     var target = targets[currentIdx];
     var correct = itemName === target.name;
+    flashMenuCard(cardEl, correct);
 
     if (correct) {
       solvedNames.push(target.name);

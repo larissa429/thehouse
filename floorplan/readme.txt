@@ -343,9 +343,107 @@ A resident's dot color is picked to be vivid and distinct as a small
 dot, which makes a lousy full-card background — dark text needs a
 light ground under it. The resident-note popup blends the color
 toward white for its background instead of using it at full
-strength; the dot itself stays untouched.
+strength; the dot itself stays untouched. This blend is set inline,
+not via the shared .note[data-color] rules — those use a slightly
+different slug scheme (e.g. "bm" for Blue Marble) and are shared with
+every character page's Connections notes, which this feature
+shouldn't reach into.
+
+Penny's own popup has no name on it, on purpose — she doesn't get
+identified here, just glimpsed. It uses a plain dark gray background
+instead of the usual lightened dot-color one, since there's no text
+on top that needs a light ground.
+
+ROOM TOOLTIP
+A room's info (its flavor line) shows in a small themed tooltip
+instead of the big note-card modal used for residents — hover
+reveals it on desktop, a tap pins it open on touch devices (no hover
+state to reveal it there). It's one shared element, repositioned per
+room, rather than rebuilding a whole modal overlay for something this
+lightweight.
+
+It's appended to <body>, not the stage — the stage clips its own
+children (overflow: hidden, so its corridor/room SVG never bleeds
+past its rounded corners), which was clipping the tooltip's top off
+whenever a room sat near the stage's own top edge, most visibly on a
+narrow mobile viewport where "near the top" is most rooms. Fixed
+positioning computed from real viewport pixels sidesteps that
+entirely instead of trying to out-guess the clip from inside it.
+
+It's anchored above the room, centered on it, in real viewport
+pixels — flips to sit below instead when there's not enough room
+above the room within the actual viewport (not the stage's own
+coordinate space, which is what let an old version think there was
+room above when the stage itself was already flush against the top
+of the screen). Clamped horizontally and vertically against the
+viewport too, for a room hugging any edge of the screen. Its width is
+measured at the page's natural flow width first, since max-width
+applies but actual content width depends on which room's text is
+longest.
+
+A pinned tip (touch) can outlive the scroll position it was placed
+at — it stays glued to its room rather than being left floating over
+whatever scrolled into its place.
+
+Whichever residents rolled absent this load are listed once,
+independent of whichever floor tab is active — absence is house-wide,
+not floor-specific (someone not home isn't hiding on another floor,
+they're just not placed anywhere this load), unlike a floor's own
+room caption, which is recomputed per floor.
 
 WANDERING (ambient movement)
+Every so often, a resident currently on the visible floor might
+slowly drift into another room — out to their door, down the hallway
+to the next one — so the page reads as caught mid-moment rather than
+static.
+
+PATHFINDING BETWEEN ROOMS
+Every room connects to every other room via the shared corridor, so
+there's no adjacency list to consult — just route through the
+midpoint between the two rooms' doorways when they're on the same
+straight segment. For a bent floor, buildWanderPath runs a small BFS
+over whichever corners that floor's chosen segments actually connect,
+from segment A's two corners to segment B's two corners — e.g. an L
+only has 2 segments/3 corners, a U 3 segments/4 corners, so this is
+always a tiny graph. It returns the corner-name path to walk
+(possibly empty if A and B share a corner directly). The actual
+waypoints a dot walks are: its own doorway, then straight down the
+corridor if the two rooms share one, or through however many corners
+connect the two segments if they don't. The final hop from the
+doorway into the room's actual landing slot happens separately, once
+occupancy for the destination is finalized.
+
+A room normally opens onto exactly one corridor segment (its own
+doorPoint/seg). A room with a `doors` array (currently just the
+Courtyard, bordered by all four ring segments) instead exits toward
+whichever side the OTHER room actually sits on — so it never needs
+corner routing to reach anywhere, matching that it's reachable from
+any wall. Since the Courtyard sits in the middle of the ring and is
+reachable from every segment, cutting straight through it is often
+shorter than walking two sides of the ring to get to the opposite
+segment, so that shortcut is compared against the normal ring route
+rather than always taking the long way.
+
+For any cross-floor departure — leaving for a room on a different
+floor of the house entirely, which has no physical corridor
+connecting it to this one — a dot instead walks toward whichever
+corner or dead end of the CURRENT floor's own hallway is reachable,
+using the exact same corner/segment graph buildWanderPath routes
+through between rooms, just ending at the wall itself (implying a
+stairwell just past it) instead of another doorway. A straight floor
+has no corners at all, just the two open ends of its one corridor.
+
+WALKING ANIMATION
+A dot is walked through its waypoints in sequence, one CSS transition
+per leg, timed by actual distance rather than a fixed duration — so a
+short hop to the room next door doesn't take as long as a trip
+through two corners, and a long leg doesn't read as sped-up just to
+fit the same duration as a short one. Each leg's easing is linear,
+not ease-in-out — ease-in-out decelerates to a full stop at the end
+of every leg (and re-accelerates from a stop at the start of the
+next), which is exactly what would read as "stopping at the points"
+instead of one continuous walk through the bends.
+
 Wandering avoids (softly, never absolutely — except a genuine hard
 avoid, filtered out first) a room someone has real friction with,
 using the same CLOSENESS_PLACEMENT_THRESHOLD as initial placement, so

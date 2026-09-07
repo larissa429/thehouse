@@ -670,7 +670,6 @@
         renderLockedDoorMarker(room);
         return;
       }
-      // Appended before this room's dots, so the dots still end up on
 
       var hit = document.createElement('button');
       hit.type = 'button';
@@ -826,20 +825,13 @@
     wrap.appendChild(img);
     wrap.appendChild(text);
     noteBody.appendChild(wrap);
-    // Inline, not the shared .note[data-color] rules — those use a
-    // slightly different slug scheme (e.g. "bm" for Blue Marble) and are
-    // shared with every character page's Connections notes, which this
-    // feature shouldn't reach into. Lightened rather than the raw dot
-    // color — vivid enough to read as a dot, too much as a whole card.
+
     noteEl.style.background = lightenColor(resident.color, 0.55);
     noteEl.style.color = '';
     noteCloseEl.style.color = '';
     noteOverlay.classList.add('open');
   }
 
-  // No name on this one, on purpose — Penny doesn't get identified here,
-  // just glimpsed. Dark gray instead of the usual lightened dot-color
-  // background, since there's no text on top that needs a light ground.
   function openLockedDoorCard() {
     noteBody.innerHTML = '';
     var wrap = document.createElement('div');
@@ -856,18 +848,6 @@
     noteOverlay.classList.add('open');
   }
 
-  // A room's info shows in a small themed tooltip instead of the big
-  // note-card modal — hover reveals it on desktop, a tap pins it open on
-  // touch devices (no hover state to reveal it there). One shared element,
-  // repositioned per room, rather than rebuilding the whole modal overlay
-  // for something this lightweight.
-  // Appended to <body>, not the stage — the stage clips its own children
-  // (overflow: hidden, so its corridor/room SVG never bleeds past its
-  // rounded corners), which was clipping the tip's top off whenever a
-  // room sat near the stage's own top edge, most visibly on a narrow
-  // mobile viewport where "near the top" is most rooms. Fixed
-  // positioning computed from real viewport pixels sidesteps that
-  // entirely instead of trying to out-guess the clip from inside it.
   var roomTipEl = document.createElement('div');
   roomTipEl.className = 'floorplan-room-tip';
   document.body.appendChild(roomTipEl);
@@ -897,13 +877,6 @@
     roomTipEl.appendChild(namesEl);
   }
 
-  // Anchored above the room, centered on it, in real viewport pixels —
-  // flips to sit below instead when there's not enough room above the
-  // room within the actual viewport (not the stage's own coordinate
-  // space, which is what let the old version think there was room
-  // above when the stage itself was already flush against the top of
-  // the screen). Clamped horizontally and vertically against the
-  // viewport too, for a room hugging any edge of the screen.
   function positionRoomTip(room) {
     var stageRect = stageEl.getBoundingClientRect();
     var roomTop = stageRect.top + (room.rect.y / 100) * stageRect.height;
@@ -911,8 +884,7 @@
     var roomCenterX = stageRect.left + ((room.rect.x + room.rect.w / 2) / 100) * stageRect.width;
 
     var margin = 8;
-    // Measure at the page's natural flow width first (max-width applies,
-    // but actual content width depends on which room's text is longest).
+
     roomTipEl.style.left = '0px';
     roomTipEl.style.top = '0px';
     var tipRect = roomTipEl.getBoundingClientRect();
@@ -929,9 +901,6 @@
     roomTipEl.style.top = top + 'px';
   }
 
-  // A pinned tip (touch) can outlive the scroll position it was placed
-  // at — keep it glued to its room rather than left floating over
-  // whatever scrolled into its place.
   window.addEventListener('scroll', function () {
     if (roomTipRoom) positionRoomTip(roomTipRoom);
   }, { passive: true });
@@ -957,10 +926,6 @@
     if (roomTipPinned && !e.target.closest('.floorplan-room-hit')) hideRoomTip();
   });
 
-  // Absence is house-wide, not floor-specific — someone not home isn't
-  // hiding on another floor, they're just not placed anywhere this
-  // load — so this renders once, independent of whichever floor tab is
-  // active, rather than being recomputed per floor like the caption is.
   function renderAway() {
     if (!awayEl) return;
     if (!house.awaySlugs.length) { awayEl.textContent = ''; return; }
@@ -974,19 +939,6 @@
     renderAway();
   }
 
-  // --- Ambient wandering -----------------------------------------------
-  // Every so often, a resident currently on the visible floor might slowly
-  // drift into another room — out to their door, down the hallway to the
-  // next one — so the page reads as caught mid-moment rather than static.
-  // Every room connects to every other room via the shared corridor, so
-  // there's no adjacency list to consult — just route through the midpoint
-  // between the two rooms' doorways.
-
-  // BFS over whichever corners this floor's chosen segments actually
-  // connect, from segment A's two corners to segment B's two corners —
-  // e.g. an L only has 2 segments/3 corners, a U 3 segments/4 corners, so
-  // this is always a tiny graph. Returns the corner-name path to walk
-  // (possibly empty if A and B share a corner directly).
   function findCorridorPath(floor, keyA, keyB) {
     if (keyA === keyB) return [];
     var adj = {};
@@ -1010,17 +962,6 @@
     return [];
   }
 
-  // The waypoints a dot walks between leaving fromRoom and arriving at
-  // toRoom's doorway — its own doorway, then straight down the corridor
-  // if they share one, or through however many corners connect the two
-  // segments if they don't. The final hop from the doorway into the
-  // room's actual landing slot happens separately, once occupancy for
-  // toRoom is finalized.
-  // A room normally opens onto exactly one corridor segment (its own
-  // doorPoint/seg). A room with `doors` (currently just the Courtyard,
-  // bordered by all four ring segments) instead exits toward whichever
-  // side the OTHER room actually sits on — so it never needs corner
-  // routing to reach anywhere, matching that it's reachable from any wall.
   function effectiveDoor(room, otherRoom) {
     if (room.doors && otherRoom.seg && room.doors[otherRoom.seg.key]) {
       return { point: room.doors[otherRoom.seg.key], key: otherRoom.seg.key };
@@ -1048,10 +989,6 @@
     });
     ringPoints.push(to.point);
 
-    // A Courtyard sits in the middle of the ring, reachable from every
-    // segment — cutting straight through it is often shorter than
-    // walking two sides of the ring to get to the opposite segment, so
-    // it's worth comparing rather than always taking the ring route.
     var courtyard = floor.rooms.filter(function (r) {
       return r.doors && r !== fromRoom && r !== toRoom;
     })[0];
@@ -1063,15 +1000,6 @@
     return ringPoints;
   }
 
-  // For any cross-floor departure — leaving for a room on a different
-  // floor of the house entirely, which has no physical corridor
-  // connecting it to this one — walks toward whichever corner or dead
-  // end of the CURRENT floor's own hallway is reachable, using the
-  // exact same corner/segment graph buildWanderPath routes through
-  // between rooms, just ending at the wall itself (implying a
-  // stairwell just past it) instead of another doorway. A straight
-  // floor has no corners at all, just the two open ends of its one
-  // corridor.
   function buildRetreatPath(fromRoom, floor) {
     var from = effectiveDoor(fromRoom, {});
     var corners = [];
@@ -1106,11 +1034,6 @@
     return points;
   }
 
-  // Walks `dot` through `points` in sequence, one CSS transition per leg,
-  // timed by actual distance rather than a fixed duration — so a short
-  // hop to the room next door doesn't take as long as a trip through two
-  // corners, and a long leg doesn't read as sped-up just to fit the same
-  // duration as a short one.
   function animateAlongPath(dot, points, onDone) {
     var i = 0;
     function step() {
@@ -1120,9 +1043,6 @@
       var prevY = parseFloat(dot.style.top) || p.y;
       var dist = Math.hypot(p.x - prevX, p.y - prevY);
       var dur = Math.max(WANDER_MIN_LEG_MS, Math.min(WANDER_MAX_LEG_MS, dist * WANDER_MS_PER_UNIT));
-      // linear, not ease-in-out — easing decelerates to a full stop at
-      // the end of every leg (and re-accelerates from a stop at the
-      // start of the next), which is exactly what reads as "stopping at
 
       dot.style.transition = 'left ' + dur + 'ms linear, top ' + dur + 'ms linear';
       dot.style.left = p.x + '%';

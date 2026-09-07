@@ -129,12 +129,20 @@ DATA DESIGN NOTES
   in the full 50-word pool share an identical tag set (checked
   explicitly — several near-collisions, like Cream/Coconut and
   Caramel/Molasses, were caught and fixed this way).
-- The 25-item menu is real, recognizable dishes/drinks/condiments — the
-  menu itself is completely ordinary, only Indigo's way of pointing at
-  it is strange. Every tag combination is unique. Each description is
-  written like real menu copy and only ever mentions PART of an item's
-  actual tags on purpose — reading the whole menu should never be enough
-  to solve an order outright, just help narrow it down.
+- The menu is real, recognizable dishes/drinks/condiments — the menu
+  itself is completely ordinary, only Indigo's way of pointing at it
+  is strange. Each description is written like real menu copy and
+  only ever mentions PART of an item's actual tags on purpose —
+  reading the whole menu should never be enough to solve an order
+  outright, just help narrow it down.
+- Like the askable words, the menu is drawn from a pool of 50
+  (ALL_MENU); each game picks 25 of them (MENU) at startGame() time
+  via the same pickWords() quota logic — at least 4 items each tagged
+  Food, Drink, and Spice/Condiment, then the rest filled randomly.
+  MENU_TAG_FREQUENCY (used for the order-reveal elimination-value
+  weighting) is recomputed from that 25-item pick each game, same as
+  GLOBAL_TAG_FREQUENCY is for words. Every tag combination is unique
+  across the full 50-item pool, not just within one game's 25.
 - The menu list is grouped into three sections (Entrees / Drinks / On
   the Side), matching each item's Food, Drink, or Spice/Condiment tag
   one-to-one. This is deliberately NOT a mystery — like a word's own

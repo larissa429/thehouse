@@ -1,16 +1,3 @@
-/* ============================================================
-   boardwalk.js — "Boardwalk Dash", a Chrome-dino-style endless runner.
-   Indigo sprints the length of the Boardwalk, jumping obstacles that
-   scroll in from the right at an ever-increasing speed.
-
-   Same fixed-internal-resolution canvas approach as merge.js — CSS
-   scales the element visually, all game math stays in STAGE_W x STAGE_H
-   coordinate space regardless of the on-screen size.
-
-   Everything content-related (Indigo's run frames, obstacle types,
-   background cameos) is data-driven from the config blocks below, so
-   dropping in new art is just adding a file + one line, not a rewrite.
-   ============================================================ */
 (function () {
   var root = document.getElementById('boardwalkGame');
   if (!root) return;
@@ -33,11 +20,11 @@
   var GROUND_Y = STAGE_H - 46;
   var INDIGO_X = 90;
   var INDIGO_SIZE = 56;
-  var GRAVITY = 2600; // px/s^2
-  var JUMP_VELOCITY = -900; // px/s
-  var START_SPEED = 320; // px/s
+  var GRAVITY = 2600;
+  var JUMP_VELOCITY = -900;
+  var START_SPEED = 320;
   var MAX_SPEED = 720;
-  var SPEED_RAMP = 6; // px/s gained per second survived
+  var SPEED_RAMP = 6;
 
   var BEST_KEY = 'boardwalk-best';
 
@@ -47,37 +34,21 @@
     return img;
   }
 
-  // --- Indigo's sprite -------------------------------------------------
-  // Add a second (or third+) running frame here once it exists — the
-  // animation cycles through however many are in this list, no other
-  // code changes needed. One entry = the current static look.
   var INDIGO_RUN_FRAME_SRCS = ['../images/icons/indigo.png'];
-  var INDIGO_JUMP_FRAME_SRC = '../images/icons/indigo.png'; // swap for a dedicated jump pose later
-  var RUN_FRAME_RATE = 8; // frames per second while grounded, only matters once there's >1 frame
+  var INDIGO_JUMP_FRAME_SRC = '../images/icons/indigo.png';
+  var RUN_FRAME_RATE = 8;
 
   var indigoRunFrames = INDIGO_RUN_FRAME_SRCS.map(loadImage);
   var indigoJumpFrame = loadImage(INDIGO_JUMP_FRAME_SRC);
 
-  // --- Obstacle types ----------------------------------------------------
-  // Add a new obstacle by adding an entry here. `image` draws a single
-  // static sprite; `images` (an array) animates through those frames the
-  // same way Indigo's run cycle does — 2 frames is enough for a walk
-  // cycle. `frameRate` overrides OBSTACLE_FRAME_RATE for just that type,
-  // for a walk cycle that shouldn't animate as fast as the default.
-  // Omit `image`/`images` to fall back to a hand-drawn shape in
-  // drawObstacle() (only 'bench' and 'lamp' have one — anything else
-  // without art falls back further to a plain box). `weight` controls
-  // how often it's picked relative to the others (higher = more common).
-  var OBSTACLE_FRAME_RATE = 6; // frames per second, default for multi-frame obstacles
+  var OBSTACLE_FRAME_RATE = 6;
   var OBSTACLE_TYPES = [
     { type: 'bench', w: 46, h: 34, weight: 3, title: 'Ran into a bench.' },
     { type: 'lamp', w: 14, h: 70, weight: 2, title: 'Caught a lamppost.' },
     { type: 'lp-cassette', w: 56, h: 56, weight: 2, title: 'Ran into LP and Cassette.', frameRate: 2,
       images: ['../images/boardwalk/lp1.png', '../images/boardwalk/lp2.png'] }
-    // Example once more resident art exists:
-    // { type: 'charlie', w: 50, h: 50, weight: 1, image: '../images/boardwalk/charlie-obstacle.png', title: 'Tripped over Charlie.' }
   ];
-  var obstacleFrames = {}; // type -> Image[], populated for any type with `image` or `images`
+  var obstacleFrames = {};
   OBSTACLE_TYPES.forEach(function (def) {
     if (def.images) obstacleFrames[def.type] = def.images.map(loadImage);
     else if (def.image) obstacleFrames[def.type] = [loadImage(def.image)];
@@ -98,21 +69,18 @@
     return OBSTACLE_TYPES[OBSTACLE_TYPES.length - 1];
   }
 
-  // --- Background cameos ---------------------------------------------
-  // Purely decorative — no collision. Add a resident image here and
-  // they'll start wandering through the background automatically.
   var BACKGROUND_CAMEO_SRCS = [
     '../images/icons/mirror.png',
     '../images/icons/journal.png'
   ];
   var cameoImages = BACKGROUND_CAMEO_SRCS.map(loadImage);
   var CAMEO_SIZE = 40;
-  var CAMEO_Y_OFFSET = 6; // sits just above the ground line
-  var CAMEO_MIN_GAP = 1800; // ms between cameo spawns
+  var CAMEO_Y_OFFSET = 6;
+  var CAMEO_MIN_GAP = 1800;
   var CAMEO_MAX_GAP = 3600;
-  var CAMEO_PARALLAX = 0.4; // fraction of foreground speed — makes them read as "behind" the action
+  var CAMEO_PARALLAX = 0.4;
 
-  var state = 'idle'; // 'idle' | 'playing' | 'gameover'
+  var state = 'idle';
   var indigoY, velocityY, obstacles, cameos, speed, elapsed, score, best, spawnTimer, cameoSpawnTimer, lastTime;
 
   function loadBest() {
@@ -132,7 +100,7 @@
     speed = START_SPEED;
     elapsed = 0;
     score = 0;
-    spawnTimer = 900; // ms until first obstacle
+    spawnTimer = 900;
     cameoSpawnTimer = 1500;
     scoreEl.textContent = '0';
   }
@@ -177,7 +145,6 @@
     spawnTimer -= dt * 1000;
     if (spawnTimer <= 0) {
       spawnObstacle();
-      // interval shrinks as speed rises, floored so it never becomes unfair-instant
       var base = Math.max(650, 1500 - elapsed * 18);
       spawnTimer = base + Math.random() * 500;
     }
@@ -229,7 +196,6 @@
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, STAGE_W, GROUND_Y);
 
-    // string lights along the top, warm and steady
     ctx.fillStyle = '#e3a94e';
     for (var lx = 20; lx < STAGE_W; lx += 60) {
       var sway = Math.sin((lx + elapsed * 40) * 0.02) * 4;
@@ -244,7 +210,6 @@
     }
     ctx.globalAlpha = 1;
 
-    // ground: boardwalk planks
     ctx.fillStyle = '#251b15';
     ctx.fillRect(0, GROUND_Y, STAGE_W, STAGE_H - GROUND_Y);
     ctx.strokeStyle = 'rgba(157, 133, 112, 0.35)';
@@ -263,9 +228,6 @@
     ctx.stroke();
   }
 
-  // Purely atmospheric — drawn behind obstacles/Indigo, dimmed and
-  // scrolling slower so they read as background rather than something
-  // to dodge.
   function drawCameos() {
     cameos.forEach(function (c) {
       if (c.img.complete && c.img.naturalWidth) {
@@ -304,7 +266,7 @@
       ctx.fillStyle = '#403022';
       ctx.fillRect(o.x, oy, o.w, o.h - 10);
 var backrestH = o.h - 10;
-var breakH = 1; // how thin each gap is
+var breakH = 1;
 ctx.fillStyle = '#3B2A1D';
 ctx.fillRect(o.x, oy + backrestH / 4, o.w, breakH);
 ctx.fillRect(o.x, oy + backrestH * 2 / 4, o.w, breakH);
@@ -317,8 +279,6 @@ ctx.fillRect(o.x - (seatW - o.w) / 2, oy + backrestH - seatH, seatW, seatH);
       ctx.fillRect(o.x + 4, oy + o.h - 10, 4, 10);
       ctx.fillRect(o.x + o.w - 8, oy + o.h - 10, 4, 10);
     } else {
-      // generic fallback for a new type that doesn't have art or a
-      // hand-drawn shape yet — visible enough to notice, not a crash
       ctx.fillStyle = '#403022';
       ctx.fillRect(o.x, oy, o.w, o.h);
     }
@@ -352,10 +312,10 @@ ctx.fillRect(o.x - (seatW - o.w) / 2, oy + backrestH - seatH, seatW, seatH);
 
   function loop(now) {
     if (state !== 'playing') return;
-    var dt = Math.min(0.05, (now - lastTime) / 1000); // clamp so a tab-switch stall doesn't teleport things
+    var dt = Math.min(0.05, (now - lastTime) / 1000);
     lastTime = now;
     update(dt);
-    if (state !== 'playing') { draw(); return; } // draw the frame the collision happened on
+    if (state !== 'playing') { draw(); return; }
     draw();
     requestAnimationFrame(loop);
   }
@@ -376,9 +336,6 @@ ctx.fillRect(o.x - (seatW - o.w) / 2, oy + backrestH - seatH, seatW, seatH);
     }
   });
   canvas.addEventListener('pointerdown', jump);
-  // The start overlay sits visually on top of the canvas (same
-  // .merge-gameover positioning as the game-over screen), so a tap/click
-  // there never reaches canvas's own listener — it needs its own.
   startEl.addEventListener('pointerdown', jump);
   restartBtn.addEventListener('click', startGame);
   restartBtn2.addEventListener('click', startGame);

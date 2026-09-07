@@ -1,12 +1,3 @@
-/* ============================================================
-   daisy-drag.js — reorderable D.A.I.S.Y. profile panels
-
-   Grab a panel by its handle (the vertical dots) and drag it up or
-   down the list; panels swap places live as you cross a neighbor's
-   midpoint. Land Green directly between Yellow and Blue (either
-   direction) and a small reward popup slides up from the bottom of
-   the screen.
-   ============================================================ */
 (function () {
   var list = document.getElementById('daisyList');
   var reward = document.getElementById('daisyReward');
@@ -20,12 +11,6 @@
     return el.getBoundingClientRect();
   }
 
-  // how far (as a fraction of a neighbor's height) the dragged panel
-  // needs to reach into it before they swap — lower means less finger
-  // travel is needed per swap, which matters a lot on tablets where the
-  // panels are still full-size (not collapsed the way they are on
-  // phones) and dragging the full height of one to trigger a swap isn't
-  // always physically possible on a fixed screen
   var SWAP_THRESHOLD = 0.25;
 
   function updateDrag(clientY) {
@@ -102,14 +87,9 @@
   list.addEventListener('pointerup', endDrag);
   list.addEventListener('pointercancel', endDrag);
 
-  // mobile: panels collapse to just the name + footnote (CSS handles the
-  // actual hiding) since a fully expanded panel can be taller than the
-  // screen, making it impossible to drag anywhere. Tapping anywhere on a
-  // panel other than the handle expands/collapses it; the handle itself
-  // is excluded so it keeps triggering a drag instead.
   list.addEventListener('click', function (e) {
     if (e.target.closest('.daisy-drag-handle')) return;
-    if (e.target.closest('a')) return; // let "Read more" links behave normally
+    if (e.target.closest('a')) return;
     var block = e.target.closest('.daisy-block');
     if (!block) return;
     block.classList.toggle('expanded');

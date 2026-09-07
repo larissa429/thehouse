@@ -1,17 +1,3 @@
-/* ============================================================
-   guesswho.js — "Who's in the House?", a text-input Guess Who
-   against a resident The House has picked at random.
-
-   The House holds a secret resident. The player asks free-text
-   yes/no questions; each one is matched against a trait table by
-   keyword (no real NLP), answered honestly, and used to narrow the
-   candidate board. The player wins by naming the secret resident
-   before running out of patience.
-
-   There's no opponent AI making moves here — the only "AI" is the
-   text matcher. Traits are simple independent booleans so matching
-   stays predictable instead of guessing at compound questions.
-   ============================================================ */
 (function () {
   var boardEl = document.getElementById('gwBoard');
   if (!boardEl) return;
@@ -36,7 +22,6 @@
   var houseYesBtn = document.getElementById('gwHouseYes');
   var houseNoBtn = document.getElementById('gwHouseNo');
 
-  // --- Character data -----------------------------------------------
   var CHARACTERS = [
     { id: 'ap', name: 'Abstract Painting', icon: '../images/guesswhoicons/ap.png',
       usesShe: true, usesHe: false, usesThey: false, usesIt: false,
@@ -184,12 +169,6 @@
       roundShape: false, rectangularShape: false }
   ];
 
-  // --- Question / trait matching -------------------------------------
-  // Triggers deliberately avoid bare "he"/"she"/"they"/"it" -- those words
-  // are the grammatical subject of nearly every question a player types
-  // ("do THEY have legs?"), so treating them as pronoun-trait signals
-  // meant almost every question got hijacked into a pronoun match. Pronoun
-  // questions now require an actually pronoun-shaped phrase.
   var QUESTIONS = [
     { trait: 'usesShe', prompt: "Does your pick use she/her pronouns?", yes: 'Yes, she uses she/her pronouns.', no: "No, not she/her.",
       triggers: ['sheher', 'she her', 'use she', 'uses she', 'goes by she', 'go by she', 'she pronoun', 'she pronouns', 'her pronoun', 'her pronouns', 'female pronoun'] },
@@ -263,9 +242,6 @@
       triggers: ['cisgender', 'cis gender', 'cis'] }
   ];
 
-  // Icons live in images/guesswhoicons/ — manually cropped versions of the
-  // site's character icons, framed specifically for this game's square
-  // tiles, so no runtime zoom/crop math is needed here anymore.
   function makeIconEl(c) {
     var icon = document.createElement('div');
     icon.className = 'gw-icon';
@@ -298,15 +274,13 @@
     return best;
   }
 
-  // --- Game state ------------------------------------------------------
-  var mode = 'solo'; // 'solo' | 'duel'
+  var mode = 'solo';
   var secret = null;
-  var asked = []; // trait keys already asked (player's questions about the House's pick)
-  var alive = {};  // id -> true if still a live candidate (House's pick, from player's POV)
+  var asked = [];
+  var alive = {};
   var turns = 0;
   var over = false;
 
-  // Duel-only state: the House trying to guess the player's chosen character.
   var playerCharId = null;
   var houseAsked = [];
   var houseAlive = {};
@@ -360,12 +334,6 @@
     updateHud();
   }
 
-  // --- Head-to-head duel -------------------------------------------------
-  // Player picks a character; the House tries to guess it by asking its own
-  // questions (same entropy-based picker as Hint) while the player races to
-  // guess the House's separately-chosen secret. Turns alternate: after the
-  // player asks/hints, the House immediately asks its own question and
-  // waits for a Yes/No answer before the player can act again.
   function startDuelPicker() {
     introEl.textContent = 'Pick a character to be your secret pick — the House will try to guess it while you try to guess its pick.';
     playerCharId = null;
@@ -482,11 +450,6 @@
     remainingCountEl.textContent = String(remainingCount());
   }
 
-  // --- The House's voice -------------------------------------------
-  // Same character established in Crossroads: few words, dry, doesn't
-  // chatter. Here it has to answer every question (that's the game), so
-  // it can't go fully silent — but the asides stay rare and short, never
-  // one per turn.
   var DONT_FOLLOW = [
     "That's not a question I answer.",
     "I don't follow.",
@@ -523,7 +486,6 @@
   }
 
   function withName(text) {
-    // Avoids a double period when the name itself ends in one (e.g. "Green D.A.I.S.Y.").
     var end = /[.!?]$/.test(secret.name) ? '' : '.';
     return text + secret.name + end;
   }
@@ -558,9 +520,6 @@
       : withName('Not quite — it was ') + ' Try again?';
   }
 
-  // The House guesses the player's pick (duel mode only). Only fires once
-  // its own candidate pool is down to one, so with honest answers this is
-  // always correct — the fallback branch is just a safety net.
   function houseWinsDuel(guessedChar) {
     lockControls();
     var playerPick = CHARACTERS.filter(function (c) { return c.id === playerCharId; })[0];
@@ -570,16 +529,11 @@
     if (correct) {
       resultEl.textContent = 'The House wins — it guessed your pick (' + playerPick.name + ') first. Its own pick was ' + secret.name + '.';
     } else {
-      // Only reachable with inconsistent answers (the true pick got
-      // eliminated by a contradiction) — a rare tie, not a real win for
-      // either side.
       appendMessage('house', "That doesn't add up.");
       resultEl.textContent = 'No winner this round — the House\'s answers stopped adding up, so it guessed ' + guessedChar.name + ' and was wrong. Your pick was ' + playerPick.name + '. Start a new duel and answer straight.';
     }
   }
 
-  // Records an answered trait, narrows the candidate pool, and refreshes
-  // the board/HUD. Shared by both a typed question and a hint reveal.
   function applyAnswer(q, answer) {
     asked.push(q.trait);
     for (var i = 0; i < CHARACTERS.length; i++) {
@@ -598,9 +552,6 @@
     }
   }
 
-  // Picks the unasked question that splits a candidate pool closest to
-  // 50/50 — the same information-gain idea used for Hint, and for the
-  // House's own questions when it's trying to guess the player's pick.
   function bestQuestionAmong(candidates, askedList) {
     var best = null;
     var bestScore = Infinity;
@@ -609,7 +560,7 @@
       if (askedList.indexOf(q.trait) !== -1) continue;
       var yesCount = candidates.filter(function (c) { return !!c[q.trait]; }).length;
       var noCount = candidates.length - yesCount;
-      if (yesCount === 0 || noCount === 0) continue; // asking this teaches nothing right now
+      if (yesCount === 0 || noCount === 0) continue;
       var score = Math.abs(yesCount - noCount);
       if (score < bestScore) {
         bestScore = score;
@@ -675,7 +626,6 @@
     endGame(id === secret.id);
   }
 
-  // --- The House's turn (duel mode) --------------------------------------
   function askHouseQuestion() {
     if (over) return;
     var candidates = CHARACTERS.filter(function (c) { return houseAlive[c.id]; });
@@ -709,8 +659,6 @@
     pendingHouseQuestion = null;
     houseTurnEl.hidden = true;
 
-    // Hands the turn back to the player — the House doesn't get to ask
-    // again until the player has asked, hinted, or guessed.
     if (over) return;
     inputEl.disabled = false;
     hintBtn.disabled = false;

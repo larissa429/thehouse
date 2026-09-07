@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', function () {
       return { x: r.left + r.width / 2 - b.left, y: r.top - b.top };
     }
 
-    // every pin gets a dot — regardless of whether it has a string
     const allPins = [selfPin].concat(Array.from(board.querySelectorAll('.connection-pin[data-color]')));
     const dotEls = new Map();
     allPins.forEach(function (pin) {
@@ -43,7 +42,6 @@ document.addEventListener('DOMContentLoaded', function () {
       dotEls.set(pin, dot);
     });
 
-    // only pins WITHOUT data-no-line get a string
     const strings = [];
     board.querySelectorAll('.connection-pin[data-color]').forEach(function (pin, i) {
       if (pin.hasAttribute('data-no-line')) return;
@@ -68,7 +66,6 @@ document.addEventListener('DOMContentLoaded', function () {
       const b = board.getBoundingClientRect();
       svg.setAttribute('viewBox', '0 0 ' + b.width + ' ' + b.height);
 
-      // step 1: position EVERY pin's dot, every frame, no exceptions
       const centers = new Map();
       allPins.forEach(function (pin) {
         const c = centerOf(pin);
@@ -78,7 +75,6 @@ document.addEventListener('DOMContentLoaded', function () {
         dot.style.top = c.y + 'px';
       });
 
-      // step 2: only pins with a string get the sag/curve math
       const from = centers.get(selfPin);
       strings.forEach(function (s) {
         const to = centers.get(s.pin);
@@ -121,9 +117,6 @@ document.addEventListener('DOMContentLoaded', function () {
         dragging = true; moved = false;
         pin.setPointerCapture(e.pointerId);
         startClientX = e.clientX; startClientY = e.clientY;
-        // NOT `|| 50` — that silently breaks at exactly 0% (the top/left
-        // edge), since 0 is falsy in JS and would wrongly fall back to
-        // center. Only an actually-missing/unparseable value should do that.
         const parsedX = parseFloat(pin.style.getPropertyValue('--x'));
         const parsedY = parseFloat(pin.style.getPropertyValue('--y'));
         startXPct = isNaN(parsedX) ? 50 : parsedX;

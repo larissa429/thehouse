@@ -1,24 +1,3 @@
-/* ============================================================
-   desk.js — draggable scattered papers + a trash can that refuses
-   to actually get rid of anything (art/misc page)
-
-   Drag any .desk-paper around the .desk. Drop one on the .trash-can
-   and it crumples (swaps to a random crumpled-paper image, shrinks
-   toward the can), then a moment later it un-crumples, swaps back to
-   its real image, and re-scatters onto the desk with the same
-   flutter-in entrance it had on page load.
-
-   One paper is special: the one marked [data-pen]. Trash it and it
-   doesn't crumple — it just shrinks and bounces as itself, then a
-   hidden drawer slides out from the bottom edge of the desk with a
-   password slip inside. That slip behaves like any other paper from
-   then on (draggable, clickable to reveal its text, throwable too).
-
-   Any element marked [data-trinket] gets the same no-crumple shrink/
-   bounce/respawn treatment as the pen, just without triggering the
-   drawer secret — for small object doodles (a die, a paper crane...)
-   that should feel like real objects on the desk rather than paper.
-   ============================================================ */
 (function () {
   var desk = document.getElementById('desk');
   var trashCan = document.getElementById('trashCan');
@@ -29,11 +8,6 @@
   var photoOverlayText = document.getElementById('photoOverlayText');
   var photoClose = document.getElementById('photoClose');
 
-  // the pointerup that opens the overlay is often followed by a synthetic
-  // click event at the same coordinates, which now land on the overlay
-  // backdrop itself — without this guard that reads as "clicked outside"
-  // and closes the overlay in the same frame it opened (the flash-and-
-  // close bug also fixed this way on the calendar page)
   var openedAt = 0;
   var OPEN_GUARD_MS = 300;
 
@@ -78,7 +52,6 @@
   }
 
   function randomScatterSpot() {
-    // keep clear of the very edges so papers don't spawn half off-desk
     return {
       x: (12 + Math.random() * 76) + '%',
       y: (12 + Math.random() * 70) + '%',
@@ -88,25 +61,19 @@
 
   function replayEntrance(paper, delayMs) {
     paper.classList.remove('entering');
-    void paper.offsetWidth; // force reflow so the animation can restart
+    void paper.offsetWidth;
     paper.style.animationDelay = (delayMs || 0) + 'ms';
     paper.classList.add('entering');
   }
 
-  /* Real bounce physics: a tiny "ball" bouncing around inside the can's
-     circular inner rim. Reflects its velocity off the rim at whatever
-     angle it actually hits, loses some energy each bounce so it settles
-     down, and calls onDone() once time's up. Drives img's own transform
-     directly, frame by frame — completely separate from .desk-paper's
-     --x/--y/--rot/--scale transform. */
   function runBounce(img, onDone) {
     var canSize = trashCan.getBoundingClientRect().width;
-    var rimRadius = canSize * 1; // tuned by eye against the actual trash.png art
+    var rimRadius = canSize * 1;
     var ballRadius = canSize * 0.06;
     var maxDist = rimRadius - ballRadius;
 
     var angle = Math.random() * Math.PI * 2;
-    var speed = canSize * (0.09 + Math.random() * 0.06); // px per frame — the "intensity"
+    var speed = canSize * (0.09 + Math.random() * 0.06);
     var vx = Math.cos(angle) * speed;
     var vy = Math.sin(angle) * speed;
     var x = 0, y = 0;
@@ -148,7 +115,6 @@
     requestAnimationFrame(frame);
   }
 
-  /* ---- the secret: pen -> drawer -> password slip --------------- */
   var drawer = document.getElementById('deskDrawer');
   var drawerOpened = false;
 
@@ -159,19 +125,14 @@
       drawerOpened = true;
       drawer.classList.add('open');
     }
-    // the paper's own re-scatter already restored --scale etc.; just wait
-    // for the drawer's own slide to be visible before the slip appears
     setTimeout(spawnPasswordPaper, 350);
   }
 
   function spawnPasswordPaper() {
-    if (document.querySelector('.desk-paper[data-password]')) return; // already out
+    if (document.querySelector('.desk-paper[data-password]')) return;
     var el = document.createElement('div');
     el.className = 'desk-paper entering';
     el.setAttribute('data-password', 'true');
-    // matches the drawer's centered position, sitting inside the open
-    // drawer's interior (not just on its front lip) so it reads as
-    // physically resting inside the box
     el.style.setProperty('--x', '50%');
     el.style.setProperty('--y', '109%');
     el.style.setProperty('--rot', (Math.random() * 16 - 8).toFixed(1) + 'deg');
@@ -184,7 +145,6 @@
     setupPaper(el, { revealText: 'PASSWORD: PENNY' });
   }
 
-  /* ---- shared setup for every paper, static or spawned later ----- */
   function setupPaper(paper, opts) {
     opts = opts || {};
     var isPen = paper.hasAttribute('data-pen');
@@ -194,10 +154,6 @@
     var img = paper.querySelector('img');
     var realSrc = img.getAttribute('src');
 
-    // optional dice-style "rolling" faces: data-roll-frames="a.webp,b.webp,..."
-    // cycles through them while it bounces in the can, then settles on a
-    // random one — same idea as the comic pages swapping to a crumple
-    // texture, just for an object instead of paper
     var rollFrames = (paper.dataset.rollFrames || '')
       .split(',')
       .map(function (s) { return s.trim(); })
@@ -207,10 +163,6 @@
     var startClientX, startClientY, startXPct, startYPct;
     var crumpling = false;
 
-    // release velocity, for rolling a die across the desk when let go —
-    // tracked as px/ms between the last two pointermove samples, not the
-    // whole drag, so a drag that ends slow doesn't inherit speed from
-    // earlier in the gesture
     var lastMoveTime = 0, lastMoveClientX = 0, lastMoveClientY = 0;
     var releaseVelX = 0, releaseVelY = 0;
 
@@ -225,7 +177,6 @@
       lastMoveTime = 0;
       releaseVelX = 0;
       releaseVelY = 0;
-      // NOT `|| 50` — breaks at exactly 0% since 0 is falsy in JS
       var parsedX = parseFloat(paper.style.getPropertyValue('--x'));
       var parsedY = parseFloat(paper.style.getPropertyValue('--y'));
       startXPct = isNaN(parsedX) ? 50 : parsedX;
@@ -283,29 +234,22 @@
         if (isTrinket) sinkTrinket();
         else crumpleThenRestore();
       } else if (rollFrames.length) {
-        // released on the open desk with some speed left — let it roll
-        // rather than just stopping dead where the pointer let go
         rollAcrossDesk(releaseVelX, releaseVelY);
       }
     }
     paper.addEventListener('pointerup', endDrag);
     paper.addEventListener('pointercancel', endDrag);
 
-    // die-only: after release, keeps moving in the direction it was
-    // dragged, bouncing off the desk's edges and losing speed to
-    // friction, cycling through face images the whole time it's moving —
-    // same physics shape as runBounce(), just bounded by a rectangle
-    // (the desk) instead of the trash can's circular rim
     function rollAcrossDesk(pxPerMsX, pxPerMsY) {
       var b = desk.getBoundingClientRect();
-      var FRAME_MS = 16.67; // ~60fps, matching requestAnimationFrame's typical cadence
-      var vx = (pxPerMsX * FRAME_MS / b.width) * 100;  // %/frame
-      var vy = (pxPerMsY * FRAME_MS / b.height) * 100; // %/frame
+      var FRAME_MS = 16.67;
+      var vx = (pxPerMsX * FRAME_MS / b.width) * 100;
+      var vy = (pxPerMsY * FRAME_MS / b.height) * 100;
 
-      var MIN_SPEED = 0.15; // %/frame — below this it's just a placed drop, not a throw
+      var MIN_SPEED = 0.15;
       if (Math.hypot(vx, vy) < MIN_SPEED) return;
 
-      crumpling = true; // reuses the "don't let it be re-grabbed mid-animation" gate
+      crumpling = true;
 
       var x = parseFloat(paper.style.getPropertyValue('--x'));
       var y = parseFloat(paper.style.getPropertyValue('--y'));
@@ -315,7 +259,7 @@
       if (isNaN(rot)) rot = 0;
       var spin = Math.hypot(vx, vy) * 40 * (Math.random() < 0.5 ? -1 : 1);
 
-      var MIN_X = 6, MAX_X = 94, MIN_Y = 6, MAX_Y = 94; // stay fully on the visible desk
+      var MIN_X = 6, MAX_X = 94, MIN_Y = 6, MAX_Y = 94;
 
       var rollInterval = setInterval(function () {
         img.setAttribute('src', randomRollFrame());
@@ -328,7 +272,7 @@
         if (x > MAX_X) { x = MAX_X; vx *= -0.6; }
         if (y < MIN_Y) { y = MIN_Y; vy *= -0.6; }
         if (y > MAX_Y) { y = MAX_Y; vy *= -0.6; }
-        vx *= 0.94; // friction
+        vx *= 0.94;
         vy *= 0.94;
         rot += spin;
         spin *= 0.94;
@@ -348,21 +292,13 @@
       requestAnimationFrame(frame);
     }
 
-    // shared "shrink and slide toward the can" step — swapImage controls
-    // whether it also swaps to a random crumpled texture (comic pages) or
-    // stays looking like itself the whole time (the pen)
     function shrinkTowardCan(swapImage) {
       crumpling = true;
       if (swapImage) img.setAttribute('src', randomCrumpleSrc());
 
-      // the entrance animation's fill-mode:both keeps its 100% keyframe
-      // "in control" of transform forever once played, even overriding
-      // later inline/custom-property changes — remove it so the base
-      // .desk-paper rule (driven by --x/--y/--rot/--scale) fully governs
-      // rendering from here on out
       paper.classList.remove('entering');
       paper.style.setProperty('--scale', '1');
-      void paper.offsetWidth; // force layout so the line above is committed
+      void paper.offsetWidth;
       paper.classList.add('crumpling');
 
       var deskRect = desk.getBoundingClientRect();
@@ -384,7 +320,7 @@
         paper.classList.remove('crumpling');
         paper.classList.add('bouncing');
         trashCan.classList.remove('wobble');
-        void trashCan.offsetWidth; // force reflow so the wobble can replay every time
+        void trashCan.offsetWidth;
         trashCan.classList.add('wobble');
 
         runBounce(img, onBounceDone);
@@ -394,7 +330,6 @@
     function crumpleThenRestore() {
       shrinkTowardCan(true);
       startBounce(function () {
-        // the desk "refuses" to keep it — it pops back out and re-scatters
         var spot = randomScatterSpot();
         paper.classList.remove('bouncing');
         paper.style.setProperty('--x', spot.x);
@@ -412,12 +347,8 @@
     }
 
     function sinkTrinket() {
-      shrinkTowardCan(false); // no image swap by default — it stays looking like itself
+      shrinkTowardCan(false);
 
-      // if this trinket has roll frames (a die's different faces), cycle
-      // through them rapidly while it's airborne/bouncing, like it's
-      // actually tumbling — starts as soon as it's thrown, not just once
-      // it lands in the can
       var rollInterval = null;
       if (rollFrames.length) {
         rollInterval = setInterval(function () {
@@ -428,8 +359,6 @@
       startBounce(function () {
         if (rollInterval) clearInterval(rollInterval);
 
-        // re-scatters same as any paper, so the trick (if it is one)
-        // can be found again later
         var spot = randomScatterSpot();
         paper.classList.remove('bouncing');
         paper.style.setProperty('--x', spot.x);
@@ -449,13 +378,6 @@
     setupPaper(paper);
   });
 
-  // hidden/secret objects (the pen, the die, the crane) spawn somewhere
-  // new every load/refresh rather than sitting in the same spot — set
-  // before their flutter-in entrance plays, so they just reposition
-  // instantly with no visible jump. Each also avoids landing within
-  // MIN_DIST of any other paper's spawn point (including each other,
-  // since this runs in order and reads whatever --x/--y is already set),
-  // so they don't spawn stacked directly on top of something else.
   var RANDOM_SPAWN_MIN_DIST = 100;
 
   function randomizeSpawnPoint(el) {

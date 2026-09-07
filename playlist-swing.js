@@ -1,27 +1,9 @@
-/* ============================================================
-   playlist-swing.js — tilted, draggable, spring-back playlist
-
-   Same drag-by-handle + swing-back physics as Telly's playlist
-   (originally in telly.js), pulled out into its own reusable script
-   with generic class names (.swing-playlist-wrap / .swing-drag-handle)
-   so other character pages can use it without touching telly.js.
-
-   Markup expected:
-     <div class="swing-playlist-wrap">
-       <div class="swing-drag-handle"></div>
-       <span class="swing-tape"></span>
-       <iframe ...></iframe>
-     </div>
-   ============================================================ */
 (function () {
   var wrap = document.querySelector('.swing-playlist-wrap');
   var handle = document.querySelector('.swing-drag-handle');
   if (!wrap || !handle) return;
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // the resting tilt angle — read from whatever the wrap's CSS already
-  // resolves --swing-deg to, so each page can set its own default via
-  // the transform's fallback value instead of editing this file
   var computedRest = parseFloat(getComputedStyle(wrap).getPropertyValue('--swing-deg'));
   var REST_DEG = isNaN(computedRest) ? -8 : computedRest;
   var STIFFNESS = 0.02;
@@ -100,11 +82,6 @@
   handle.addEventListener('pointerup', endDrag);
   handle.addEventListener('pointercancel', endDrag);
 
-  // the drag offset is a raw pixel amount added on top of the wrap's
-  // percentage-based anchor position — if the window is resized after
-  // dragging, that stale pixel offset no longer lines up with the new
-  // layout (looks like the card is stuck "awkwardly" off to one side),
-  // so snap back to the anchor position whenever the viewport changes
   window.addEventListener('resize', function () {
     posX = 0;
     posY = 0;

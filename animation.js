@@ -1,11 +1,3 @@
-/* ============================================================
-   animation.js — the little theater on the Animation art page
-
-   Register clips here as you add video files to /videos. The curtains
-   open on load, the current clip loads into the stage <video>, and the
-   prev/next buttons step through the CLIPS list (looping around at
-   either end).
-   ============================================================ */
 (function () {
   var CLIPS = [
     { src: '../../videos/iwantbylars.mp4', title: 'I Want — by Lars' },
@@ -43,8 +35,6 @@
 
   loadClip(0);
 
-  // curtains open a beat after the page settles, like the house lights
-  // dimming before a show
   window.addEventListener('load', function () {
     setTimeout(function () { stage.classList.add('open'); }, 400);
   });

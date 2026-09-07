@@ -1,13 +1,3 @@
-/* ============================================================
-   locations.js — interactive map for locations/index.html
-   Each .location-pin is a draggable polaroid positioned at --x/--y
-   (percent), same drag pattern as the connections-board pins
-   elsewhere on the site. A plain click (not a drag) clones the
-   pin's <template> — a themed brochure panel with its own photo
-   gallery and color scheme — into the shared .note-overlay popup.
-   This page wires its own open/close rather than depending on
-   calendar.js or connections.js being present.
-   ============================================================ */
 (function () {
   var map = document.getElementById('locationMap');
   if (!map) return;
@@ -42,15 +32,12 @@
     lightbox.addEventListener('click', function (e) { if (e.target === lightbox) closeLightbox(); });
   }
 
-  // Escape closes whichever layer is on top first, so dismissing an
-  // enlarged photo doesn't also dump you out of the brochure behind it.
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     if (lightbox && lightbox.classList.contains('open')) closeLightbox();
     else closeNote();
   });
 
-  // tapping a gallery circle inside the (cloned) brochure opens it full-size
   if (noteBody) {
     noteBody.addEventListener('click', function (e) {
       var img = e.target.closest('.brochure-gallery img');
@@ -59,10 +46,6 @@
     });
   }
 
-  // Below the 700px breakpoint the map switches to a static wrapping grid
-  // (see styles.css) — dragging a pin there would have nothing visible to
-  // do, since position is no longer absolute, so skip wiring it up at all
-  // rather than fighting the page's own touch scrolling for no benefit.
   var dragEnabled = window.matchMedia('(min-width: 701px)').matches;
 
   map.querySelectorAll('.location-pin').forEach(function (pin) {
@@ -76,7 +59,6 @@
         pin.setPointerCapture(e.pointerId);
         startClientX = e.clientX;
         startClientY = e.clientY;
-        // NOT `|| 50` — 0% is falsy in JS and would wrongly snap to center
         var parsedX = parseFloat(pin.style.getPropertyValue('--x'));
         var parsedY = parseFloat(pin.style.getPropertyValue('--y'));
         startXPct = isNaN(parsedX) ? 50 : parsedX;

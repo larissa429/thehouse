@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   var eyes = document.querySelectorAll('.house-eye');
-  var maxRadius = 18;       // how far the pupil can travel (in the eye's own 0-100 units)
-  var sensitivity = 6;      // higher = mouse has to move further to reach max deflection
+  var maxRadius = 18;
+  var sensitivity = 6;
 
   function updatePupil(eyeEl, mouseX, mouseY) {
     var rect = eyeEl.getBoundingClientRect();

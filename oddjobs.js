@@ -1,17 +1,6 @@
-// Odd Jobs — WarioWare-style microgame engine.
-//
-// Each "job" is a tiny self-contained round: a one-word prompt flashes,
-// then the player gets a few seconds (shrinking as the shift goes on) to
-// do exactly one thing. Get it right -> next job. Get it wrong, or run
-// out the clock -> lose a life. Three misses ends the shift.
-//
-// Adding a new job later should mean adding one entry to the JOBS array
-// below and nothing else — the engine doesn't know or care what's
-// actually happening inside a job's playfield.
-
 (function () {
   var stageEl = document.getElementById('oddjobsStage');
-  if (!stageEl) return; // not on the Odd Jobs page
+  if (!stageEl) return;
 
   var scoreEl = document.getElementById('oddjobsScore');
   var livesEl = document.getElementById('oddjobsLives');
@@ -29,7 +18,7 @@
   var MAX_LIVES = 3;
   var START_DURATION = 4000;
   var MIN_DURATION = 1400;
-  var DURATION_STEP = 120; // shaved off per round, floors at MIN_DURATION
+  var DURATION_STEP = 120;
 
   var score = 0;
   var lives = MAX_LIVES;
@@ -38,14 +27,7 @@
   var resolved = false;
   var timeoutId = null;
   var running = false;
-  // Bumped every time a round starts. Anything scheduled by an older
-  // round (the prompt-delay timeout, the round's own auto-fail timeout,
-  // a job's own event listeners) captures the token it was born with and
-  // checks it before acting — so a Restart mid-round can't let a stale
-  // callback reach into the fresh round it left behind.
   var activeToken = 0;
-
-  // --- Shared job helpers ---------------------------------------------
 
   function shuffle(arr) {
     for (var i = arr.length - 1; i > 0; i--) {
@@ -55,10 +37,6 @@
     return arr;
   }
 
-  // Builds an init() for the "wanted icon + tap the matching option out of
-  // a row of decoys" job shape (Match the request, Pour the order). Same
-  // single-tap rules as every other simple job, just parameterized by the
-  // label text and the emoji set.
   function wantedRowInit(label, choices) {
     return function (field, resolve) {
       var options = shuffle(choices.slice());
@@ -97,10 +75,6 @@
     };
   }
 
-  // Pointer-based drag (mouse + touch in one). Moves `chip` by percentage
-  // of `field`'s box as the pointer moves, then hands off to `onRelease`
-  // to do its own hit-testing (against whatever drop targets that job
-  // defines) once the pointer lifts.
   function enableDrag(chip, field, onRelease) {
     var dragging = false;
     chip.addEventListener('pointerdown', function (e) {
@@ -127,14 +101,10 @@
     chip.addEventListener('pointercancel', release);
   }
 
-  // --- Jobs ---------------------------------------------------------
-
   var JOBS = [
     {
       id: 'waterPlant',
       prompt: 'Water it!',
-      // Five plants in a row, one visibly wilting — tap that one.
-      // Tapping any other plant fails the round immediately.
       init: function (field, resolve) {
         var plants = document.createElement('div');
         plants.className = 'oddjobs-plants';
@@ -144,7 +114,7 @@
           var btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'oddjobs-plant';
-          btn.textContent = '🌱'; // 🌱
+          btn.textContent = '🌱';
           if (i === target) btn.classList.add('is-wilting');
           (function (isTarget) {
             btn.addEventListener('click', function () {
@@ -159,8 +129,6 @@
     {
       id: 'catchPetal',
       prompt: 'Catch it!',
-      // A single petal drifts down from the top — tap it before it
-      // reaches the ground. Missing (it lands) fails the round.
       init: function (field, resolve, duration) {
         var ground = document.createElement('div');
         ground.className = 'oddjobs-ground';
@@ -169,7 +137,7 @@
         var petal = document.createElement('button');
         petal.type = 'button';
         petal.className = 'oddjobs-petal';
-        petal.textContent = '🌸'; // 🌸
+        petal.textContent = '🌸';
         var startPct = 15 + Math.random() * 70;
         petal.style.left = startPct + '%';
         petal.style.top = '-10%';
@@ -187,7 +155,6 @@
           resolve(false);
         });
 
-        // Kick the fall off on the next frame so the transition applies.
         requestAnimationFrame(function () {
           requestAnimationFrame(function () {
             petal.style.transition = 'top ' + duration + 'ms linear';
@@ -199,20 +166,11 @@
     {
       id: 'matchRequest',
       prompt: 'Match it!',
-      // A patron holds up the book they want — tap the matching book out
-      // of a small row of decoys. Shape-distinct emoji on purpose (not
-      // just closed books in different colors) — same colorblind-
-      // unfriendly trap as the wilting-plant pulse, avoided from the start.
       init: wantedRowInit('Wanted', ['📕', '📖', '📔', '📚'])
     },
     {
       id: 'shelveIt',
       prompt: 'Shelve it!',
-      // Three faded "ghost" slots are scattered up top, each a different
-      // book; three full-color chips sit along the bottom in shuffled
-      // order. Drag each chip onto its matching ghost slot. A chip
-      // dropped anywhere else just snaps back — only the clock can fail
-      // this one. Winning means placing all three before time runs out.
       init: function (field, resolve) {
         var BOOKS = ['📕', '📖', '📔'];
         var slotSpots = [
@@ -278,16 +236,11 @@
     {
       id: 'pourOrder',
       prompt: 'Pour it!',
-      // Same shape as Match the request — an order icon shows what's
-      // wanted, tap the matching drink out of a row of decoys.
       init: wantedRowInit('Ordered', ['🍺', '🍷', '🍹', '🍸'])
     },
     {
       id: 'busTable',
       prompt: 'Bus it!',
-      // A handful of dirty dishes are scattered across the table — tap
-      // every one before time's up. No wrong target here; the clock
-      // alone is the pressure, same as Catch the memory petal.
       init: function (field, resolve) {
         var DISHES = ['🍽️', '🥤', '🍷', '🥣'];
         var spots = [
@@ -317,8 +270,6 @@
     }
   ];
 
-  // --- Engine ---------------------------------------------------------
-
   function currentDuration() {
     return Math.max(MIN_DURATION, START_DURATION - round * DURATION_STEP);
   }
@@ -347,7 +298,6 @@
   function startTimerBar(duration) {
     timerFillEl.style.transition = 'none';
     timerFillEl.style.width = '100%';
-    // Force reflow so the transition below actually animates from 100%.
     void timerFillEl.offsetWidth;
     timerFillEl.style.transition = 'width ' + duration + 'ms linear';
     timerFillEl.style.width = '0%';
@@ -375,7 +325,6 @@
 
     promptEl.textContent = job.prompt;
     promptEl.classList.remove('is-shown');
-    // Reflow so re-adding the class always re-triggers the transition.
     void promptEl.offsetWidth;
     promptEl.classList.add('is-shown');
 
@@ -421,10 +370,6 @@
   }
 
   function startShift() {
-    // Restart can be hit mid-round. nextRound() bumps activeToken, which
-    // makes every callback the previous round scheduled (prompt-delay,
-    // auto-fail timeout, a job's own listeners) a no-op the moment it
-    // runs — but drop the pending timer too, just to not leave it ticking.
     if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
 
     score = 0;
@@ -439,15 +384,9 @@
   }
 
   function returnToStart() {
-    // Same mid-round-safe teardown as startShift, but lands on the start
-    // screen instead of launching straight into a fresh shift.
     running = false;
     activeToken++;
     if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
-    // resolve() normally freezes the timer bar's CSS transition the
-    // instant a round ends — but returning to start can happen mid-round,
-    // bypassing resolve() entirely, so the bar would otherwise keep
-    // animating toward 0% behind the start overlay.
     timerFillEl.style.transition = 'none';
 
     score = 0;

@@ -5,16 +5,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (e.target.classList.contains('x')) {
       const win = e.target.closest('.telly-window');
       if (win) win.remove();
-      spawnReplacement(); // closing one just makes room for another
+      spawnReplacement();
     }
   });
 
-  // ---- DRAG BY TITLE BAR ----
-  // delegated so it works on every window, including ones spawned later
   let dragWin = null, dragOffsetX = 0, dragOffsetY = 0;
 
   stage.addEventListener('pointerdown', function (e) {
-    if (e.target.classList.contains('x')) return; // don't drag from the close button
+    if (e.target.classList.contains('x')) return;
     const bar = e.target.closest('.telly-window-bar');
     if (!bar) return;
     const win = bar.closest('.telly-window');
@@ -57,7 +55,7 @@ const WINDOW_COUNT = 100;
     const el = document.createElement('div');
     el.className = 'telly-window' + (isFinal ? ' final' : '');
     el.innerHTML =
-      '<div class="telly-window-bar">CRITICAL ERROR!! <span class="x">\u00d7</span></div>' +
+      '<div class="telly-window-bar">CRITICAL ERROR!! <span class="x">×</span></div>' +
       '<div class="telly-window-body">' +
         '<img src="../images/shredder.gif" alt="" width="40" height="40" />' +
         '<p>DIRECTORY "Telly" NOT FOUND</p>' +
@@ -75,10 +73,6 @@ const WINDOW_COUNT = 100;
   const maxX = Math.max(stageW - WINDOW_W, 0);
   const maxY = Math.max(stageH - WINDOW_H, 0);
 
-  /* ---- organic cascades: each stack starts at a fresh random spot
-     and keeps stepping diagonally until the NEXT step would run
-     off the screen edge — at which point a brand new stack begins
-     at a brand new random spot. Stack lengths naturally vary. ---- */
   const windows = [];
   let placed = 0;
   let batchX = 0, batchY = 0, posInBatch = 0;
@@ -92,7 +86,6 @@ const WINDOW_COUNT = 100;
     const rawX = batchX + posInBatch * STEP + (Math.random() * JITTER - JITTER / 2);
     const rawY = batchY + posInBatch * STEP * 0.7 + (Math.random() * JITTER - JITTER / 2);
 
-    // hit an edge: end this stack, start a new one next loop
     if (rawX > maxX || rawY > maxY || rawX < 0 || rawY < 0) {
       posInBatch = 0;
       continue;
@@ -115,7 +108,6 @@ const WINDOW_COUNT = 100;
   stage.appendChild(finalWindow);
   windows.push(finalWindow);
 
-  // running z-index counter for anything created/raised AFTER the initial batch
   let topZ = WINDOW_COUNT + 10;
 
   function spawnReplacement() {
@@ -124,7 +116,6 @@ const WINDOW_COUNT = 100;
     w.style.top = (Math.random() * maxY) + 'px';
     w.style.zIndex = ++topZ;
     stage.appendChild(w);
-    // add 'show' on the next frame so its fade-in transition actually plays
     requestAnimationFrame(function () { w.classList.add('show'); });
   }
 
@@ -163,12 +154,6 @@ const WINDOW_COUNT = 100;
   }
 });
 
-/* ---- TELLY'S PLAYLIST: draggable, always wobbles back sideways
-   ------------------------------------------------------------
-   The drag HANDLE is a plain div overlaying the top edge (not the
-   iframe itself) — the iframe is cross-origin content and silently
-   swallows pointer events before our JS ever sees them, which is
-   why dragging felt broken/unresponsive before this. ------------- */
 (function () {
   const wrap = document.querySelector('.telly-playlist-wrap');
   const handle = document.querySelector('.telly-drag-handle');
@@ -255,4 +240,3 @@ const WINDOW_COUNT = 100;
   applyPos();
   applyAngle();
 })();
-      

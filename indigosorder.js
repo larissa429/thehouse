@@ -343,8 +343,7 @@
     currentReveal.forEach(function (item) { noteSeen(symbolFor(item.tag)); });
 
     asksSinceGuess++;
-    var asksNeeded = hasGuessedOnce ? 1 : ASKS_PER_GUESS;
-    roundPhase = asksSinceGuess >= asksNeeded ? 'guess' : 'ask';
+    roundPhase = asksSinceGuess >= ASKS_PER_GUESS ? 'guess' : 'ask';
 
     renderCurrentOrder();
     renderSeenSymbols();
@@ -560,6 +559,7 @@
     var header = notesFloatHeaderEl;
     var minBtn = notesFloatMinBtn;
     var fullBtn = document.getElementById('itNotesFloatFull');
+    var opacityBtn = document.getElementById('itNotesFloatOpacity');
     if (!panel || !header || !minBtn) return;
 
     if (window.matchMedia('(max-width: 640px)').matches) {
@@ -587,7 +587,7 @@
     var preFullscreenTop = '', preFullscreenHeight = '';
 
     header.addEventListener('pointerdown', function (e) {
-      if (e.target === minBtn || e.target === fullBtn) return;
+      if (e.target === minBtn || e.target === fullBtn || e.target === opacityBtn) return;
       dragging = true; moved = false;
       header.setPointerCapture(e.pointerId);
       var rect = panel.getBoundingClientRect();
@@ -658,6 +658,20 @@
           fullBtn.classList.add('is-active');
           fullBtn.setAttribute('aria-label', 'Exit fullscreen');
         }
+      });
+    }
+
+    if (opacityBtn) {
+      var OPACITY_LEVELS = [1, 0.5, 0.3, 0.1];
+      var opacityIdx = 0;
+      opacityBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        opacityIdx = (opacityIdx + 1) % OPACITY_LEVELS.length;
+        var level = OPACITY_LEVELS[opacityIdx];
+        var pct = Math.round(level * 100);
+        panel.style.opacity = level;
+        opacityBtn.textContent = pct + '%';
+        opacityBtn.setAttribute('aria-label', 'Panel opacity: ' + pct + '%');
       });
     }
   }

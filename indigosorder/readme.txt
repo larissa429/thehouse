@@ -77,12 +77,19 @@ get their footing on before the pool of "seen" symbols starts growing
 faster.
 
 GUESS BUFFER (ASKS_PER_GUESS)
-A guess only unlocks once the player has asked enough times — otherwise
-a wrong guess costs nothing but a single ask before trying again, which
-makes guessing effectively free. That buffer only matters before the
-player's very first guess of the whole playthrough: by the time they've
-made one, they've already picked up a few symbols along the way, so
-every guess after that unlocks after a single ask.
+A guess only unlocks once the player has asked ASKS_PER_GUESS (3) times
+since the last guess — otherwise a wrong guess costs nothing but a
+single ask before trying again, which makes guessing effectively free.
+This applies to every guess, every order, for the whole playthrough
+(an earlier build only enforced it before the player's first-ever
+guess, but that let later orders devolve into trial-and-error guessing
+with too little asking in between — First Contact itself is normally
+played with 2+ human turns per alien turn, so this matches that pacing
+throughout, not just at the start).
+
+Separately, hasGuessedOnce still tracks whether the player has made
+their first guess of the playthrough — that flag now only gates
+negation (see ORDER REVEAL & NEGATION above), not the ask buffer.
 
 DATA DESIGN NOTES
 - Every tag lives in one flat pool — flavor, type, and color are not

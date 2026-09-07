@@ -499,23 +499,40 @@
       cursor: pointer;
     }
     .it-notes-float-full.is-active { color: var(--lamp); border-color: var(--lamp); }
+    .it-notes-float-opacity {
+      font-family: var(--label);
+      font-size: 0.68rem;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      color: var(--ink-soft);
+      background: none;
+      border: var(--edge);
+      border-radius: 4px;
+      height: 1.6rem;
+      padding: 0 0.5rem;
+      cursor: pointer;
+    }
     .it-notes-float-body { padding: 0.9rem 1rem 1rem; }
     .it-notes-float.is-minimized .it-notes-float-body { display: none; }
 
     .it-notes-float.is-fullscreen {
       display: flex;
       flex-direction: column;
-      width: min(94vw, 62rem);
+      width: fit-content;
+      min-width: 20rem;
+      max-width: calc(100vw - 2rem);
     }
     .it-notes-float.is-fullscreen .it-notes-float-body {
       flex: 1;
       display: flex;
       flex-direction: column;
+      align-items: center;
       overflow-y: auto;
       padding: 1.2rem 1.5rem 1.5rem;
     }
     .it-notes-float.is-fullscreen .it-decoder-list {
       flex: 1;
+      aspect-ratio: 1;
       grid-template-rows: repeat(5, 1fr);
       gap: 0.6rem;
     }
@@ -539,9 +556,10 @@
     .it-notes-float.is-fullscreen .it-decoder-marker { width: 8px; height: 8px; }
 
     @media (max-width: 640px) {
-      .it-wordgrid { grid-template-columns: repeat(2, 1fr); }
-      .it-decoder-list { grid-template-columns: repeat(2, 1fr); }
-      .it-symbol-picker-grid { grid-template-columns: repeat(4, 1fr); }
+      .it-wordgrid { grid-template-columns: repeat(3, 1fr); }
+      .it-wordgrid > *:last-child { grid-column: 2 / 3; }
+      .it-decoder-list { grid-template-columns: repeat(3, 1fr); }
+      .it-decoder-list > *:last-child { grid-column: 2 / 3; }
 
       .it-notes-float {
         left: 0;
@@ -560,6 +578,7 @@
         touch-action: auto;
       }
       .it-notes-float-full { display: none; }
+      .it-notes-float-opacity { display: none; }
       .it-notes-float-body {
         flex: 1;
         overflow-y: auto;
@@ -668,6 +687,7 @@
     <div class="it-notes-float-header" id="itNotesFloatHeader">
       <span>Your Notes</span>
       <div class="it-notes-float-actions">
+        <button type="button" class="it-notes-float-opacity" id="itNotesFloatOpacity" aria-label="Panel opacity: 100%">100%</button>
         <button type="button" class="it-notes-float-full" id="itNotesFloatFull" aria-label="Fullscreen">&#9974;</button>
         <button type="button" class="it-notes-float-min" id="itNotesFloatMin" aria-label="Minimize">&minus;</button>
       </div>

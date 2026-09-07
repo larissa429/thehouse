@@ -1,21 +1,8 @@
-// Floor Plan — a procedurally generated house layout.
-//
-// The House doesn't have one fixed interior, so every page load carves a
-// fresh set of rooms with a small generator instead of using one hand-drawn
-// map — but it's not just "chop a box into smaller boxes." Every floor is
-// built around a central corridor, with rooms attached along both sides of
-// it, the way an actual floor plan reads: circulation space down the
-// middle, rooms lining it. Floors 1 and 3 are both "hangout" floors drawing
-// from the same weighted room pool; floor 2 is one long stretch of
-// bedrooms, doors lining both walls of the hallway. A colored dot per
-// resident sits wherever they've actually landed this load — nobody shows
-// up somewhere they aren't, bedrooms included. Tap a dot to see who it is.
-// Two extra, much rarer things can appear alongside the normal rooms — see
-// LOCKED_DOOR and HIDDEN_DOOR below.
+
 
 (function () {
   var tabsEl = document.getElementById('floorplanTabs');
-  if (!tabsEl) return; // not on the Floor Plan page
+  if (!tabsEl) return;
 
   var stageEl = document.getElementById('floorplanStage');
   var svgEl = document.getElementById('floorplanSvg');
@@ -27,10 +14,6 @@
   var noteBody = document.getElementById('note-body');
   var noteCloseEl = document.getElementById('note-close');
 
-  // A brief full-viewport white pulse for the hidden door breaking —
-  // sits above note-overlay so it flashes over the dark card, not just
-  // behind it. Created once and toggled via class rather than rebuilt
-  // per use, the same way roomTipEl is further down.
   var flashEl = document.createElement('div');
   flashEl.className = 'floorplan-flash';
   document.body.appendChild(flashEl);
@@ -38,51 +21,29 @@
   var SVG_NS = 'http://www.w3.org/2000/svg';
   var HIDDEN_DOOR_KEY = 'thehouse-floorplan-basement-door-found';
 
-  // --- Tunable odds — the whole point of this comment is "go ahead and
-  // change these numbers later without needing to touch anything else." ---
-  var ABSENCE_CHANCE = 0.18;       // any resident but Journal, per load
-  var BEDROOM_STAY_CHANCE = 0.3;   // odds a present resident is just in their own room today
-  var EXTRA_ROOM_SLOTS = 3;        // how many extra rolls floors 1 & 3 get past the staples
-  var RARE_ROOM_CHANCE = 0.42;     // per extra slot
-  var RARER_ROOM_CHANCE = 0.12;    // per extra slot (independent of the rare roll)
-  var HIDDEN_DOOR_CHANCE = 0.09;   // floor 1 only, only if not already found
-  var LOCKED_DOOR_CHANCE = 0.05;   // floor 2 only — Penny, an even rarer find
-  var WANDER_CHECK_MS = 9000;      // how often a dot might decide to wander
-  var WANDER_CHANCE = 0.35;        // odds a wander check actually moves someone
-  var WANDER_MS_PER_UNIT = 45;     // walking speed — ms per viewBox unit of distance
-  var WANDER_MIN_LEG_MS = 350;     // floor, so a short hop isn't instant
-  var WANDER_MAX_LEG_MS = 1800;    // ceiling, so a long hallway leg isn't glacial
-  var CLOSENESS_PLACEMENT_THRESHOLD = 3; // a bond weaker than this (either direction) is just noise — placement ignores it entirely instead of giving every mild acquaintance or minor friction a say
-  var BEDROOM_VISIT_THRESHOLD = 6; // a real bond, positive only — this is "close enough to actually hang out in their room," not just "close enough to notice"
-  var BEDROOM_VISIT_CAP = 3;       // a bedroom stops being visitable once this many people are already in it
-  var FOLLOW_CHANCE_PER_POINT = 0.08; // odds someone left behind tags along, per point of CLOSENESS with whoever just left (e.g. a +9 bond ~= 72%)
-  var PAIR_FOLLOW_CHANCE = 0.85;      // Cool S/Clickbaity specifically — a stronger, flatter chance than the closeness math gives anyone else
-  var FLEE_CHANCE_PER_POINT = 0.1;    // odds someone already in a room leaves when a disliked arrival shows up, per point of negative CLOSENESS
-  var BLUEMARBLE_BEDROOM_CHANCE = 0.5; // her own override of BEDROOM_STAY_CHANCE — she's the isolated one, so she starts home more than most
-  var HARD_AVOID_THRESHOLD = -10; // a bond this bad isn't just unlikely to end up in the same room — it never happens at all, placement or wandering, no exceptions
-
-  // --- Residents ---------------------------------------------------------
-  // Colors match each resident's existing connection-note color in
-  // styles.css (.note[data-color]) — nothing new invented there. Clickbaity
-  // is the one real gap (he used to share a color with Cool S, since they
-  // were one page) — gets the site's existing red accent instead.
-  //
-  // defaultChance is how often a resident with a defaultRoom actually goes
-  // there instead of falling through to the normal closeness-biased pick —
-  // omitted means "always" (Mirror really is in the kitchen constantly).
-  // AP and PBC both default to the bathroom, which reads wrong if it's
-  // guaranteed every single load — a bathroom is a quick stop, not a
-  // hangout, so it's a coin-flip-ish chance instead.
+  var ABSENCE_CHANCE = 0.18;
+  var BEDROOM_STAY_CHANCE = 0.3;
+  var EXTRA_ROOM_SLOTS = 3;
+  var RARE_ROOM_CHANCE = 0.42;
+  var RARER_ROOM_CHANCE = 0.12;
+  var HIDDEN_DOOR_CHANCE = 0.09;
+  var LOCKED_DOOR_CHANCE = 0.05;
+  var WANDER_CHECK_MS = 9000;
+  var WANDER_CHANCE = 0.35;
+  var WANDER_MS_PER_UNIT = 45;
+  var WANDER_MIN_LEG_MS = 350;
+  var WANDER_MAX_LEG_MS = 1800;
+  var CLOSENESS_PLACEMENT_THRESHOLD = 3;
+  var BEDROOM_VISIT_THRESHOLD = 6;
+  var BEDROOM_VISIT_CAP = 3;
+  var FOLLOW_CHANCE_PER_POINT = 0.08;
+  var PAIR_FOLLOW_CHANCE = 0.85;
+  var FLEE_CHANCE_PER_POINT = 0.1;
+  var BLUEMARBLE_BEDROOM_CHANCE = 0.5;
+  var HARD_AVOID_THRESHOLD = -10;
 
   var RESIDENTS = [
-    // Doesn't really dislike anyone — even Blue Marble, his worst bond
-    // numerically, is closer to something SHE can't stand about being
-    // near HIM than the reverse. tolerant means his own placement and
-    // wandering never treat a disliked-by-others room as somewhere to
-    // avoid, and he never rolls to flee an arrival, no matter the bond.
-    // Someone else's dislike of him (PBC's -7, Blue Marble's hard avoid)
-    // still works exactly as it always has — this only ever suppresses
-    // HIS side of a reaction, never theirs.
+
     { slug: 'journal', name: 'Journal', icon: '../images/zoomedicons/journal.webp', color: '#693719', alwaysHome: true, tolerant: true },
     { slug: 'mirror', name: 'Mirror', icon: '../images/zoomedicons/mirror.webp', color: '#d9b473', defaultRoom: 'Kitchen' },
     { slug: 'lp', name: 'LP', icon: '../images/zoomedicons/lp.webp', color: '#cfa8d4' },
@@ -90,19 +51,14 @@
     { slug: 'dream', name: 'Dream', icon: '../images/zoomedicons/dream.webp', color: '#3d2f69' },
     { slug: 'indigo', name: 'Indigo', icon: '../images/zoomedicons/indigo.webp', color: '#2904bd' },
     { slug: 'cassette', name: 'Cassette', icon: '../images/zoomedicons/cassette.webp', color: '#f0a878' },
-    // Isolated by nature — starts home in her own room more often than
-    // most (bedroomStayChance overrides the general BEDROOM_STAY_CHANCE
-    // just for her). Wandering itself (including back home) works the
-    // same for her as anyone else now.
+
     { slug: 'bluemarble', name: 'Blue Marble', icon: '../images/zoomedicons/bluemarble.webp', color: '#a8d4c4', bedroomStayChance: BLUEMARBLE_BEDROOM_CHANCE },
     { slug: 'ap', name: 'AP', icon: '../images/zoomedicons/ap.webp', color: '#e8a2a8', defaultRoom: 'Bathroom', defaultChance: 0.45 },
     { slug: 'cools', name: 'Cool S', icon: '../images/zoomedicons/cools.webp', color: '#c4b0e8', pair: 'clickbaity' },
     { slug: 'clickbaity', name: 'Clickbaity', icon: '../images/zoomedicons/clickbaity.webp', color: '#c0463c', pair: 'cools' },
     { slug: 'geeky', name: 'Geeky', icon: '../images/zoomedicons/geeky.webp', color: '#f0955a' },
     { slug: 'pbc', name: 'PBC', icon: '../images/zoomedicons/pbc.webp', color: '#e8781e', defaultRoom: 'Bathroom', defaultChance: 0.45 },
-    // Starts placed in her own (famously trashed) bedroom every load
-    // she's home (noHangoutDefault) — but isn't stuck there for the
-    // whole visit, wandering works the same for her as anyone else now.
+
     { slug: 'dumptruck', name: 'Dumptruck', icon: '../images/zoomedicons/dumptruck.webp', color: '#3f6b32', noHangoutDefault: true }
   ];
 
@@ -111,19 +67,12 @@
     return null;
   }
 
-  // A resident's own bedroom room object on floor 2, found the same way
-  // generateHouse's internal bedroomOf() does — used outside placement,
-  // by a resident retreating there mid-visit from a hangout floor.
   function findBedroom(slug) {
     var r = findResident(slug);
     if (!r || !house || !house.floors[1]) return null;
     return house.floors[1].rooms.filter(function (room) { return room.name === r.name + "'s Room"; })[0];
   }
 
-  // Every layout function fills slots by walking its room-name list in
-  // order, and the staples are always concatenated first — so without
-  // this, "Kitchen & Dining Room" (etc) would land in the same early slot
-  // almost every load regardless of which shape or extra rooms show up.
   function shuffle(arr) {
     for (var i = arr.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
@@ -132,19 +81,10 @@
     return arr;
   }
 
-  // --- Closeness graph -----------------------------------------------
-  // Pulled from each character's own Connections section, not invented.
-  // Positive = pulls two residents toward the same room; negative = pushes
-  // apart. This is a soft bias for placement, never a hard rule.
-  // Scale is -10 to 10, not just -2 to 3 — the old narrow range meant
-  // every strong bond used the same top value, which fused most of the
-  // cast into one indistinguishable "everyone's best friends" blob at
-  // placement time. Widening it lets real differences in closeness
-  // actually separate people into distinct friend groups instead.
   var CLOSENESS = [
     ['journal', 'mirror', 4], ['journal', 'n528', 5], ['journal', 'bluemarble', -10], ['journal', 'dumptruck', 3],
     ['mirror', 'bluemarble', 6], ['mirror', 'ap', 3],
-    ['lp', 'cassette', 9], // dating
+    ['lp', 'cassette', 9],
     ['cassette', 'indigo', 6], ['cassette', 'bluemarble', 5], ['indigo', 'lp', 6],
     ['n528', 'dream', 9],
     ['geeky', 'clickbaity', 6], ['geeky', 'cools', 5],
@@ -161,13 +101,6 @@
     return 0;
   }
 
-  // Unlike the ordinary soft closeness bias (down-weighted, never
-  // excluded), a bond at or below HARD_AVOID_THRESHOLD removes a room
-  // from consideration entirely — currently only Journal/Blue Marble.
-  // Used by both initial placement and every wander/flee destination
-  // pick, so it holds for the whole visit, not just the first load.
-  // Falls back to the unfiltered list if literally every candidate
-  // would be excluded, rather than leaving nobody anywhere to go.
   function excludeHardAvoidRooms(slug, rooms) {
     var safe = rooms.filter(function (room) {
       return !room.occupants.some(function (occSlug) { return closenessBetween(slug, occSlug) <= HARD_AVOID_THRESHOLD; });
@@ -175,14 +108,10 @@
     return safe.length ? safe : rooms;
   }
 
-  // --- Room pool -----------------------------------------------------
-
   var STAPLES = ['Kitchen & Dining Room', 'Living Room', 'Foyer', 'Bathroom'];
   var RARE = ['In-House Theater', 'Courtyard', 'Crafts Room', 'Music Room', 'Arcade', 'Sunroom', 'Board Game Den'];
   var RARER = ['Indoor Treehouse', 'Snow Room', 'Pillow Pit', 'Planetarium', 'Karaoke Bar & Grill'];
 
-  // One line per hangout room, shown when its box is clicked — bedrooms
-  // don't get one of these at all, just the occupant list.
   var ROOM_DESCRIPTIONS = {
     'Kitchen & Dining Room': 'Where meals happen, whenever anyone actually cooks.',
     'Living Room': 'The most neutral room in any house.',
@@ -202,13 +131,11 @@
     'Karaoke Bar & Grill': 'A karaoke bar and grill combined into one room.'
   };
 
-  // Optional author-picked casts — if the room spawns AND everyone in its
-  // cast is home, there's a chance the whole scene actually happens.
   var ROOM_CASTS = {
     'Karaoke Bar & Grill': ['journal', 'mirror', 'n528', 'dream', 'cassette', 'lp', 'indigo', 'bluemarble'],
     'In-House Theater': ['journal', 'mirror', 'n528', 'dream']
   };
-  var CAST_SCENE_CHANCE = 0.7; // if the cast's room spawns and everyone's home, odds the scene actually triggers
+  var CAST_SCENE_CHANCE = 0.7;
 
   function pickExtraRooms(usedNames) {
     var picked = [];
@@ -224,16 +151,6 @@
     }
     return picked;
   }
-
-  // --- Corridor-and-doors room generator --------------------------------
-  // Every floor is one central corridor with rooms lining both sides of
-  // it — half the room list along the top wall, half along the bottom —
-  // instead of recursively slicing the whole canvas into a grid. That's
-  // the actual point of it: real negative space (margins, the corridor
-  // itself) instead of every square inch being "a room," which is what
-  // made the old generator read as a box getting subdivided rather than a
-  // floor plan. `doorPoint` is where each room meets the corridor — the
-  // waypoint ambient wandering routes through.
 
   function buildCorridorFloor(names, opts) {
     var corridorY = 50;
@@ -264,10 +181,7 @@
           rect: rect,
           cx: rect.x + rect.w / 2,
           cy: rect.y + rect.h / 2,
-          // The true centerline of the corridor, not its near edge — a
-          // wandering dot's waypoints come straight from this, and should
-          // read as walking down the middle of the hallway, not hugging
-          // the wall it just stepped out of.
+
           doorPoint: { x: rect.x + rect.w / 2, y: corridorY },
           seg: { key: 'spine', axis: 'h', pos: corridorY },
           occupants: []
@@ -286,27 +200,9 @@
     return buildCorridorFloor(names, { corridorHalf: 5, marginX: 6, marginY: 6, gap: 1.6, doorGap: 1.2 });
   }
 
-  // --- Bent hangout floors (L / U / O) ----------------------------------
-  // A different shape of hallway for variety, on top of the room-content
-  // variety the pool already gives. These trace one, two, or three sides
-  // of a shared inner square (L / U), rooms on BOTH sides of every used
-  // segment the same way the straight floor has rooms on both sides of
-  // its one corridor — an outward row (away from the inner square, full
-  // segment length) and an inward row (into it, inset from both ends so
-  // two segments meeting at a corner never reach into the same square
-  // inch). The inward row draws its own small second batch of extra
-  // rooms rather than splitting the outward batch thinner, so both sides
-  // actually end up populated instead of the inner row being an
-  // afterthought.
-  //
-  // O is the exception: all four sides, single row each (as before,
-  // outward only), because the inner square is reserved for a Courtyard
-  // that always fills it completely — the payoff for going all the way
-  // around instead of a real second room row.
-
   var PERIMETER = { x0: 26, y0: 26, x1: 74, y1: 74 };
   var PERIMETER_HALF = 4, PERIMETER_DEPTH = 15, PERIMETER_GAP = 1.2;
-  var CORNER_INSET = 6; // trimmed off each end of an inward row so it can't reach a shared corner
+  var CORNER_INSET = 6;
 
   function perimeterSegments() {
     return {
@@ -318,29 +214,19 @@
   }
 
   function corridorRectFor(seg) {
-    // Extended past the segment's own from/to by its half-thickness at
-    // both ends — a segment's rect otherwise stops exactly at the shared
-    // corner point, which covers the *inner* corner (both segments reach
-    // it) but leaves the *outer* corner of the turn uncovered by either
-    // one, reading as a notch bitten out of the hallway right at the bend.
+
     var from = seg.from - PERIMETER_HALF, to = seg.to + PERIMETER_HALF;
     return seg.axis === 'h'
       ? { x: from, y: seg.pos - PERIMETER_HALF, w: to - from, h: PERIMETER_HALF * 2 }
       : { x: seg.pos - PERIMETER_HALF, y: from, w: PERIMETER_HALF * 2, h: to - from };
   }
 
-  // Each shape lists its possible segment combinations; one is picked at
-  // random so an "L," say, can land on any of its four possible corners.
   var SHAPE_SEGMENT_OPTIONS = {
     l: [['top', 'right'], ['right', 'bottom'], ['bottom', 'left'], ['left', 'top']],
     u: [['left', 'top', 'right'], ['top', 'right', 'bottom'], ['right', 'bottom', 'left'], ['bottom', 'left', 'top']],
     o: [['top', 'right', 'bottom', 'left']]
   };
 
-  // The 4 fixed points where perimeter segments meet, and which two
-  // corners each segment's centerline runs between — used to route a
-  // wandering dot through the actual turn(s) between two different
-  // segments, rather than a straight line cutting across the bend.
   var CORNER_POINTS = {
     NW: { x: PERIMETER.x0, y: PERIMETER.y0 },
     NE: { x: PERIMETER.x1, y: PERIMETER.y0 },
@@ -349,13 +235,6 @@
   };
   var SEGMENT_CORNERS = { top: ['NW', 'NE'], right: ['NE', 'SE'], bottom: ['SW', 'SE'], left: ['NW', 'SW'] };
 
-  // rowSign is which way this row extends from the corridor: seg.outSign
-  // for the outward row, -seg.outSign for the inward one. alongFrom/To
-  // optionally narrow the usable stretch of the segment (used to inset
-  // the inward row away from corners). segKey identifies which side of
-  // the perimeter this is (top/right/bottom/left) — tagged onto every
-  // room it produces so wandering knows which corridor segment a room
-  // opens onto, for routing through the right corner(s) between segments.
   function layoutPerimeterRow(seg, names, rowSign, segKey, alongFrom, alongTo) {
     var rooms = [];
     var n = names.length;
@@ -373,9 +252,7 @@
       var farEdge = nearEdge + rowSign * PERIMETER_DEPTH;
       var d0 = Math.min(nearEdge, farEdge), d1 = Math.max(nearEdge, farEdge);
       var rect, doorPoint;
-      // doorPoint sits on the corridor's true centerline (seg.pos), not
-      // the near edge — a wander waypoint built from this should read as
-      // walking down the middle of the hallway, never hugging the wall.
+
       if (seg.axis === 'h') {
         rect = { x: alongStart, y: d0, w: alongLen, h: d1 - d0 };
         doorPoint = { x: rect.x + rect.w / 2, y: seg.pos };
@@ -415,12 +292,7 @@
       };
       rooms.push({
         name: 'Courtyard', rect: cRect, cx: cRect.x + cRect.w / 2, cy: cRect.y + cRect.h / 2,
-        // Bordered by all four ring segments, not just one — `doors` gives
-        // wandering a direct exit toward whichever side the destination is
-        // actually on, instead of always leaving north and walking the
-        // long way around the ring no matter where it's actually headed.
-        // doorPoint/seg stay as a plain fallback for anything that isn't
-        // pathing-aware (e.g. the hidden door borrowing a random doorway).
+
         doorPoint: { x: cRect.x + cRect.w / 2, y: PERIMETER.y0 }, seg: { key: 'top', axis: 'h', pos: PERIMETER.y0 },
         doors: {
           top: { x: cRect.x + cRect.w / 2, y: PERIMETER.y0 },
@@ -437,15 +309,6 @@
     var chosenKeys = options[Math.floor(Math.random() * options.length)];
     var chosenSegs = chosenKeys.map(function (k) { return allSegs[k]; });
 
-    // A second, independent batch of extra rooms for the inward rows —
-    // otherwise the inner side is just the outer side's list split
-    // thinner, and ends up sparse instead of a real second row of rooms.
-    // Only ONE segment ever hosts an inward row, not every segment — two
-    // different segments' inward rows both reach toward the same shared
-    // corner (their depth, not just their length along the wall), so any
-    // pair of them can collide there regardless of how much each is inset
-    // lengthwise. With a single inward row there's nothing left for it to
-    // compete with, so no corner math is needed at all.
     var inwardNames = pickExtraRooms(names);
     var inwardSegIndex = Math.floor(Math.random() * chosenSegs.length);
 
@@ -476,15 +339,10 @@
   }
 
   function buildResidentialFloor(names) {
-    // Thin door slots, not deep rooms — this is meant to read as "a very
-    // long hallway with bedroom doors lining it," not a row of little rooms.
+
     return buildCorridorFloor(names, { corridorHalf: 4, marginX: 3, marginY: 6, gap: 0.9, doorGap: 0.8, depth: 9 });
   }
 
-  // A room's near edge (the boundary facing the corridor, where a door
-  // actually is) and its footprint along the wall — shared by real rooms
-  // and by a phantom rect below, so an empty stretch's computed edge is
-  // guaranteed to land exactly where a real room's own edge would.
   function wallEdgeOf(rect, seg) {
     if (seg.axis === 'h') {
       var cy = rect.y + rect.h / 2;
@@ -494,10 +352,6 @@
     return { edge: cx < seg.pos ? rect.x + rect.w : rect.x, from: rect.y, to: rect.y + rect.h };
   }
 
-  // A phantom outward-row room spanning a whole segment, built with the
-  // exact near/far-edge math layoutPerimeterRow itself uses for a real
-  // one — never rendered, just a stand-in so an empty segment's door
-  // lines up with where a real room's wall would actually be.
   function phantomOutwardRect(seg) {
     var nearEdge = seg.pos + seg.outSign * (PERIMETER_HALF + PERIMETER_GAP);
     var farEdge = nearEdge + seg.outSign * PERIMETER_DEPTH;
@@ -507,12 +361,6 @@
       : { x: d0, y: seg.from, w: d1 - d0, h: seg.to - seg.from };
   }
 
-  // Same idea, facing the other way — an inward row (a second row of
-  // rooms facing the corridor from inside the ring) only ever gets
-  // built for one segment per floor, and only when there were spare
-  // rooms to fill it — so most segments, most loads, have this whole
-  // stretch sitting completely empty. Inset by CORNER_INSET like a real
-  // inward row, so it can't reach a shared corner either.
   function phantomInwardRect(seg) {
     var rowSign = -seg.outSign;
     var nearEdge = seg.pos + rowSign * (PERIMETER_HALF + PERIMETER_GAP);
@@ -524,13 +372,6 @@
       : { x: d0, y: from, w: d1 - d0, h: to - from };
   }
 
-  // Finds a spot along a corridor wall that isn't actually a room's own
-  // doorway — anywhere a room COULD sit but doesn't right now: the
-  // margin before the first room or after the last one in a row, the
-  // seam between two neighboring rooms, or (most often) a whole segment
-  // that came up with zero rooms at all, since the room-name list doesn't
-  // always divide evenly across however many segments this shape has.
-  // Reads as a second, unlabeled door built into the wall itself.
   function findEmptyWallSpot(floor) {
     var groups = {};
     floor.rooms.forEach(function (room) {
@@ -540,13 +381,6 @@
       (groups[key] = groups[key] || { axis: room.seg.axis, edge: e.edge, centerline: room.seg.pos, spans: [] }).spans.push({ from: e.from, to: e.to });
     });
 
-    // Every row's own real length — the straight floor's single shared
-    // spine for both its rows, or (for a bent floor) whichever perimeter
-    // segment a given edge value belongs to. The outward row spans the
-    // segment's full length; the inward row (if any) is inset from both
-    // ends so it can never reach a shared corner — using the outward
-    // row's wider bounds for it would "find" a gap in that reserved
-    // corner buffer, which isn't a real wall at all.
     var rowBounds = {};
     if (floor.corridorSegments && floor.corridorSegments.length && !floor.segments) {
       var spine = floor.corridorSegments[0];
@@ -563,10 +397,6 @@
       rowBounds[seg.axis + ':' + Math.round(inwardEdge * 10)] = { from: seg.from + CORNER_INSET, to: seg.to - CORNER_INSET };
     });
 
-    // A gap has to actually be big enough to hold a door — the cosmetic
-    // seam between two adjacent rooms, or a sliver of margin left over
-    // right next to a corner, is real empty wall but nowhere a door
-    // could plausibly fit. A bit more than the door mark's own footprint.
     var MIN_GAP = dotSizePercent(1) + 1;
     var gaps = [];
     Object.keys(groups).forEach(function (key) {
@@ -582,12 +412,6 @@
       if (bounds.to - cursor > MIN_GAP) gaps.push({ axis: g.axis, edge: g.edge, centerline: g.centerline, from: cursor, to: bounds.to });
     });
 
-    // A row with zero rooms at all doesn't produce a group above
-    // (nothing to group) — checked separately using the same phantom
-    // rects, so each edge still matches a real room's exactly. Outward
-    // rows are usually populated (an uneven room count is what leaves
-    // one empty); inward rows are the more common case, since most
-    // segments never get one built at all.
     (floor.segments || []).forEach(function (segMeta) {
       var seg = allSegs[segMeta.key];
       if (!seg) return;
@@ -606,18 +430,12 @@
     var span = pick.to - pick.from;
     var margin = span > 0.1 ? Math.min(2, span / 2 - 0.01) : 0;
     var t = margin > 0 ? pick.from + margin + Math.random() * (span - 2 * margin) : (pick.from + pick.to) / 2;
-    // pick.edge is a ROOM's own near edge — flush with the corridor
-    // itself sits PERIMETER_GAP closer to the centerline than that (the
-    // same small buffer every room keeps from the hallway). Straight
-    // floors use the same 1.2 for their own doorGap, so one constant
-    // covers both.
+
     var corridorEdge = pick.edge > pick.centerline ? pick.edge - PERIMETER_GAP : pick.edge + PERIMETER_GAP;
     return pick.axis === 'h'
       ? { x: t, y: corridorEdge, axis: 'h' }
       : { x: corridorEdge, y: t, axis: 'v' };
   }
-
-  // --- Whole-house generation --------------------------------------------
 
   function generateHouse() {
     var floor1Names = shuffle(STAPLES.concat(pickExtraRooms(STAPLES)));
@@ -628,12 +446,7 @@
     var doorFound = false;
     try { doorFound = localStorage.getItem(HIDDEN_DOOR_KEY) === '1'; } catch (e) {}
     var hiddenDoorPresent = !doorFound && Math.random() < HIDDEN_DOOR_CHANCE;
-    // Sits in a gap of empty wall between two rooms, not another room's
-    // own doorway — reads as a second, unmarked door built into the wall.
-    // Works the same regardless of which hallway shape Floor 1 rolled.
-    // Some loads just don't have a wall gap big enough anywhere, and
-    // that's fine — it simply doesn't spawn that load, rather than
-    // forcing it into a spot too small to actually be a door.
+
     var hiddenDoorPoint = null;
     var hiddenDoorAxis = 'h';
     if (hiddenDoorPresent && floor1.rooms.length) {
@@ -646,7 +459,6 @@
       }
     }
 
-    // Bedrooms: one door per resident, plus a rare chance of The Locked Door.
     var bedroomNames = RESIDENTS.map(function (r) { return r.name + "'s Room"; });
     var lockedDoorPresent = Math.random() < LOCKED_DOOR_CHANCE;
     if (lockedDoorPresent) bedroomNames.push('__locked_door__');
@@ -658,12 +470,11 @@
       return floor2.rooms.filter(function (room) { return room.name === r.name + "'s Room"; })[0];
     }
 
-    // --- Who's home ---
     var home = {};
     RESIDENTS.forEach(function (r) {
       home[r.slug] = r.alwaysHome || Math.random() >= ABSENCE_CHANCE;
     });
-    // Cool S and Clickbaity are inseparable — if either's home, both are.
+
     if (home.cools || home.clickbaity) { home.cools = true; home.clickbaity = true; }
 
     var hangoutRooms = floor1.rooms.concat(floor3.rooms);
@@ -675,14 +486,6 @@
       placedSlugs[slug] = room;
     }
 
-    // A cast is an author-picked GROUP, not weighted room candidates —
-    // it bypasses the normal closeness-biased pick entirely, so a hard
-    // avoid needs its own separate check here or a cast scene could
-    // still force two people together despite it (Karaoke Bar & Grill's
-    // cast, for one, lists both Journal and Blue Marble). Greedy pass in
-    // list order: whoever's confirmed to attend first stays; anyone
-    // hard-avoiding an already-confirmed attendee sits this one out
-    // instead, rather than skipping the whole scene over one conflict.
     function withoutHardAvoidConflicts(slugs) {
       var attending = [];
       slugs.forEach(function (slug) {
@@ -692,8 +495,6 @@
       return attending;
     }
 
-    // 1. Rare-room casts get first pick, if their room actually spawned
-    //    and (mostly) everyone in it is home.
     hangoutRooms.forEach(function (room) {
       var cast = ROOM_CASTS[room.name];
       if (!cast) return;
@@ -703,14 +504,10 @@
       }
     });
 
-    // 2. Everyone else who's home: either they're just in their own room
-    //    today, or they're out — a resident is only ever placed in exactly
-    //    one spot total, bedroom included, so a bedroom dot always means
-    //    "actually in there right now," never just "this is whose room it is."
     RESIDENTS.forEach(function (r) {
       if (!home[r.slug] || placedSlugs[r.slug]) return;
       if (r.pair && placedSlugs[r.pair]) { place(r.slug, placedSlugs[r.pair]); return; }
-      if (r.noHangoutDefault) { place(r.slug, bedroomOf(r.slug)); return; } // Dumptruck
+      if (r.noHangoutDefault) { place(r.slug, bedroomOf(r.slug)); return; }
 
       var bedroomStayChance = r.bedroomStayChance != null ? r.bedroomStayChance : BEDROOM_STAY_CHANCE;
       if (Math.random() < bedroomStayChance) {
@@ -723,12 +520,7 @@
         candidate = hangoutRooms.filter(function (room) { return room.name.indexOf(r.defaultRoom) !== -1; })[0];
       }
       if (!candidate) {
-        // A close-enough friend's bedroom counts as a hangout candidate
-        // too, once its owner has actually settled in there for the day —
-        // visiting only makes sense if someone's actually home, and only
-        // for a bond real enough to be worth going to someone's room for,
-        // not just any mild closeness. Capped so it never turns into a
-        // second living room.
+
         var visitableBedrooms = floor2.rooms.filter(function (room) {
           return room.name !== '__locked_door__' && room.occupants.length > 0 &&
             room.occupants.length < BEDROOM_VISIT_CAP &&
@@ -736,15 +528,6 @@
         });
         var candidateRooms = excludeHardAvoidRooms(r.slug, hangoutRooms.concat(visitableBedrooms));
 
-        // Closeness-biased pick: weight every room by how positive/negative
-        // its current occupants read for this resident, then roll against
-        // those weights. Rooms with no signal at all still get a small
-        // base weight so everyone has somewhere to land. A bond under
-        // CLOSENESS_PLACEMENT_THRESHOLD doesn't count at all here — only
-        // real closeness or real friction should ever bias where someone
-        // lands; anything weaker is placed as if there were no bond.
-        // Someone tolerant never lets friction push them away from a
-        // room — only the positive side of a bond ever counts for them.
         var weights = candidateRooms.map(function (room) {
           var score = 1;
           room.occupants.forEach(function (slug) {
@@ -765,9 +548,6 @@
       place(r.slug, candidate);
     });
 
-    // Whoever rolled absent this load, in roster order — separate from
-    // any floor, since not-home means not placed anywhere at all, not
-    // just off the currently visible one.
     var awaySlugs = RESIDENTS.filter(function (r) { return !home[r.slug]; }).map(function (r) { return r.slug; });
 
     return {
@@ -780,23 +560,10 @@
     };
   }
 
-  // --- Rendering -----------------------------------------------------
-
   var house = generateHouse();
-  var activeFloor = 0; // index into house.floors (0 = Floor 1, 1 = Floor 2, 2 = Floor 3)
+  var activeFloor = 0;
   var wanderTimer = null;
 
-  // Tracks who's currently mid-travelTo, independent of any DOM element
-  // or class — switching floors while someone's animation is still in
-  // flight wipes the whole layer (renderStage rebuilds it from scratch),
-  // destroying that dot's node before its onDone ever fires. The
-  // orphaned animation's callback still runs later and still mutates
-  // the room data correctly, but a freshly re-rendered dot for that
-  // same resident (created next time their floor is viewed) starts
-  // without the is-wandering class, since it's a brand new element that
-  // never got marked — so a DOM-class check alone can't tell a second,
-  // unrelated tick that this resident is still actually mid-move. This
-  // object can, because it isn't tied to any one element's lifetime.
   var pendingMoveSlugs = {};
 
   function svgText(x, y, content, cls) {
@@ -828,11 +595,7 @@
   }
 
   function dotSlots(room, count) {
-    // Small flow-wrap grid of offsets inside the room's rect, so multiple
-    // residents in one room don't stack exactly on top of each other. A
-    // bedroom is much shallower than a hangout room (rect.h ~9 vs 15+),
-    // so wrapping to a second row there puts the rows too close together
-    // to actually clear each other — force one single row instead.
+
     var narrow = room.rect.h < 12;
     var cols = narrow ? count : Math.min(4, Math.max(1, Math.ceil(Math.sqrt(count))));
     var slots = [];
@@ -846,26 +609,16 @@
     return slots;
   }
 
-  // A rare-room cast (up to 8 people) and a bent floor's narrower
-  // single-row rooms don't always agree on how much space there is —
-  // shrink dots a little once a room gets crowded, rather than letting a
-  // full cast scene overlap itself in a room sized for two or three.
   function dotSizePercent(count, narrow) {
-    // A narrow (bedroom-depth) room's single-row layout has less width
-    // to spread 3 dots across than a hangout room does, so it needs to
-    // start shrinking a person sooner than the normal >4 crowding rule.
+
     if (narrow && count >= 3) return 2.5;
     if (count <= 4) return 3.2;
     return Math.max(1.7, 3.2 * (4 / count));
   }
 
-  // Perimeter rooms are one row (not two), so they're narrower than the
-  // straight floor's rooms — a long name like "Karaoke Bar & Grill" won't
-  // fit at a fixed size next to a short one like "Foyer." Size each label
-  // to the room it's actually in instead of guessing one size for all.
   function fitLabelFontSize(rect, label, baseSize) {
     var available = rect.w * 0.9;
-    var estCharWidth = 0.62; // approx width-per-em for this label font
+    var estCharWidth = 0.62;
     var needed = label.length * estCharWidth;
     var fit = needed > 0 ? (available / needed) : baseSize;
     return Math.max(1.1, Math.min(baseSize, fit));
@@ -881,12 +634,7 @@
     var anyRoom = floor.rooms.length > 0;
 
     if (floor.corridorSegments && floor.corridorSegments.length) {
-      // One <path> with one subpath per segment, not separate <rect>
-      // elements — overlapping segments (every corner where two meet)
-      // would otherwise each composite their own translucent fill, doubling
-      // up right where they cross and reading as boxes stacked on top of
-      // each other rather than one hallway. Wound consistently, a single
-      // path's overlapping subpaths merge into one flat region instead.
+
       var d = floor.corridorSegments.map(function (seg) {
         var x2 = seg.x + seg.w, y2 = seg.y + seg.h;
         return 'M' + seg.x + ',' + seg.y + ' L' + x2 + ',' + seg.y + ' L' + x2 + ',' + y2 + ' L' + seg.x + ',' + y2 + ' Z';
@@ -905,9 +653,6 @@
       rect.setAttribute('class', 'floorplan-room-rect');
       svgEl.appendChild(rect);
 
-      // The Locked Door gets a room box like everywhere else, on purpose
-      // left unlabeled — it's supposed to look like an ordinary bedroom
-      // door until you actually open it.
       if (room.name === '__locked_door__') return;
 
       var label = room.name.replace(/'s Room$/, '');
@@ -926,9 +671,7 @@
         return;
       }
       // Appended before this room's dots, so the dots still end up on
-      // top of it in the DOM's paint/hit-test order — hovering or
-      // clicking a dot is about that resident, hovering or tapping
-      // anywhere else in the box is about the room itself.
+
       var hit = document.createElement('button');
       hit.type = 'button';
       hit.className = 'floorplan-room-hit';
@@ -943,10 +686,7 @@
       hit.addEventListener('mouseleave', function () {
         if (!roomTipPinned) hideRoomTip();
       });
-      // A tap fires a click with no prior hover on touch devices, so this
-      // is what actually opens the tip there — pinned so it survives
-      // until the next tap elsewhere, since there's no hover to hold it
-      // open in the meantime.
+
       hit.addEventListener('click', function () {
         if (roomTipPinned && roomTipRoom === room) { hideRoomTip(); return; }
         showRoomTip(room, true);
@@ -974,9 +714,6 @@
     captionEl.textContent = (totalDots === 0 && !isBedroomFloor) ? 'Quiet in here at the moment.' : '';
   }
 
-  // Clickbaity's own object is a hollow red circle — an outline instead
-  // of a filled dot for him specifically reads as more "him" than just
-  // another colored disc.
   var CLICKBAITY_OUTLINE_WIDTH = '4px';
 
   function renderDot(resident, room, slot, roomCount) {
@@ -999,9 +736,6 @@
     layerEl.appendChild(el);
   }
 
-  // Penny's room stays visually ordinary — a plain unlabeled room box
-  // (drawn already, above) with just a small grey marker inside, easy to
-  // mistake for any other empty room until clicked.
   function renderLockedDoorMarker(room) {
     var el = document.createElement('button');
     el.type = 'button';
@@ -1016,13 +750,7 @@
   }
 
   function renderHiddenDoor() {
-    // A rare, unlabeled door built right into the wall itself — a thin
-    // line running along the wall, not a room's own doorway. Clicking it
-    // brings the door itself up close (openHiddenDoorCard) instead of
-    // reacting right here — trying it is a separate, deliberate second
-    // step. Runs parallel to whichever wall it landed on: a horizontal
-    // wall (axis 'h') gets a horizontal line, a vertical wall a
-    // vertical one.
+
     if (!house.hiddenDoorPoint) return;
     var el = document.createElement('button');
     el.type = 'button';
@@ -1034,23 +762,11 @@
     layerEl.appendChild(el);
   }
 
-  // Walking up to the door and actually trying it are two different
-  // clicks — this is just the walking up, no caption, just the door
-  // itself close enough to try. Background matches the floor plan's own
-  // stage (--wall) rather than Penny's neutral gray — this is still a
-  // piece of the house, not a separate glimpse into nothing. The image
-  // itself is recolored to read directly against that dark card (see the
-  // CSS) rather than sitting on a light patch of its own.
-  // Closing this card any other way (the ×, the backdrop, Escape) leaves
-  // the door exactly as it was, findable again later — only actually
-  // trying it (clicking the door) below commits to breaking it for good.
   function openHiddenDoorCard() {
     noteBody.innerHTML = '';
     var wrap = document.createElement('div');
     wrap.className = 'floorplan-door-lightbox';
-    // A masked shape, not an <img> — see the CSS for why: door.png only
-    // supplies the alpha shape here, so there's no image content for
-    // alt text to describe, just an aria-label standing in for one.
+
     var shape = document.createElement('div');
     shape.className = 'floorplan-door-shape';
     shape.setAttribute('role', 'img');
@@ -1070,10 +786,6 @@
     });
   }
 
-  // The door doesn't budge — it breaks. A screen-wide shake and flash
-  // sell that as the intended outcome instead of a stray click doing
-  // nothing, then the door (and the card showing it) is gone for good,
-  // same as the old single-click removal used to be.
   function breakHiddenDoor() {
     noteOverlay.classList.add('is-shaking');
     flashEl.classList.add('is-flashing');
@@ -1087,11 +799,6 @@
     }, 400);
   }
 
-  // A resident's color is picked to be vivid and distinct as a small dot,
-  // which makes a lousy full-card background — dark text needs a light
-  // ground under it. Blends the color toward white for the note's
-  // background instead of using it at full strength; the dot itself is
-  // untouched.
   function lightenColor(hex, amount) {
     var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
     r = Math.round(r + (255 - r) * amount);
@@ -1416,7 +1123,7 @@
       // linear, not ease-in-out — easing decelerates to a full stop at
       // the end of every leg (and re-accelerates from a stop at the
       // start of the next), which is exactly what reads as "stopping at
-      // the points" instead of one continuous walk through the bends.
+
       dot.style.transition = 'left ' + dur + 'ms linear, top ' + dur + 'ms linear';
       dot.style.left = p.x + '%';
       dot.style.top = p.y + '%';
@@ -1425,14 +1132,6 @@
     step();
   }
 
-  // Wandering avoids (softly, never absolutely — except a genuine hard
-  // avoid, filtered out first) a room someone has real friction with,
-  // using the same CLOSENESS_PLACEMENT_THRESHOLD as initial placement,
-  // so a passing acquaintance never factors in, only an actual grudge.
-  // Someone tolerant skips this downweighting entirely — friction with
-  // whoever's in a room never steers them away from it.
-  // Reused for the original random destination, and for wherever a
-  // fleeing resident goes next.
   function pickRepulsionWeightedRoom(moverSlug, candidates) {
     candidates = excludeHardAvoidRooms(moverSlug, candidates);
     var mover = findResident(moverSlug);
@@ -1454,13 +1153,6 @@
     return candidates[candidates.length - 1];
   }
 
-  // The full set of rooms a resident could wander to right now, from
-  // wherever they currently are: any hangout room on floor 1 or 3,
-  // their own bedroom, or a close-enough friend's bedroom that's home
-  // and not already full — the same rule initial placement itself uses
-  // to decide a bedroom visit is plausible at all. Excludes fromRoom;
-  // hard-avoid filtering happens later, inside pickRepulsionWeightedRoom,
-  // whichever candidate list this ends up feeding into.
   function eligibleDestinationRooms(slug, fromRoom) {
     var ownBedroom = findBedroom(slug);
     var rooms = house.floors[0].rooms.concat(house.floors[2].rooms);
@@ -1476,11 +1168,6 @@
     return rooms.filter(function (r) { return r !== fromRoom; });
   }
 
-  // Everyone left behind independently rolls whether to tag along —
-  // each roll is only about that one person's own bond with whoever
-  // just left, never about whether anyone else already decided to
-  // follow. Cool S/Clickbaity use a flatter, stronger roll instead of
-  // the closeness math everyone else gets.
   function rollFollowers(moverSlug, leftBehindSlugs) {
     var mover = findResident(moverSlug);
     return leftBehindSlugs.filter(function (slug) {
@@ -1494,11 +1181,6 @@
     });
   }
 
-  // Same idea in reverse — everyone already in the room independently
-  // rolls whether the new arrival is enough to make them leave, based
-  // only on their own bond with whoever just walked in, never on
-  // whether anyone else in the room also flees. Someone tolerant never
-  // rolls to flee at all — whoever just walked in, they're staying put.
   function rollFleers(moverSlug, presentSlugs) {
     return presentSlugs.filter(function (slug) {
       var resident = findResident(slug);
@@ -1509,17 +1191,6 @@
     });
   }
 
-  // Moves `dot` from fromRoom to toRoom, wherever each actually is.
-  // fromRoom is always on the CURRENTLY VISIBLE floor (that's the only
-  // place a real dot to animate exists at all) — toRoom might be too
-  // (a normal walk through the shared corridor), or might be on an
-  // entirely different floor of the house, which has no physical
-  // corridor connecting it to this one to walk through. For a same-floor
-  // move, dot stays and gets repositioned. For a cross-floor move, dot
-  // walks to the edge of the CURRENT floor (implying a stairwell just
-  // past it) and then simply vanishes — added to the destination's
-  // occupants directly in the data, since that floor isn't rendered
-  // right now, accurate whenever the user actually checks it.
   function travelTo(dot, fromRoom, toRoom, floor, onDone) {
     var slug = dot.dataset.slug;
     var sameFloor = floor.rooms.indexOf(toRoom) !== -1;
@@ -1531,34 +1202,12 @@
       fromRoom.occupants = fromRoom.occupants.filter(function (s) { return s !== slug; });
       if (toRoom.occupants.indexOf(slug) === -1) toRoom.occupants.push(slug);
 
-      // A floor switch mid-animation wipes layerEl and rebuilds it from
-      // scratch at least once more before this callback runs — that
-      // orphans the original `dot` node, and if the switch lands back on
-      // this same floor before the animation finishes, paints a brand
-      // new node for this slug from the (still pre-move) data. Whichever
-      // node is live right now — not necessarily the one this animation
-      // started on — is the one that has to end up reflecting the data
-      // mutation above; operating on the stale `dot` reference instead
-      // would either re-attach an orphan alongside that fresh node, or
-      // silently update a detached element nobody sees while the fresh
-      // one keeps showing the resident in the room they already left,
-      // ready to be re-selected and duplicated on a later tick.
       var liveDot = layerEl.querySelector('.floorplan-dot[data-slug="' + slug + '"]');
 
       if (liveDot) {
         if (sameFloor) {
           liveDot.dataset.room = toRoom.name;
-          // Every room's invisible tooltip-hit button was appended to
-          // layerEl before that room's own dots, so a dot painted in its
-          // original room sits safely above its own room's hit button —
-          // but the dot's position in the DOM never otherwise changes.
-          // Left where it was, it'd still sit BEFORE whichever other
-          // rooms' hit buttons come later in the document, and later
-          // siblings paint on top — so once settled into a room whose hit
-          // button was appended after it, that invisible button would
-          // silently swallow every click meant for the dot. Re-appending
-          // it here makes it the last child, and therefore topmost, no
-          // matter which room it lands in.
+
           layerEl.appendChild(liveDot);
 
           var toSlots = dotSlots(toRoom, toRoom.occupants.length);
@@ -1576,9 +1225,6 @@
           liveDot.remove();
         }
 
-        // Reflow whoever's left in fromRoom now that there's one fewer —
-        // relevant on-screen only when fromRoom is on the visible floor,
-        // which it always is; harmless no-op if nobody's left there.
         var fromSlots = dotSlots(fromRoom, fromRoom.occupants.length);
         var fromSize = dotSizePercent(fromRoom.occupants.length, fromRoom.rect.h < 12);
         fromRoom.occupants.forEach(function (occSlug, idx) {
@@ -1600,16 +1246,6 @@
     var floor = house.floors[activeFloor];
     if (!floor || !floor.rooms.length) return;
 
-    // Excludes anyone already mid-transition from an earlier tick whose
-    // animation hasn't finished (and therefore whose async onDone
-    // callback hasn't run yet) — without this, a second tick can grab
-    // the same dot/slug again before the first move actually lands, and
-    // each move's own callback independently pushes the slug into a
-    // different destination room, duplicating them across floors.
-    // pendingMoveSlugs is checked (not just the is-wandering class)
-    // because switching floors mid-animation rebuilds the whole layer,
-    // and a freshly recreated dot for a still-pending resident wouldn't
-    // carry the class over from the element it replaced.
     var dots = Array.prototype.slice.call(layerEl.querySelectorAll('.floorplan-dot[data-slug]')).filter(function (d) {
       return !pendingMoveSlugs[d.dataset.slug];
     });
@@ -1624,31 +1260,11 @@
     if (!destinations.length) return;
     var toRoom = pickRepulsionWeightedRoom(moverSlug, destinations);
 
-    // Snapshot who's on each side of the move BEFORE anyone actually
-    // moves — follow/flee reactions are purely about this one move,
-    // never chained off a follower's or fleer's own arrival/departure.
     var leftBehind = fromRoom.occupants.filter(function (s) { return s !== moverSlug; });
     var alreadyThere = toRoom.occupants.slice();
 
     travelTo(dot, fromRoom, toRoom, floor, function () {
-      // Fleeing is a reaction to the ARRIVAL — it only makes sense once
-      // the disliked person is actually standing there, so this stays
-      // gated on the mover's own animation finishing.
-      //
-      // alreadyThere is a snapshot from when THIS move started, not from
-      // just now — by the time this callback actually fires (after the
-      // mover's own animation finishes), an unrelated tick could already
-      // have moved one of these people elsewhere, or have them mid-move
-      // right now. Re-checking isn't optional: skipping it means
-      // travelTo gets called twice on the same dot from two independent
-      // async callbacks, and each one pushes the slug into a different
-      // room — duplicating them across floors instead of just picking
-      // the wrong (stale) one. A fleer dot only even exists here if
-      // they're on the SAME floor as toRoom (only the visible floor
-      // renders any dots at all) — someone reacting to an arrival on a
-      // floor that isn't currently open just silently has no dot to
-      // move, which is exactly right: nothing to see, so nothing
-      // animates.
+
       var fleers = rollFleers(moverSlug, alreadyThere);
       fleers.forEach(function (slug) {
         if (pendingMoveSlugs[slug]) return;
@@ -1662,24 +1278,13 @@
       });
     });
 
-    // Following, in contrast, is a reaction to the DEPARTURE — tagging
-    // along means walking out together, not watching the mover leave,
-    // waiting for them to fully arrive, and only then deciding to catch
-    // up. Rolled and started in the same tick as the mover's own
-    // travelTo (nothing async in between, so leftBehind can't have gone
-    // stale) rather than nested in their onDone.
     var followers = rollFollowers(moverSlug, leftBehind);
     followers.forEach(function (slug) {
       if (pendingMoveSlugs[slug]) return;
       var followerDot = layerEl.querySelector('.floorplan-dot[data-slug="' + slug + '"]');
       if (!followerDot) return;
       if (followerDot.dataset.room !== fromRoom.name) return;
-      // rollFollowers only ever checks the follower's bond with the
-      // MOVER, never who else is already in toRoom — a hard avoid still
-      // applies even when tagging along, so a follower whose positive
-      // bond would normally pull them along simply doesn't follow this
-      // particular time if toRoom already contains someone they can
-      // never share a room with.
+
       var hardBlocked = toRoom.occupants.some(function (occSlug) { return closenessBetween(slug, occSlug) <= HARD_AVOID_THRESHOLD; });
       if (hardBlocked) return;
       travelTo(followerDot, fromRoom, toRoom, floor);

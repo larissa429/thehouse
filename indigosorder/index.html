@@ -258,9 +258,11 @@
     .it-decoder-toolbar {
       display: flex;
       justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 0.4rem;
       margin-bottom: 0.5rem;
     }
-    .it-decoder-clear {
+    .it-decoder-clear, .it-decoder-clear-board {
       font-family: var(--label);
       font-size: 0.62rem;
       letter-spacing: 0.04em;
@@ -273,6 +275,7 @@
       cursor: pointer;
     }
     .it-decoder-clear:hover { color: var(--lamp); border-color: var(--lamp); }
+    .it-decoder-clear-board:hover { color: var(--urgent); border-color: var(--urgent); }
     .it-decoder-list {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -556,7 +559,7 @@
       cursor: pointer;
     }
     .it-notes-float-full.is-active { color: var(--lamp); border-color: var(--lamp); }
-    .it-notes-float-opacity {
+    .it-notes-float-opacity, .it-notes-float-touch {
       font-family: var(--label);
       font-size: 0.68rem;
       letter-spacing: 0.02em;
@@ -569,6 +572,9 @@
       padding: 0 0.5rem;
       cursor: pointer;
     }
+    .it-notes-float-touch.is-active { color: var(--lamp); border-color: var(--lamp); }
+    .it-notes-float.is-touch-through { pointer-events: none; }
+    .it-notes-float.is-touch-through .it-notes-float-touch { pointer-events: auto; }
     .it-notes-float-body { padding: 0.9rem 1rem 1rem; }
     .it-notes-float.is-minimized .it-notes-float-body { display: none; }
 
@@ -640,6 +646,7 @@
       }
       .it-notes-float-full { display: none; }
       .it-notes-float-opacity { display: none; }
+      .it-notes-float-touch { display: none; }
       .it-notes-float-body {
         flex: 1;
         overflow-y: auto;
@@ -765,13 +772,15 @@
       <span>Your Notes</span>
       <div class="it-notes-float-actions">
         <button type="button" class="it-notes-float-opacity" id="itNotesFloatOpacity" aria-label="Panel opacity: 100%">100%</button>
+        <button type="button" class="it-notes-float-touch" id="itNotesFloatTouch" aria-label="Touch-through mode: off">THRU</button>
         <button type="button" class="it-notes-float-full" id="itNotesFloatFull" aria-label="Fullscreen">&#9974;</button>
         <button type="button" class="it-notes-float-min" id="itNotesFloatMin" aria-label="Minimize">&minus;</button>
       </div>
     </div>
     <div class="it-notes-float-body" id="itNotesFloatBody">
       <div class="it-decoder-toolbar">
-        <button type="button" class="it-decoder-clear" id="itDecoderClear">Clear markers</button>
+        <button type="button" class="it-decoder-clear" id="itDecoderClear" aria-label="Clear all markers">CLEAR &#128308; &#128993; &#128994; ALL</button>
+        <button type="button" class="it-decoder-clear-board" id="itDecoderClearBoard">Clear board</button>
       </div>
       <div class="it-decoder-list" id="itDecoderGrid"></div>
     </div>

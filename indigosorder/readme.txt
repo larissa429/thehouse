@@ -324,13 +324,29 @@ UI NOTES
   fullscreen mode. Safe against the symbol picker modal specifically
   because that's a sibling element in the DOM (#itSymbolPicker), not
   a child of .it-notes-float, so it was never at risk of being clipped.
-- A "Clear markers" button sits above the decoder grid (separate from
-  Restart) that wipes every red/yellow/green marker dot in one click,
-  without touching the player's actual symbol picks. Added because
-  the markers are meant as disposable per-round scratch marks, but
-  the picks are the player's accumulated theory of what each symbol
-  means and persist for the whole game — clearing them together would
-  throw away real progress along with the scratch state.
+- A "CLEAR 🔴 🟡 🟢 ALL" button sits above the decoder grid (separate
+  from Restart) that wipes every red/yellow/green marker dot in one
+  click, without touching the player's actual symbol picks. Added
+  because the markers are meant as disposable per-round scratch
+  marks, but the picks are the player's accumulated theory of what
+  each symbol means and persist for the whole game — clearing them
+  together would throw away real progress along with the scratch
+  state. A second, separate "Clear board" button next to it clears
+  BOTH markers and picks at once, for when the player wants to wipe
+  their whole working theory without a full Restart (which would also
+  reshuffle the word/menu pools and reset the timer/progress).
+- A "THRU" toggle in the header lets the player click through the
+  panel to whatever's underneath it on the page, without moving it
+  out of the way first. Implemented as `pointer-events: none` on the
+  whole panel while active — this both makes clicks/drags pass through
+  to the page below AND locks the panel in place (dragging is just a
+  pointerdown/pointermove/pointerup sequence on the header, so with
+  pointer-events off, none of those ever reach it), which is why one
+  property covers both things the player asked for. The toggle button
+  itself keeps `pointer-events: auto` as an explicit override so it
+  stays clickable to turn the mode back off even while everything
+  else in the panel is inert. Whatever opacity level was set before
+  toggling stays as-is — touch-through doesn't change it.
 - The timer is a stopwatch, not a countdown, while the deduction loop
   itself is still being tuned — a clock that could cut a player off
   before they've even learned the system would add frustration on top

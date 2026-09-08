@@ -11,6 +11,8 @@
   var logEl = document.getElementById('itLog');
   var decoderGridEl = document.getElementById('itDecoderGrid');
   var decoderClearBtn = document.getElementById('itDecoderClear');
+  var decoderClearBoardBtn = document.getElementById('itDecoderClearBoard');
+  var notesFloatTouchBtn = document.getElementById('itNotesFloatTouch');
   var notesFloatEl = document.getElementById('itNotesFloat');
   var notesFloatHeaderEl = document.getElementById('itNotesFloatHeader');
   var notesFloatMinBtn = document.getElementById('itNotesFloatMin');
@@ -701,6 +703,14 @@
       dot.classList.remove('is-on');
     });
   });
+  decoderClearBoardBtn.addEventListener('click', function () {
+    decoderGridEl.querySelectorAll('.it-decoder-marker.is-on').forEach(function (dot) {
+      dot.classList.remove('is-on');
+    });
+    decoderGridEl.querySelectorAll('.it-decoder-pick').forEach(function (pickBtn) {
+      setDecoderPick(pickBtn, null);
+    });
+  });
 
   symbolPickerClearBtn.addEventListener('click', function () {
     if (symbolPickerTargetBtn) setDecoderPick(symbolPickerTargetBtn, null);
@@ -720,7 +730,17 @@
     var minBtn = notesFloatMinBtn;
     var fullBtn = document.getElementById('itNotesFloatFull');
     var opacityBtn = document.getElementById('itNotesFloatOpacity');
+    var touchBtn = notesFloatTouchBtn;
     if (!panel || !header || !minBtn) return;
+
+    if (touchBtn) {
+      touchBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var isThrough = panel.classList.toggle('is-touch-through');
+        touchBtn.classList.toggle('is-active', isThrough);
+        touchBtn.setAttribute('aria-label', 'Touch-through mode: ' + (isThrough ? 'on' : 'off'));
+      });
+    }
 
     if (window.matchMedia('(max-width: 640px)').matches) {
       function toggleMinimized() {
@@ -747,7 +767,7 @@
     var preFullscreenTop = '', preFullscreenHeight = '';
 
     header.addEventListener('pointerdown', function (e) {
-      if (e.target === minBtn || e.target === fullBtn || e.target === opacityBtn) return;
+      if (e.target === minBtn || e.target === fullBtn || e.target === opacityBtn || e.target === touchBtn) return;
       dragging = true; moved = false;
       header.setPointerCapture(e.pointerId);
       var rect = panel.getBoundingClientRect();

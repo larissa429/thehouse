@@ -257,6 +257,7 @@
 
     .it-decoder-toolbar {
       display: flex;
+      align-items: center;
       justify-content: flex-end;
       flex-wrap: wrap;
       gap: 0.4rem;
@@ -264,28 +265,30 @@
     }
     .it-decoder-clear-board {
       font-family: var(--label);
-      font-size: 0.62rem;
+      font-size: 11px;
+      line-height: 1;
       letter-spacing: 0.04em;
       text-transform: uppercase;
       color: var(--ink-soft);
       background: none;
-      border: var(--edge);
+      border: none;
       border-radius: 4px;
       padding: 0.25rem 0.55rem;
       cursor: pointer;
     }
-    .it-decoder-clear-board:hover { color: var(--urgent); border-color: var(--urgent); }
+    .it-decoder-clear-board:hover { color: var(--urgent); }
     .it-decoder-clear-group {
       display: flex;
       align-items: center;
       gap: 0.35rem;
-      border: var(--edge);
+      border: none;
       border-radius: 4px;
       padding: 0.25rem 0.5rem;
     }
     .it-decoder-clear-label {
       font-family: var(--label);
-      font-size: 0.62rem;
+      font-size: 11px;
+      line-height: 1;
       letter-spacing: 0.04em;
       text-transform: uppercase;
       color: var(--ink-soft);
@@ -297,7 +300,7 @@
       justify-content: center;
       background: none;
       border: none;
-      padding: 0.15rem;
+      padding: 0;
       cursor: pointer;
       opacity: 0.75;
       transition: opacity 0.15s, transform 0.15s;
@@ -316,7 +319,8 @@
     .it-decoder-clear-swatch[data-color="green"] { background: #7a9463; }
     .it-decoder-clear-all {
       font-family: var(--label);
-      font-size: 0.62rem;
+      font-size: 11px;
+      line-height: 1;
       letter-spacing: 0.04em;
       text-transform: uppercase;
       color: var(--ink-soft);

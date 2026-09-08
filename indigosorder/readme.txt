@@ -332,7 +332,15 @@ UI NOTES
   three at once. The dots are small CSS circles styled exactly like
   the real marker dots (same three colors, just a bit bigger), not
   emoji characters — emoji render inconsistently across platforms and
-  looked oversized next to the actual UI they represent. None of
+  looked oversized next to the actual UI they represent. Both the
+  group and the "Clear board" button are borderless — text-only
+  controls rather than boxed buttons — and the label/"All"/"Clear
+  board" text is set to the dots' exact pixel size (11px) with
+  line-height: 1, since a text element's line-box includes leading
+  above and below the glyph that throws off simple align-items:
+  center against a fixed-size circle; matching font-size and
+  collapsing the line-height is what actually gets their visual
+  centers to land on the same pixel. None of
   these touch the player's actual symbol picks — the markers are
   disposable per-round scratch marks, but the picks are the player's
   accumulated theory of what each symbol means and persist for the

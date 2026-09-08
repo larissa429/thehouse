@@ -403,4 +403,24 @@ DEFERRED / NOT YET DONE
   button in the Ask Indigo grid, showing only the ingredient name, so
   the player has to work from memory/assumption about which words
   carry which trait instead of reading it straight off the button.
-  Explicitly flagged by the user as a later addition, not now.
+  Meant for the standalone site version only, not the miniboss
+  encounter — see below.
+- Endless mode idea (not started, mechanics undecided): the user's
+  own words, "idk the specifics yet." Floated alongside hard mode as
+  something the standalone site version could offer past its current
+  fixed 3-order structure. Open questions for whenever this comes
+  back up: does it just keep generating orders indefinitely with a
+  running solve count (pure practice mode), or does difficulty ramp
+  until there's an actual lose condition and a score to chase? Is it
+  its own mode or does it imply hard-mode rules by default? None of
+  this decided yet — don't assume an answer, ask.
+- This game is planned to have two roles going forward: a permanent
+  standalone minigame on the site, AND Miniboss 2 in a planned 3-stage
+  WarioWare-style microgame arcade (Miniboss 1 is a Simon Says/
+  PaRappa-style rhythm game following Daisy's instructions; a final
+  boss caps stage 3). See the "microgames arcade structure" memory
+  note for the full plan. Explicit design call from the user: the
+  miniboss encounter stays exactly the current build (it shouldn't be
+  the hardest version of anything, since it's one stop in a longer
+  run) — hard mode and endless mode are both standalone-only, for
+  players who want more after clearing the miniboss version.

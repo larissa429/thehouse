@@ -111,9 +111,9 @@ their first guess of the playthrough — that flag now only gates
 negation (see ORDER REVEAL & NEGATION above), not the ask buffer.
 
 DATA DESIGN NOTES
-- Every tag lives in one flat pool — flavor, type, and color are not
-  separate axes, just different flavors (so to speak) of the same kind
-  of fact about a word or menu item.
+- Every tag lives in one flat pool — flavor, type, and physical
+  property are not separate axes, just different flavors (so to
+  speak) of the same kind of fact about a word or menu item.
 - The askable words are drawn from a pool of 50 (ALL_WORDS); each game
   picks 25 of them (WORDS) at startGame() time via pickWords(), so the
   exact word list — and the tag-frequency table used for the ask
@@ -143,6 +143,71 @@ DATA DESIGN NOTES
   weighting) is recomputed from that 25-item pick each game, same as
   GLOBAL_TAG_FREQUENCY is for words. Every tag combination is unique
   across the full 50-item pool, not just within one game's 25.
+- The original color tags (Red/Orange/Yellow/Green/Brown/White/
+  Purple/Black/Clear) were retired after real playtest feedback
+  showed they didn't work: color was the one tag axis a player could
+  only learn by eyeballing a menu photo (every other axis is handed
+  to them as text — a word's tags print right on its button, and an
+  item's type is telegraphed by its menu section), and phone food
+  photography is genuinely bad at exactly the hues that mattered —
+  everything roasted/baked reads as the same indistinct brown. The
+  distribution was also lopsided (Brown alone was 16 of 50 menu
+  items) with two tags, Purple and Clear, functionally dead (1 and 0
+  uses). Multi-tagging a second color onto ambiguous items was
+  considered and rejected — a real menu just doesn't have enough
+  naturally purple or clear dishes to fill those buckets honestly,
+  and forcing a tag onto something that doesn't actually look that
+  way defeats the point of a photo-legible tag.
+- Replaced with a 9-tag physical-property axis: Liquid, Fizzy,
+  Crunchy, Soft, Crumbly, Sticky, Frothy, Smooth, Juicy. Chosen
+  against a harder bar than color ever had to clear: every one of
+  these has a real, non-forced example on BOTH the askable-word side
+  (raw ingredients — Walnut is Crunchy, Wine is Liquid) and the menu
+  side (finished dishes — Buffalo Wings is Crunchy, Old Fashioned is
+  Liquid). This matters mechanically, not just thematically: TAGS is
+  exactly 25 entries because there are exactly 25 hand-picked symbol
+  icons, one per tag (see symbolMap in startGame()), and the Ask
+  Indigo mechanic can only teach a symbol's meaning through words
+  that actually carry that tag — a word's tags print in plain text on
+  its own button, so a player can work backward from an ask response
+  to which symbol means what. A tag that never appears on any word
+  would be un-learnable through asking, only ever encountered
+  passively during an order reveal with no clean way to confirm it.
+  An earlier draft of this axis included Plated/Bowled/Wrapped/
+  Poured — vessel/presentation tags — but those were dropped for
+  exactly this reason: "how a dish is served" isn't a property a raw
+  spice or ingredient word can honestly have, so none of them would
+  ever have shown up in the word pool at all.
+- Spice/Condiment menu items (Hot Sauce, Garlic Butter, Pico de
+  Gallo, Whole Grain Mustard, Ranch Dressing, Balsamic Glaze, Honey
+  Mustard, Chimichurri) were deliberately left out of the new
+  physical-property axis — a bottled sauce or dressing doesn't have
+  an honest Crunchy/Soft/Liquid/etc. the way a plated dish or a
+  poured drink does. This is fine since the axis (like flavor) is
+  multi-tag, not exactly-one — it's not a gap that needs filling.
+- Removing color also removed a tag that had quietly been the only
+  thing distinguishing several pairs of words/items that were
+  otherwise flavor-identical (e.g. Chili vs. Garlic, both Spicy/
+  Savory/Spice-Condiment; Pico de Gallo vs. Whole Grain Mustard, both
+  Savory/Sour/Spicy/Spice-Condiment). Re-checked the full 50-word and
+  50-item pools for duplicate tag sets after the swap and fixed every
+  collision with a genuine distinguishing tag (Pico de Gallo picked
+  up Fruity from its tomato base, since condiments don't get the new
+  physical-property axis) rather than an arbitrary one.
+- Nutty was kept in the flavor pool rather than cut, even though it
+  was nearly as thin as the dead color tags (2 words, 2 menu items) —
+  cutting it would have left TAGS at 24 instead of exactly 25, one
+  short of the 25 hand-picked symbol icons. Floral and Smoky were
+  also flagged as possibly dead going by menu-item count alone (1 and
+  4), but checked out fine once counted across both pools together
+  (7 and 7 words respectively) — the menu is just genuinely light on
+  floral dishes right now, which is a content gap, not a broken tag.
+- Fizzy is worth watching: it landed at only 4 uses total (Soda Water
+  among words; Mimosa, Ginger Beer, Sparkling Lemonade on the menu).
+  That's as thin as the color tags that got cut, but it's an honest
+  reflection of how rare real carbonation is across a 50-item pool,
+  not a forced tag — left as-is for now rather than manufactured
+  wider.
 - All 50 ALL_MENU items now have real photos in images/menu/, resized
   to a max dimension of 800px and re-encoded (mozjpeg, quality 82) to
   keep file sizes in line with the original 25 (each new photo landed
@@ -169,9 +234,9 @@ DATA DESIGN NOTES
   with fill="currentColor" so CSS controls color per context (reveal,
   negated, log, seen-symbols line, decoder picker). See svgs.txt in the
   repo root for the source/curation list. Deliberately nothing that
-  reads as a literal flavor/color picture (a flame, a drop), since
-  several tags ARE colors and a literal icon would bias what players
-  assume a symbol means before they've earned that knowledge.
+  reads as a literal picture of a tag's meaning (a flame, a drop),
+  since a literal icon would bias what players assume a symbol means
+  before they've earned that knowledge.
 
 UI NOTES
 - The order line is split into two halves: "His answer" (his honest

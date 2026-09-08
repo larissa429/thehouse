@@ -158,8 +158,8 @@ DATA DESIGN NOTES
   naturally purple or clear dishes to fill those buckets honestly,
   and forcing a tag onto something that doesn't actually look that
   way defeats the point of a photo-legible tag.
-- Replaced with a 9-tag physical-property axis: Liquid, Fizzy,
-  Crunchy, Soft, Crumbly, Sticky, Frothy, Smooth, Juicy. Chosen
+- Replaced with a 9-tag physical-property axis: Liquid, Hot, Cold,
+  Crunchy, Soft, Crumbly, Frothy, Smooth, Juicy. Chosen
   against a harder bar than color ever had to clear: every one of
   these has a real, non-forced example on BOTH the askable-word side
   (raw ingredients — Walnut is Crunchy, Wine is Liquid) and the menu
@@ -202,12 +202,56 @@ DATA DESIGN NOTES
   4), but checked out fine once counted across both pools together
   (7 and 7 words respectively) — the menu is just genuinely light on
   floral dishes right now, which is a content gap, not a broken tag.
-- Fizzy is worth watching: it landed at only 4 uses total (Soda Water
-  among words; Mimosa, Ginger Beer, Sparkling Lemonade on the menu).
-  That's as thin as the color tags that got cut, but it's an honest
-  reflection of how rare real carbonation is across a 50-item pool,
-  not a forced tag — left as-is for now rather than manufactured
-  wider.
+- Real playtest surfaced a second bug in the physical-property axis
+  itself: a player got a game whose word draw had Lemonade, Whiskey,
+  Milk, and Soda Water as its only Liquid words — all four of which
+  are ALSO Drink-typed, so there was no word in play that could ever
+  isolate the Liquid symbol from the Drink symbol. Any subset of
+  those four ties Liquid and Drink at the same count every time; the
+  tie never breaks toward one specifically, because nothing in that
+  draw ever had one tag without the other. Auditing every new-axis
+  tag for this same problem (does EVERY word/item carrying it also
+  always carry some other specific tag, pool-wide, not just this
+  draw) found it was worse than one unlucky draw:
+    - Frothy was ALWAYS Drink on both pools (only Coffee/Milk on
+      words, only 4 drinks on menu — no food ever got it). Fixed by
+      giving Cream (words) and Deviled Eggs (menu) a Frothy tag too —
+      both genuinely whipped/aerated, neither is a Drink.
+    - Smooth was ALWAYS Sweet AND Rich on words (Honey/Cream/Caramel/
+      Chocolate all three). Fixed by adding Smooth to Butter and
+      Yogurt — real, non-sweet, non-rich smooth textures.
+    - Liquid itself wasn't structurally broken — Vinegar and Maple
+      Syrup already existed as non-Drink Liquid words — but with only
+      2 escape-valve words out of 50, a draw missing both wasn't rare
+      enough. Strengthened by adding Liquid to Honey and Molasses
+      (both genuinely liquid, neither a drink), bringing it to 4.
+    - Fizzy and Sticky turned out to have NO possible fix: Fizzy was
+      always Sour+Drink on words (Soda Water is the only real
+      carbonated ingredient in the pool) and always Sweet+Drink on
+      menu; Sticky was always Sweet on words (every sticky ingredient
+      here — Caramel, Honey, Molasses, Maple Syrup, Pineapple — is a
+      sugar). Unlike Liquid, there was no non-forced word anywhere in
+      the 50 that could break either correlation. Retired both rather
+      than fake an example, matching the same standard color got held
+      to (Purple/Clear were cut for exactly this reason).
+  Replaced Fizzy and Sticky with Hot and Cold, checked against the
+  same bar as the rest of the axis (real examples on both pools, not
+  locked to an existing tag): Hot spans Food (most hot entrees) AND
+  Drink (Irish Coffee, Hot Chocolate); Cold spans Drink (most cold
+  cocktails) AND Food (Caesar Salad, Deviled Eggs, Pumpkin Pie, etc.),
+  so neither is purely a restatement of Food/Drink. On the word side,
+  Hot leans on real warming-spice associations (Ginger, Chili,
+  Cinnamon, Cardamom, Turmeric, Curry Powder) plus Coffee/Tea; Cold
+  leans on Soda Water, Mint (a genuine cooling sensory property, not
+  just serving convention), Milk, Yogurt, and a few customarily-
+  chilled fruits (Grapefruit, Lime, Berry, Blackberry) — deliberately
+  left off words with no honest temperature association rather than
+  forcing it onto all 50. Re-verified the full pool afterward: no
+  duplicate tag sets, no vocabulary errors, and — the actual bar that
+  matters — zero words-side lock issues left in the new axis (the
+  menu side still has some tags skewing Food, e.g. Crunchy/Juicy, but
+  that doesn't block the Ask mechanic the way a words-side lock does,
+  since menu items aren't askable).
 - All 50 ALL_MENU items now have real photos in images/menu/, resized
   to a max dimension of 800px and re-encoded (mozjpeg, quality 82) to
   keep file sizes in line with the original 25 (each new photo landed

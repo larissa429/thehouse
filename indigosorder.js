@@ -31,6 +31,11 @@
   var overlayTitleEl = document.getElementById('itOverlayTitle');
   var overlayTextEl = document.getElementById('itOverlayText');
   var overlayRestartBtn = document.getElementById('itOverlayRestart');
+  var overlayAnswersBtn = document.getElementById('itOverlayAnswers');
+  var answersOverlayEl = document.getElementById('itAnswersOverlay');
+  var answersOrdersEl = document.getElementById('itAnswersOrders');
+  var answersKeyEl = document.getElementById('itAnswersKey');
+  var answersCloseBtn = document.getElementById('itAnswersClose');
   var startOverlayEl = document.getElementById('itStartOverlay');
   var startBtn = document.getElementById('itStartBtn');
   var howToPlayBtn = document.getElementById('itHowToPlay');
@@ -441,6 +446,7 @@
     logEl.innerHTML = '<p class="it-log-empty">Nothing yet — ask him something.</p>';
     answerSymbolsEl.innerHTML = '';
     overlayEl.hidden = true;
+    answersOverlayEl.hidden = true;
     startOverlayEl.hidden = !!skipRulesGate;
     orderFeedbackEl.textContent = '';
     orderFeedbackEl.className = 'it-order-feedback';
@@ -793,8 +799,42 @@
     overlayEl.hidden = false;
   }
 
+  function renderAnswers() {
+    answersOrdersEl.innerHTML = '';
+    targets.forEach(function (target) {
+      var row = document.createElement('div');
+      row.className = 'it-answers-order';
+      var strong = document.createElement('strong');
+      strong.textContent = target.name;
+      var span = document.createElement('span');
+      span.textContent = target.tags.join(' · ');
+      row.appendChild(strong);
+      row.appendChild(span);
+      answersOrdersEl.appendChild(row);
+    });
+
+    answersKeyEl.innerHTML = '';
+    TAGS.forEach(function (tag) {
+      var cell = document.createElement('div');
+      cell.className = 'it-answers-key-cell';
+      cell.appendChild(makeSymbolIcon(symbolFor(tag)));
+      var label = document.createElement('label');
+      label.textContent = tag === 'Spice/Condiment' ? 'Spice/Cond' : tag;
+      cell.appendChild(label);
+      answersKeyEl.appendChild(cell);
+    });
+  }
+
   restartBtn.addEventListener('click', function () { startGame(true); });
   overlayRestartBtn.addEventListener('click', function () { startGame(true); });
+  overlayAnswersBtn.addEventListener('click', function () {
+    renderAnswers();
+    answersOverlayEl.hidden = false;
+  });
+  answersCloseBtn.addEventListener('click', function () { answersOverlayEl.hidden = true; });
+  answersOverlayEl.addEventListener('click', function (e) {
+    if (e.target === answersOverlayEl) answersOverlayEl.hidden = true;
+  });
   startBtn.addEventListener('click', beginRound);
   howToPlayBtn.addEventListener('click', pauseForRules);
   askBtn.addEventListener('click', askIndigo);

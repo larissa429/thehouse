@@ -439,6 +439,19 @@ UI NOTES
   and re-read the rules — this does NOT reset anything (same words,
   same order, same notes), it just freezes the timer/interactivity
   until "I'm Ready" is clicked again.
+- The win screen ("Order served.") has a "View Answers" button next
+  to Try Again, opening a separate reveal modal (#itAnswersOverlay)
+  with the true tags for all 3 solved orders and the full 25-symbol
+  key, so the player can check their own notes/guesses against ground
+  truth. Deliberately only reachable from the win screen, not mid-game
+  — the user's explicit call, since surfacing it during an unsolved
+  order would just hand over the answer instead of letting the player
+  work it out. renderAnswers() reads straight from `targets` (the same
+  array startGame() already set for the whole game) and `symbolMap`,
+  so there's no separate data path to keep in sync — it's just showing
+  what the game already knows. startGame() defensively re-hides
+  #itAnswersOverlay on every fresh game in case Restart ever fires
+  while it's open.
 
 DEFERRED / NOT YET DONE
 - Real symbol art beyond the current icon set, if desired.

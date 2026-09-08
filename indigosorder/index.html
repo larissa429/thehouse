@@ -404,6 +404,123 @@
     .it-decoder-marker[data-color="yellow"] { background: var(--lamp); }
     .it-decoder-marker[data-color="green"] { background: #7a9463; }
 
+    .it-overlay-actions { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
+    .it-overlay-secondary {
+      font-family: var(--label);
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      background: var(--wall);
+      border: var(--edge);
+      border-radius: 6px;
+      padding: 0.6rem 1.2rem;
+      cursor: pointer;
+    }
+
+    .it-answers-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 70;
+      padding: 1rem;
+    }
+    .it-answers-card {
+      background: var(--wall-lit);
+      border: var(--edge);
+      border-radius: 10px;
+      padding: 1.6rem 1.8rem;
+      max-width: 40rem;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .it-answers-card h3 {
+      font-family: var(--display);
+      font-weight: normal;
+      font-size: 1.3rem;
+      color: var(--ink);
+      text-align: center;
+      margin: 0 0 1.2rem;
+    }
+    .it-answers-section { margin-bottom: 1.5rem; }
+    .it-answers-section h4 {
+      font-family: var(--label);
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      margin: 0 0 0.7rem;
+      border-bottom: var(--edge);
+      padding-bottom: 0.4rem;
+    }
+    .it-answers-orders {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .it-answers-order {
+      background: var(--wall);
+      border-radius: 6px;
+      padding: 0.7rem 0.9rem;
+    }
+    .it-answers-order strong {
+      font-family: var(--display);
+      font-weight: normal;
+      color: var(--lamp);
+      display: block;
+      margin-bottom: 0.2rem;
+      font-size: 1.05rem;
+    }
+    .it-answers-order span {
+      color: var(--ink-soft);
+      font-size: 0.85rem;
+    }
+    .it-answers-key {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+    }
+    .it-answers-key-cell {
+      background: var(--wall);
+      border-radius: 6px;
+      padding: 0.5rem 0.4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .it-answers-key-cell .it-symbol-icon {
+      width: 1.6rem;
+      height: 1.6rem;
+      color: var(--lamp);
+    }
+    .it-answers-key-cell label {
+      font-family: var(--label);
+      font-size: 0.55rem;
+      letter-spacing: 0.02em;
+      color: var(--ink-soft);
+      text-align: center;
+      line-height: 1.2;
+    }
+    .it-answers-card > button {
+      font-family: var(--label);
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--shadow);
+      background: var(--lamp);
+      border: none;
+      border-radius: 6px;
+      padding: 0.6rem 1.2rem;
+      cursor: pointer;
+      display: block;
+      margin: 0.5rem auto 0;
+    }
+
     .it-symbol-picker-overlay {
       position: fixed;
       inset: 0;
@@ -876,7 +993,25 @@
     <div class="it-overlay-card">
       <h2 id="itOverlayTitle"></h2>
       <p id="itOverlayText"></p>
-      <button type="button" id="itOverlayRestart">Try Again</button>
+      <div class="it-overlay-actions">
+        <button type="button" class="it-overlay-secondary" id="itOverlayAnswers">View Answers</button>
+        <button type="button" id="itOverlayRestart">Try Again</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="it-answers-overlay" id="itAnswersOverlay" hidden>
+    <div class="it-answers-card">
+      <h3>His Full Order</h3>
+      <div class="it-answers-section">
+        <h4>The Orders</h4>
+        <div class="it-answers-orders" id="itAnswersOrders"></div>
+      </div>
+      <div class="it-answers-section">
+        <h4>Symbol Key</h4>
+        <div class="it-answers-key" id="itAnswersKey"></div>
+      </div>
+      <button type="button" id="itAnswersClose">Close</button>
     </div>
   </div>
 

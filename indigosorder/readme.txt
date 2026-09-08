@@ -254,6 +254,20 @@ UI NOTES
   panel (same pointer-event drag pattern as the corkboard pins on
   character pages, just repositioning the whole panel in fixed viewport
   coordinates instead of a pin within one board).
+- The minimize button ignores a click that lands right as a drag ends
+  (a `moved` flag set once the header's been dragged past a 4px
+  threshold), so releasing the panel with the cursor sitting over the
+  button doesn't also toggle it. That flag used to only get cleared
+  inside the minimize button's own click handler, which meant it
+  stuck at true after any drag that DIDN'T end over the button — the
+  normal case, since dragging is for repositioning the panel
+  somewhere else. The next real click on minimize, completely
+  unrelated to any drag, would then get silently eaten by that stale
+  flag, needing a second click to actually work. Fixed by clearing
+  the flag on a 0ms setTimeout inside endDrag() instead — long enough
+  to still suppress a click from the exact same drag-release gesture
+  (which fires synchronously, same tick), but cleared before any
+  later, separate click could see it.
 - The timer is a stopwatch, not a countdown, while the deduction loop
   itself is still being tuned — a clock that could cut a player off
   before they've even learned the system would add frustration on top

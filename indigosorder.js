@@ -773,6 +773,7 @@
     function endDrag() {
       dragging = false;
       header.classList.remove('is-dragging');
+      setTimeout(function () { moved = false; }, 0);
     }
     header.addEventListener('pointerup', endDrag);
     header.addEventListener('pointercancel', endDrag);

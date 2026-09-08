@@ -441,13 +441,18 @@ UI NOTES
   until "I'm Ready" is clicked again.
 - His Answer and His Order reveal symbols play in one at a time
   (playSequentialReveal()) instead of appearing all at once — each
-  symbol pops in, holds for REVEAL_HOLD_MS (950ms), then the next one
-  replaces it, ending on the last symbol of each phase (which just
-  stays, not clearing to blank) until the next ask starts the cycle
-  over. His Answer plays first, then His Order once that finishes —
-  meant to read as one continuous exchange rather than a static dump,
-  and doubles as "he moves on to the next thing" when a symbol is
-  replaced. This is PURELY how the live two-symbol display animates —
+  symbol pops in after a REVEAL_HOLD_MS (950ms) gap from the last,
+  accumulating alongside the ones already shown rather than replacing
+  them, until all of that phase's symbols are on screen together. His
+  Answer plays first, then His Order once that finishes. A fresh ask
+  clears both containers and starts the sequence over from empty —
+  only accumulates within one ask's reveal, never across asks. Meant
+  to read as one continuous exchange arriving in real time rather than
+  a static dump, while still leaving every symbol visible to read once
+  it's landed (an earlier version had each new symbol replace the
+  last, which read as "sequential" more than intended and made it easy
+  to miss one that showed and vanished before it registered). This is
+  PURELY how the live two-symbol display animates —
   every permanent record (the log entry, "Symbols seen so far",
   noteSeen()) still happens immediately and synchronously the moment
   the player asks, same as before. That split was an explicit design

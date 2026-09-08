@@ -360,7 +360,6 @@
     if (!items.length) { if (onDone) onDone(); return; }
     var i = 0;
     function showNext() {
-      container.innerHTML = '';
       var icon = buildIcon(items[i]);
       icon.classList.add('is-popping');
       container.appendChild(icon);

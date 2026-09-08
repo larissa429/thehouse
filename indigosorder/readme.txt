@@ -305,13 +305,26 @@ DATA DESIGN NOTES
 - The decoder ("Your Notes") is a pure scratchpad — the game never reads
   the player's picks, it's just where they record their own working
   theory of what each symbol means.
-- Symbol icons are 25 hand-picked Material Symbols icons (SVG), inlined
-  with fill="currentColor" so CSS controls color per context (reveal,
-  negated, log, seen-symbols line, decoder picker). See svgs.txt in the
-  repo root for the source/curation list. Deliberately nothing that
-  reads as a literal picture of a tag's meaning (a flame, a drop),
-  since a literal icon would bias what players assume a symbol means
-  before they've earned that knowledge.
+- Symbol icons are drawn from a pool of 50 hand-picked Material Symbols
+  icons (SVG, in SYMBOL_ICONS), inlined with fill="currentColor" so CSS
+  controls color per context (reveal, negated, log, seen-symbols line,
+  decoder picker). Deliberately nothing that reads as a literal picture
+  of a tag's meaning (a flame, a drop), since a literal icon would bias
+  what players assume a symbol means before they've earned that
+  knowledge — the second 25 (added later) leaned more toward abstract/
+  geometric shapes specifically, since the first 25 had drifted toward
+  some fairly specific, recognizable objects. See svgs.txt in the repo
+  root for the full source/curation list.
+  Each game picks 25 of the 50 at startGame() time (activeSymbolIds =
+  shuffle(all 50 indices).slice(0, 25)) and maps them 1:1 to the 25
+  tags — same pool-of-50-pick-25 pattern as WORDS and MENU, so which
+  actual icon shapes show up (not just which tag they're assigned to)
+  varies game to game too. activeSymbolIds is also what the "pick a
+  symbol" decoder modal iterates over — it must stay scoped to this
+  game's active 25, not the full 50, or the picker would let the
+  player select an icon that was never actually shown to them that
+  game (a real bug caught before shipping: it originally iterated the
+  full SYMBOL_ICONS array directly).
 
 UI NOTES
 - The order line is split into two halves: "His answer" (his honest

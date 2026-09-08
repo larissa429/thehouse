@@ -252,6 +252,37 @@ DATA DESIGN NOTES
   menu side still has some tags skewing Food, e.g. Crunchy/Juicy, but
   that doesn't block the Ask mechanic the way a words-side lock does,
   since menu items aren't askable).
+- The "strengthen the escape-valve pool" fix above (Liquid: 2→4 words)
+  was not actually a fix, just better odds — real playtest hit the
+  exact same Liquid/Drink tie again on a later game. The math makes
+  clear why: missing all 4 escape-valve words in a 25-of-50 draw is
+  still ~5.5% per game (calculated as C(46,25)/C(50,25)), and that's
+  the BEST of the pairs — auditing every new-axis tag for escape-valve
+  count (not just existence, which the earlier audit checked) found
+  far worse ones sitting undetected: Frothy had exactly 1 escape-valve
+  word against FOUR different tags (Sweet, Creamy, Rich, Drink) at
+  once, meaning close to a coin-flip chance any given game broke it;
+  Smooth vs. Rich and Cold vs. Sour were similarly thin. None of this
+  had been reported yet only because no playtester had happened to ask
+  about exactly the wrong combination of words yet — the bug was
+  always live, just not yet observed.
+  Fixed properly this time with an actual guarantee instead of
+  probability-shaving: WORD_ESCAPE_VALVE_PAIRS lists every [hasTag,
+  notTag] pair found to be at risk (9 total), and pickWordsWithEscapeValves()
+  — now what startGame() calls instead of pickWords() directly for
+  WORDS — runs ensureEscapeValve() once per pair after the normal
+  quota-based pick. Each call checks whether the draw already has a
+  word with hasTag-and-not-notTag; if not, it swaps in one from the
+  full pool, choosing a safe word to swap out (never one that would
+  drop a WORD_TYPE_MINIMUM count, and never the sole remaining escape
+  valve for a DIFFERENT pair being protected in this same pass, so the
+  9 guarantees don't undo each other). Verified via 5000 simulated
+  draws: zero failures across word count, duplicate names, type-tag
+  minimums, and all 9 escape-valve pairs, every single trial — this is
+  now a hard guarantee, not an improved-but-still-nonzero-odds fix.
+  Menu-side pairs weren't touched, since MENU isn't what the Ask
+  mechanic draws from and doesn't carry the same "undecodable forever"
+  failure mode.
 - All 50 ALL_MENU items now have real photos in images/menu/, resized
   to a max dimension of 800px and re-encoded (mozjpeg, quality 82) to
   keep file sizes in line with the original 25 (each new photo landed

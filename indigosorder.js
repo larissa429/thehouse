@@ -233,6 +233,77 @@
     return shuffle(picked);
   }
 
+  // Pairs where a new-axis physical-property tag can tie completely with
+  // another tag if a game's random word draw happens to miss every word
+  // that carries the first without the second — e.g. every Liquid word
+  // drawn also being a Drink makes the two symbols undecodable that game.
+  // A thin pool of such words only shrinks the odds (still ~5% even with
+  // 4 candidates out of 50); this guarantees at least one every game,
+  // the same way WORD_TYPE_MINIMUM guarantees Food/Drink/Spice-Condiment.
+  var WORD_ESCAPE_VALVE_PAIRS = [
+    ['Liquid', 'Drink'],
+    ['Cold', 'Sour'],
+    ['Frothy', 'Sweet'],
+    ['Frothy', 'Creamy'],
+    ['Frothy', 'Rich'],
+    ['Frothy', 'Drink'],
+    ['Smooth', 'Sweet'],
+    ['Smooth', 'Rich'],
+    ['Juicy', 'Fruity']
+  ];
+
+  function ensureEscapeValve(pool, picked, hasTag, notTag) {
+    var hasEscape = picked.some(function (w) {
+      return w.tags.indexOf(hasTag) !== -1 && w.tags.indexOf(notTag) === -1;
+    });
+    if (hasEscape) return picked;
+
+    var pickedNames = {};
+    picked.forEach(function (w) { pickedNames[w.name] = true; });
+    var candidates = shuffle(pool.filter(function (w) {
+      return !pickedNames[w.name] && w.tags.indexOf(hasTag) !== -1 && w.tags.indexOf(notTag) === -1;
+    }));
+    if (!candidates.length) return picked;
+
+    var typeCounts = {};
+    WORD_TYPE_TAGS.forEach(function (tag) {
+      typeCounts[tag] = picked.filter(function (w) { return w.tags.indexOf(tag) !== -1; }).length;
+    });
+
+    var swapIdx = -1;
+    for (var i = picked.length - 1; i >= 0; i--) {
+      var w = picked[i];
+      var safeForType = WORD_TYPE_TAGS.every(function (tag) {
+        return w.tags.indexOf(tag) === -1 || typeCounts[tag] > WORD_TYPE_MINIMUM;
+      });
+      if (!safeForType) continue;
+      var isSoleEscapeForOtherPair = WORD_ESCAPE_VALVE_PAIRS.some(function (pair) {
+        if (pair[0] === hasTag && pair[1] === notTag) return false;
+        var isEscapeForPair = w.tags.indexOf(pair[0]) !== -1 && w.tags.indexOf(pair[1]) === -1;
+        if (!isEscapeForPair) return false;
+        var otherEscapeCount = picked.filter(function (w2) {
+          return w2 !== w && w2.tags.indexOf(pair[0]) !== -1 && w2.tags.indexOf(pair[1]) === -1;
+        }).length;
+        return otherEscapeCount === 0;
+      });
+      if (isSoleEscapeForOtherPair) continue;
+      swapIdx = i;
+      break;
+    }
+    if (swapIdx === -1) return picked;
+
+    picked[swapIdx] = candidates[0];
+    return picked;
+  }
+
+  function pickWordsWithEscapeValves(pool, count) {
+    var picked = pickWords(pool, count);
+    WORD_ESCAPE_VALVE_PAIRS.forEach(function (pair) {
+      picked = ensureEscapeValve(pool, picked, pair[0], pair[1]);
+    });
+    return shuffle(picked);
+  }
+
   var symbolMap;
   var targets;
   var currentIdx;
@@ -316,7 +387,7 @@
     var symbolIds = SYMBOL_ICONS.map(function (_, i) { return i; });
     shuffle(symbolIds).forEach(function (id, i) { symbolMap[TAGS[i]] = id; });
 
-    WORDS = pickWords(ALL_WORDS, 25);
+    WORDS = pickWordsWithEscapeValves(ALL_WORDS, 25);
     GLOBAL_TAG_FREQUENCY = {};
     WORDS.forEach(function (w) {
       w.tags.forEach(function (t) { GLOBAL_TAG_FREQUENCY[t] = (GLOBAL_TAG_FREQUENCY[t] || 0) + 1; });

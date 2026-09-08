@@ -124,31 +124,31 @@
     { name: 'Vanilla Milkshake', tags: ['Sweet', 'Creamy', 'Rich', 'White', 'Drink'], desc: 'A thick, creamy vanilla shake, sweet and rich.', img: 'vanillamilkshake.jpg' },
     { name: 'Mac and Cheese', tags: ['Savory', 'Creamy', 'Rich', 'Orange', 'Food'], desc: 'Pasta baked in a creamy, savory cheese sauce.', img: 'macandcheese.jpg' },
     { name: 'BBQ Ribs', tags: ['Smoky', 'Savory', 'Sweet', 'Brown', 'Food'], desc: 'Ribs slow-cooked over smoke, savory and sweet.', img: 'bbqribs.jpg' },
-    { name: 'Fish Tacos', tags: ['Savory', 'Spicy', 'Sour', 'White', 'Food'], desc: 'Crispy fish with a savory, spicy kick, finished with a sour squeeze of lime.', img: 'fishtacos.jpg', photo: false },
-    { name: 'French Onion Soup', tags: ['Savory', 'Earthy', 'Rich', 'Brown', 'Food'], desc: 'A rich onion broth, savory and earthy, topped with melted cheese and toast.', img: 'frenchonionsoup.jpg', photo: false },
-    { name: 'Apple Pie', tags: ['Sweet', 'Fruity', 'Brown', 'Food'], desc: 'Warm, sweet apples baked into a flaky, golden crust.', img: 'applepie.jpg', photo: false },
-    { name: 'Shrimp Scampi', tags: ['Savory', 'Rich', 'Salty', 'White', 'Food'], desc: 'Garlic butter shrimp tossed with pasta, rich and salty.', img: 'shrimpscampi.jpg', photo: false },
-    { name: 'Cobb Salad', tags: ['Savory', 'Rich', 'Salty', 'Green', 'Food'], desc: 'Crisp greens topped with egg and bacon in a rich, savory dressing.', img: 'cobbsalad.jpg', photo: false },
-    { name: 'Beef Stew', tags: ['Savory', 'Rich', 'Smoky', 'Brown', 'Food'], desc: 'Slow-braised beef in a smoky, rich broth.', img: 'beefstew.jpg', photo: false },
-    { name: 'Deviled Eggs', tags: ['Creamy', 'Savory', 'Yellow', 'Food'], desc: 'Creamy yolks whipped with a savory bite, served chilled.', img: 'deviledeggs.jpg', photo: false },
-    { name: 'Peach Cobbler', tags: ['Sweet', 'Fruity', 'Orange', 'Food'], desc: 'Warm, sweet peaches baked under a golden crust.', img: 'peachcobbler.jpg', photo: false },
-    { name: 'Clam Chowder', tags: ['Creamy', 'Savory', 'White', 'Food'], desc: 'A creamy, savory chowder loaded with tender clams.', img: 'clamchowder.jpg', photo: false },
-    { name: 'Falafel Wrap', tags: ['Savory', 'Earthy', 'Green', 'Food'], desc: 'Crispy chickpea falafel wrapped up with greens and a savory, earthy tahini drizzle.', img: 'falafelwrap.jpg', photo: false },
-    { name: 'Banana Bread', tags: ['Sweet', 'Nutty', 'Brown', 'Food'], desc: 'A moist banana loaf, sweet and nutty, studded with walnuts.', img: 'bananabread.jpg', photo: false },
-    { name: 'Egg Rolls', tags: ['Savory', 'Salty', 'Brown', 'Food'], desc: 'Golden fried rolls packed with a savory, salty filling.', img: 'eggrolls.jpg', photo: false },
-    { name: 'Pumpkin Pie', tags: ['Sweet', 'Earthy', 'Orange', 'Food'], desc: 'Warm spiced pumpkin custard, sweet and earthy, in a flaky crust.', img: 'pumpkinpie.jpg', photo: false },
-    { name: 'Grilled Cheese', tags: ['Creamy', 'Rich', 'Savory', 'Yellow', 'Food'], desc: 'Melted cheese between golden bread, rich, creamy, and savory.', img: 'grilledcheese.jpg', photo: false },
-    { name: 'Margarita', tags: ['Sour', 'Sweet', 'Salty', 'Green', 'Drink'], desc: 'Tequila shaken with lime and a salty rim, sour and sweet.', img: 'margarita.jpg', photo: false },
-    { name: 'Espresso Martini', tags: ['Bitter', 'Sweet', 'Rich', 'Black', 'Drink'], desc: 'Espresso and vodka shaken rich and bitter, just sweet enough.', img: 'espressomartini.jpg', photo: false },
-    { name: 'Iced Tea', tags: ['Bitter', 'Sweet', 'Brown', 'Drink'], desc: 'Cold-brewed tea, bitter and lightly sweetened.', img: 'icedtea.jpg', photo: false },
-    { name: 'Strawberry Daiquiri', tags: ['Sour', 'Sweet', 'Fruity', 'Red', 'Drink'], desc: 'Blended strawberries, sour and sweet, with a fruity finish.', img: 'strawberrydaiquiri.jpg', photo: false },
-    { name: 'Hot Chocolate', tags: ['Sweet', 'Bitter', 'Creamy', 'Brown', 'Drink'], desc: 'Rich melted chocolate, sweet with a bitter edge, and creamy steamed milk.', img: 'hotchocolate.jpg', photo: false },
-    { name: 'Ginger Beer', tags: ['Spicy', 'Sweet', 'Brown', 'Drink'], desc: 'A spicy, sweet ginger brew with a sharp bite.', img: 'gingerbeer.jpg', photo: false },
-    { name: 'Sparkling Lemonade', tags: ['Sour', 'Sweet', 'Yellow', 'Drink'], desc: 'Sparkling lemonade, sour and sweet with a fizzy lift.', img: 'sparklinglemonade.jpg', photo: false },
-    { name: 'Ranch Dressing', tags: ['Savory', 'Creamy', 'White', 'Spice/Condiment'], desc: 'A creamy, savory condiment good on nearly anything.', img: 'ranchdressing.jpg', photo: false },
-    { name: 'Balsamic Glaze', tags: ['Sweet', 'Sour', 'Black', 'Spice/Condiment'], desc: 'A syrupy balsamic reduction, sweet and sour.', img: 'balsamicglaze.jpg', photo: false },
-    { name: 'Honey Mustard', tags: ['Sweet', 'Savory', 'Yellow', 'Spice/Condiment'], desc: 'A sweet, savory mustard blended with honey.', img: 'honeymustard.jpg', photo: false },
-    { name: 'Chimichurri', tags: ['Spicy', 'Earthy', 'Green', 'Spice/Condiment'], desc: 'A spicy, earthy herb condiment, bright with fresh green herbs.', img: 'chimichurri.jpg', photo: false }
+    { name: 'Fish Tacos', tags: ['Savory', 'Spicy', 'Sour', 'White', 'Food'], desc: 'Crispy fish with a savory, spicy kick, finished with a sour squeeze of lime.', img: 'fishtacos.jpg' },
+    { name: 'French Onion Soup', tags: ['Savory', 'Earthy', 'Rich', 'Brown', 'Food'], desc: 'A rich onion broth, savory and earthy, topped with melted cheese and toast.', img: 'frenchonionsoup.jpg' },
+    { name: 'Apple Pie', tags: ['Sweet', 'Fruity', 'Brown', 'Food'], desc: 'Warm, sweet apples baked into a flaky, golden crust.', img: 'applepie.jpg' },
+    { name: 'Shrimp Scampi', tags: ['Savory', 'Rich', 'Salty', 'White', 'Food'], desc: 'Garlic butter shrimp tossed with pasta, rich and salty.', img: 'shrimpscampi.jpg' },
+    { name: 'Cobb Salad', tags: ['Savory', 'Rich', 'Salty', 'Green', 'Food'], desc: 'Crisp greens topped with egg and bacon in a rich, savory dressing.', img: 'cobbsalad.jpg' },
+    { name: 'Beef Stew', tags: ['Savory', 'Rich', 'Smoky', 'Brown', 'Food'], desc: 'Slow-braised beef in a smoky, rich broth.', img: 'beefstew.jpg' },
+    { name: 'Deviled Eggs', tags: ['Creamy', 'Savory', 'Yellow', 'Food'], desc: 'Creamy yolks whipped with a savory bite, served chilled.', img: 'deviledeggs.jpg' },
+    { name: 'Peach Cobbler', tags: ['Sweet', 'Fruity', 'Orange', 'Food'], desc: 'Warm, sweet peaches baked under a golden crust.', img: 'peachcobbler.jpg' },
+    { name: 'Clam Chowder', tags: ['Creamy', 'Savory', 'White', 'Food'], desc: 'A creamy, savory chowder loaded with tender clams.', img: 'clamchowder.jpg' },
+    { name: 'Falafel Wrap', tags: ['Savory', 'Earthy', 'Green', 'Food'], desc: 'Crispy chickpea falafel wrapped up with greens and a savory, earthy tahini drizzle.', img: 'falafelwrap.jpg' },
+    { name: 'Banana Bread', tags: ['Sweet', 'Nutty', 'Brown', 'Food'], desc: 'A moist banana loaf, sweet and nutty, studded with walnuts.', img: 'bananabread.jpg' },
+    { name: 'Egg Rolls', tags: ['Savory', 'Salty', 'Brown', 'Food'], desc: 'Golden fried rolls packed with a savory, salty filling.', img: 'eggrolls.jpg' },
+    { name: 'Pumpkin Pie', tags: ['Sweet', 'Earthy', 'Orange', 'Food'], desc: 'Warm spiced pumpkin custard, sweet and earthy, in a flaky crust.', img: 'pumpkinpie.jpg' },
+    { name: 'Grilled Cheese', tags: ['Creamy', 'Rich', 'Savory', 'Yellow', 'Food'], desc: 'Melted cheese between golden bread, rich, creamy, and savory.', img: 'grilledcheese.jpg' },
+    { name: 'Margarita', tags: ['Sour', 'Sweet', 'Salty', 'Green', 'Drink'], desc: 'Tequila shaken with lime and a salty rim, sour and sweet.', img: 'margarita.jpg' },
+    { name: 'Espresso Martini', tags: ['Bitter', 'Sweet', 'Rich', 'Black', 'Drink'], desc: 'Espresso and vodka shaken rich and bitter, just sweet enough.', img: 'espressomartini.jpg' },
+    { name: 'Iced Tea', tags: ['Bitter', 'Sweet', 'Brown', 'Drink'], desc: 'Cold-brewed tea, bitter and lightly sweetened.', img: 'icedtea.jpg' },
+    { name: 'Strawberry Daiquiri', tags: ['Sour', 'Sweet', 'Fruity', 'Red', 'Drink'], desc: 'Blended strawberries, sour and sweet, with a fruity finish.', img: 'strawberrydaiquiri.jpg' },
+    { name: 'Hot Chocolate', tags: ['Sweet', 'Bitter', 'Creamy', 'Brown', 'Drink'], desc: 'Rich melted chocolate, sweet with a bitter edge, and creamy steamed milk.', img: 'hotchocolate.jpg' },
+    { name: 'Ginger Beer', tags: ['Spicy', 'Sweet', 'Brown', 'Drink'], desc: 'A spicy, sweet ginger brew with a sharp bite.', img: 'gingerbeer.jpg' },
+    { name: 'Sparkling Lemonade', tags: ['Sour', 'Sweet', 'Yellow', 'Drink'], desc: 'Sparkling lemonade, sour and sweet with a fizzy lift.', img: 'sparklinglemonade.jpg' },
+    { name: 'Ranch Dressing', tags: ['Savory', 'Creamy', 'White', 'Spice/Condiment'], desc: 'A creamy, savory condiment good on nearly anything.', img: 'ranchdressing.jpg' },
+    { name: 'Balsamic Glaze', tags: ['Sweet', 'Sour', 'Black', 'Spice/Condiment'], desc: 'A syrupy balsamic reduction, sweet and sour.', img: 'balsamicglaze.jpg' },
+    { name: 'Honey Mustard', tags: ['Sweet', 'Savory', 'Yellow', 'Spice/Condiment'], desc: 'A sweet, savory mustard blended with honey.', img: 'honeymustard.jpg' },
+    { name: 'Chimichurri', tags: ['Spicy', 'Earthy', 'Green', 'Spice/Condiment'], desc: 'A spicy, earthy herb condiment, bright with fresh green herbs.', img: 'chimichurri.jpg' }
   ];
 
   var SYMBOL_ICONS = [
@@ -316,8 +316,7 @@
       w.tags.forEach(function (t) { GLOBAL_TAG_FREQUENCY[t] = (GLOBAL_TAG_FREQUENCY[t] || 0) + 1; });
     });
 
-    var readyMenu = ALL_MENU.filter(function (m) { return m.photo !== false; });
-    MENU = pickWords(readyMenu, Math.min(25, readyMenu.length));
+    MENU = pickWords(ALL_MENU, 25);
     MENU_TAG_FREQUENCY = {};
     MENU.forEach(function (m) {
       m.tags.forEach(function (t) { MENU_TAG_FREQUENCY[t] = (MENU_TAG_FREQUENCY[t] || 0) + 1; });

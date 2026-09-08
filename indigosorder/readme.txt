@@ -143,13 +143,11 @@ DATA DESIGN NOTES
   weighting) is recomputed from that 25-item pick each game, same as
   GLOBAL_TAG_FREQUENCY is for words. Every tag combination is unique
   across the full 50-item pool, not just within one game's 25.
-- The 25 newest ALL_MENU entries (everything from Fish Tacos onward)
-  carry `photo: false` — they don't have a real photo in images/menu/
-  yet, so startGame() filters them out entirely before picking (only
-  items where photo !== false are eligible), keeping the live game to
-  just the original 25 that do have photos. Once real photos exist
-  for all 25 new items, delete every `photo: false` field (or delete
-  the filter's condition) to bring the full 50-item pool online.
+- All 50 ALL_MENU items now have real photos in images/menu/, resized
+  to a max dimension of 800px and re-encoded (mozjpeg, quality 82) to
+  keep file sizes in line with the original 25 (each new photo landed
+  well under 100KB after compression, down from as large as ~9-10MB
+  straight off a phone).
 - The menu list is grouped into three sections (Entrees / Drinks / On
   the Side), matching each item's Food, Drink, or Spice/Condiment tag
   one-to-one. This is deliberately NOT a mystery — like a word's own

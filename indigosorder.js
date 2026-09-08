@@ -10,7 +10,10 @@
   var seenSymbolsEl = document.getElementById('itSeenSymbols');
   var logEl = document.getElementById('itLog');
   var decoderGridEl = document.getElementById('itDecoderGrid');
-  var decoderClearBtn = document.getElementById('itDecoderClear');
+  var decoderClearRedBtn = document.getElementById('itDecoderClearRed');
+  var decoderClearYellowBtn = document.getElementById('itDecoderClearYellow');
+  var decoderClearGreenBtn = document.getElementById('itDecoderClearGreen');
+  var decoderClearAllBtn = document.getElementById('itDecoderClearAll');
   var decoderClearBoardBtn = document.getElementById('itDecoderClearBoard');
   var notesFloatTouchBtn = document.getElementById('itNotesFloatTouch');
   var notesFloatEl = document.getElementById('itNotesFloat');
@@ -698,15 +701,20 @@
   startBtn.addEventListener('click', beginRound);
   howToPlayBtn.addEventListener('click', pauseForRules);
   askBtn.addEventListener('click', askIndigo);
-  decoderClearBtn.addEventListener('click', function () {
-    decoderGridEl.querySelectorAll('.it-decoder-marker.is-on').forEach(function (dot) {
+  function clearMarkers(color) {
+    var selector = color
+      ? '.it-decoder-marker[data-color="' + color + '"].is-on'
+      : '.it-decoder-marker.is-on';
+    decoderGridEl.querySelectorAll(selector).forEach(function (dot) {
       dot.classList.remove('is-on');
     });
-  });
+  }
+  decoderClearRedBtn.addEventListener('click', function () { clearMarkers('red'); });
+  decoderClearYellowBtn.addEventListener('click', function () { clearMarkers('yellow'); });
+  decoderClearGreenBtn.addEventListener('click', function () { clearMarkers('green'); });
+  decoderClearAllBtn.addEventListener('click', function () { clearMarkers(); });
   decoderClearBoardBtn.addEventListener('click', function () {
-    decoderGridEl.querySelectorAll('.it-decoder-marker.is-on').forEach(function (dot) {
-      dot.classList.remove('is-on');
-    });
+    clearMarkers();
     decoderGridEl.querySelectorAll('.it-decoder-pick').forEach(function (pickBtn) {
       setDecoderPick(pickBtn, null);
     });

@@ -324,15 +324,18 @@ UI NOTES
   fullscreen mode. Safe against the symbol picker modal specifically
   because that's a sibling element in the DOM (#itSymbolPicker), not
   a child of .it-notes-float, so it was never at risk of being clipped.
-- A "CLEAR 🔴 🟡 🟢 ALL" button sits above the decoder grid (separate
-  from Restart) that wipes every red/yellow/green marker dot in one
-  click, without touching the player's actual symbol picks. Added
-  because the markers are meant as disposable per-round scratch
-  marks, but the picks are the player's accumulated theory of what
-  each symbol means and persist for the whole game — clearing them
-  together would throw away real progress along with the scratch
-  state. A second, separate "Clear board" button next to it clears
-  BOTH markers and picks at once, for when the player wants to wipe
+- A "CLEAR 🔴 🟡 🟢 ALL" control sits above the decoder grid (separate
+  from Restart), grouped as one visual unit but four independent
+  buttons — "Clear" is plain label text, each colored dot clears only
+  that color's markers across every tag (🔴 clears every red marker
+  and leaves yellow/green alone, etc.), and "All" clears all three at
+  once. None of these touch the player's actual symbol picks — the
+  markers are disposable per-round scratch marks, but the picks are
+  the player's accumulated theory of what each symbol means and
+  persist for the whole game, so clearing them together would throw
+  away real progress along with the scratch state. A second, separate
+  "Clear board" button next to the group clears BOTH markers (all
+  three colors) and picks at once, for when the player wants to wipe
   their whole working theory without a full Restart (which would also
   reshuffle the word/menu pools and reset the timer/progress).
 - A "THRU" toggle in the header lets the player click through the

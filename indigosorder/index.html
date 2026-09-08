@@ -262,7 +262,7 @@
       gap: 0.4rem;
       margin-bottom: 0.5rem;
     }
-    .it-decoder-clear, .it-decoder-clear-board {
+    .it-decoder-clear-board {
       font-family: var(--label);
       font-size: 0.62rem;
       letter-spacing: 0.04em;
@@ -274,8 +274,48 @@
       padding: 0.25rem 0.55rem;
       cursor: pointer;
     }
-    .it-decoder-clear:hover { color: var(--lamp); border-color: var(--lamp); }
     .it-decoder-clear-board:hover { color: var(--urgent); border-color: var(--urgent); }
+    .it-decoder-clear-group {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      border: var(--edge);
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+    }
+    .it-decoder-clear-label {
+      font-family: var(--label);
+      font-size: 0.62rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      flex-shrink: 0;
+    }
+    .it-decoder-clear-dot {
+      font-size: 0.8rem;
+      line-height: 1;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.15s, transform 0.15s;
+      flex-shrink: 0;
+    }
+    .it-decoder-clear-dot:hover { opacity: 1; transform: scale(1.2); }
+    .it-decoder-clear-all {
+      font-family: var(--label);
+      font-size: 0.62rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .it-decoder-clear-all:hover { color: var(--lamp); }
     .it-decoder-list {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -779,7 +819,13 @@
     </div>
     <div class="it-notes-float-body" id="itNotesFloatBody">
       <div class="it-decoder-toolbar">
-        <button type="button" class="it-decoder-clear" id="itDecoderClear" aria-label="Clear all markers">CLEAR &#128308; &#128993; &#128994; ALL</button>
+        <div class="it-decoder-clear-group" role="group" aria-label="Clear markers by color">
+          <span class="it-decoder-clear-label">Clear</span>
+          <button type="button" class="it-decoder-clear-dot" id="itDecoderClearRed" aria-label="Clear red markers">&#128308;</button>
+          <button type="button" class="it-decoder-clear-dot" id="itDecoderClearYellow" aria-label="Clear yellow markers">&#128993;</button>
+          <button type="button" class="it-decoder-clear-dot" id="itDecoderClearGreen" aria-label="Clear green markers">&#128994;</button>
+          <button type="button" class="it-decoder-clear-all" id="itDecoderClearAll" aria-label="Clear all markers">All</button>
+        </div>
         <button type="button" class="it-decoder-clear-board" id="itDecoderClearBoard">Clear board</button>
       </div>
       <div class="it-decoder-list" id="itDecoderGrid"></div>

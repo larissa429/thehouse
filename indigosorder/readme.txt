@@ -324,25 +324,31 @@ UI NOTES
   fullscreen mode. Safe against the symbol picker modal specifically
   because that's a sibling element in the DOM (#itSymbolPicker), not
   a child of .it-notes-float, so it was never at risk of being clipped.
-- A "CLEAR 🔴 🟡 🟢 ALL" control sits above the decoder grid (separate
+- A "CLEAR ● ● ● ALL" control sits above the decoder grid (separate
   from Restart), grouped as one visual unit but four independent
   buttons — "Clear" is plain label text, each colored dot clears only
-  that color's markers across every tag (🔴 clears every red marker
-  and leaves yellow/green alone, etc.), and "All" clears all three at
-  once. None of these touch the player's actual symbol picks — the
-  markers are disposable per-round scratch marks, but the picks are
-  the player's accumulated theory of what each symbol means and
-  persist for the whole game, so clearing them together would throw
-  away real progress along with the scratch state. A second, separate
-  "Clear board" button next to the group clears BOTH markers (all
-  three colors) and picks at once, for when the player wants to wipe
-  their whole working theory without a full Restart (which would also
+  that color's markers across every tag (the red dot clears every red
+  marker and leaves yellow/green alone, etc.), and "All" clears all
+  three at once. The dots are small CSS circles styled exactly like
+  the real marker dots (same three colors, just a bit bigger), not
+  emoji characters — emoji render inconsistently across platforms and
+  looked oversized next to the actual UI they represent. None of
+  these touch the player's actual symbol picks — the markers are
+  disposable per-round scratch marks, but the picks are the player's
+  accumulated theory of what each symbol means and persist for the
+  whole game, so clearing them together would throw away real
+  progress along with the scratch state. A second, separate "Clear
+  board" button next to the group clears BOTH markers (all three
+  colors) and picks at once, for when the player wants to wipe their
+  whole working theory without a full Restart (which would also
   reshuffle the word/menu pools and reset the timer/progress).
-- A "THRU" toggle in the header lets the player click through the
-  panel to whatever's underneath it on the page, without moving it
-  out of the way first. Implemented as `pointer-events: none` on the
-  whole panel while active — this both makes clicks/drags pass through
-  to the page below AND locks the panel in place (dragging is just a
+- A touch-through toggle in the header (inline SVG icon, a
+  target-with-cursor glyph, fill="currentColor" so it themes like the
+  other symbol icons) lets the player click through the panel to
+  whatever's underneath it on the page, without moving it out of the
+  way first. Implemented as `pointer-events: none` on the whole panel
+  while active — this both makes clicks/drags pass through to the
+  page below AND locks the panel in place (dragging is just a
   pointerdown/pointermove/pointerup sequence on the header, so with
   pointer-events off, none of those ever reach it), which is why one
   property covers both things the player asked for. The toggle button

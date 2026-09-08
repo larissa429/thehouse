@@ -292,17 +292,28 @@
       flex-shrink: 0;
     }
     .it-decoder-clear-dot {
-      font-size: 0.8rem;
-      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: none;
       border: none;
-      padding: 0;
+      padding: 0.15rem;
       cursor: pointer;
-      opacity: 0.7;
+      opacity: 0.75;
       transition: opacity 0.15s, transform 0.15s;
       flex-shrink: 0;
     }
     .it-decoder-clear-dot:hover { opacity: 1; transform: scale(1.2); }
+    .it-decoder-clear-swatch {
+      display: block;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .it-decoder-clear-swatch[data-color="red"] { background: var(--urgent); }
+    .it-decoder-clear-swatch[data-color="yellow"] { background: var(--lamp); }
+    .it-decoder-clear-swatch[data-color="green"] { background: #7a9463; }
     .it-decoder-clear-all {
       font-family: var(--label);
       font-size: 0.62rem;
@@ -599,7 +610,7 @@
       cursor: pointer;
     }
     .it-notes-float-full.is-active { color: var(--lamp); border-color: var(--lamp); }
-    .it-notes-float-opacity, .it-notes-float-touch {
+    .it-notes-float-opacity {
       font-family: var(--label);
       font-size: 0.68rem;
       letter-spacing: 0.02em;
@@ -612,6 +623,20 @@
       padding: 0 0.5rem;
       cursor: pointer;
     }
+    .it-notes-float-touch {
+      color: var(--ink-soft);
+      background: none;
+      border: var(--edge);
+      border-radius: 4px;
+      width: 1.6rem;
+      height: 1.6rem;
+      padding: 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .it-notes-float-touch svg { display: block; }
     .it-notes-float-touch.is-active { color: var(--lamp); border-color: var(--lamp); }
     .it-notes-float.is-touch-through { pointer-events: none; }
     .it-notes-float.is-touch-through .it-notes-float-touch { pointer-events: auto; }
@@ -812,7 +837,7 @@
       <span>Your Notes</span>
       <div class="it-notes-float-actions">
         <button type="button" class="it-notes-float-opacity" id="itNotesFloatOpacity" aria-label="Panel opacity: 100%">100%</button>
-        <button type="button" class="it-notes-float-touch" id="itNotesFloatTouch" aria-label="Touch-through mode: off">THRU</button>
+        <button type="button" class="it-notes-float-touch" id="itNotesFloatTouch" aria-label="Touch-through mode: off"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M11.7 18q-2.4-.125-4.05-1.85T6 12q0-2.5 1.75-4.25T12 6q2.425 0 4.15 1.65T18 11.7l-2.1-.625q-.325-1.35-1.4-2.212T12 8q-1.65 0-2.825 1.175T8 12q0 1.425.863 2.5t2.212 1.4zm1.2 3.95q-.225.05-.45.05H12q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12v.45q0 .225-.05.45L20 12.3V12q0-3.35-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20h.3zm7.625.55l-4.275-4.275L15 22l-3-10l10 3l-3.775 1.25l4.275 4.275z"/></svg></button>
         <button type="button" class="it-notes-float-full" id="itNotesFloatFull" aria-label="Fullscreen">&#9974;</button>
         <button type="button" class="it-notes-float-min" id="itNotesFloatMin" aria-label="Minimize">&minus;</button>
       </div>
@@ -821,9 +846,9 @@
       <div class="it-decoder-toolbar">
         <div class="it-decoder-clear-group" role="group" aria-label="Clear markers by color">
           <span class="it-decoder-clear-label">Clear</span>
-          <button type="button" class="it-decoder-clear-dot" id="itDecoderClearRed" aria-label="Clear red markers">&#128308;</button>
-          <button type="button" class="it-decoder-clear-dot" id="itDecoderClearYellow" aria-label="Clear yellow markers">&#128993;</button>
-          <button type="button" class="it-decoder-clear-dot" id="itDecoderClearGreen" aria-label="Clear green markers">&#128994;</button>
+          <button type="button" class="it-decoder-clear-dot" id="itDecoderClearRed" aria-label="Clear red markers"><span class="it-decoder-clear-swatch" data-color="red"></span></button>
+          <button type="button" class="it-decoder-clear-dot" id="itDecoderClearYellow" aria-label="Clear yellow markers"><span class="it-decoder-clear-swatch" data-color="yellow"></span></button>
+          <button type="button" class="it-decoder-clear-dot" id="itDecoderClearGreen" aria-label="Clear green markers"><span class="it-decoder-clear-swatch" data-color="green"></span></button>
           <button type="button" class="it-decoder-clear-all" id="itDecoderClearAll" aria-label="Clear all markers">All</button>
         </div>
         <button type="button" class="it-decoder-clear-board" id="itDecoderClearBoard">Clear board</button>

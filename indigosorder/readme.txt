@@ -439,6 +439,34 @@ UI NOTES
   and re-read the rules — this does NOT reset anything (same words,
   same order, same notes), it just freezes the timer/interactivity
   until "I'm Ready" is clicked again.
+- His Answer and His Order reveal symbols play in one at a time
+  (playSequentialReveal()) instead of appearing all at once — each
+  symbol pops in, holds for REVEAL_HOLD_MS (950ms), then the next one
+  replaces it, ending on the last symbol of each phase (which just
+  stays, not clearing to blank) until the next ask starts the cycle
+  over. His Answer plays first, then His Order once that finishes —
+  meant to read as one continuous exchange rather than a static dump,
+  and doubles as "he moves on to the next thing" when a symbol is
+  replaced. This is PURELY how the live two-symbol display animates —
+  every permanent record (the log entry, "Symbols seen so far",
+  noteSeen()) still happens immediately and synchronously the moment
+  the player asks, same as before. That split was an explicit design
+  question the user confirmed: nothing about the scratchpad or the
+  seen-symbols log should ever depend on catching a symbol before it
+  disappears, only the live "stage" display is theatrical.
+  The Ask button (and the whole ask flow) is locked out for the
+  duration via a `revealAnimating` flag, both because the answer/order
+  data for the NEXT ask isn't meant to interrupt the current one mid-
+  sequence, and to avoid two overlapping playSequentialReveal() timeout
+  chains racing on the same two containers. startGame() defensively
+  clears any pending reveal timeout and resets the flag, in case
+  Restart fires mid-animation. Guessing (submitGuess) is NOT gated by
+  this — the underlying currentReveal data is always complete and
+  correct the instant an ask resolves, only its on-screen reveal is
+  staggered, so there's nothing incomplete for a guess to race against.
+  submitGuess's own clearing of the order display (after every guess,
+  right or wrong) stays a plain instant clear, not routed through the
+  animated path — there's nothing to reveal there, just a reset.
 - The win screen ("Order served.") has a "View Answers" button next
   to Try Again, opening a separate reveal modal (#itAnswersOverlay)
   with the true tags for all 3 solved orders and the full 25-symbol

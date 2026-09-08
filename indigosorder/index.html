@@ -137,6 +137,14 @@
       fill: currentColor;
     }
     .it-reveal-symbol, .it-answer-symbol { position: relative; width: 1.8rem; height: 1.8rem; }
+    @keyframes itSymbolPop {
+      0% { opacity: 0; transform: scale(0.7); }
+      60% { opacity: 1; transform: scale(1.08); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .it-reveal-symbol.is-popping, .it-answer-symbol.is-popping {
+      animation: itSymbolPop 0.25s ease-out;
+    }
     .it-reveal-symbol.is-negated { color: var(--ink-soft); }
     .it-reveal-symbol.is-negated::after {
       content: '';

@@ -350,6 +350,30 @@
   var WORDS;
   var GLOBAL_TAG_FREQUENCY;
   var activeSymbolIds;
+  var REVEAL_HOLD_MS = 950;
+  var revealAnimating = false;
+  var revealTimeoutId = null;
+
+  function playSequentialReveal(container, items, buildIcon, onDone) {
+    if (revealTimeoutId) { clearTimeout(revealTimeoutId); revealTimeoutId = null; }
+    container.innerHTML = '';
+    if (!items.length) { if (onDone) onDone(); return; }
+    var i = 0;
+    function showNext() {
+      container.innerHTML = '';
+      var icon = buildIcon(items[i]);
+      icon.classList.add('is-popping');
+      container.appendChild(icon);
+      i++;
+      if (i < items.length) {
+        revealTimeoutId = setTimeout(showNext, REVEAL_HOLD_MS);
+      } else {
+        revealTimeoutId = null;
+        if (onDone) onDone();
+      }
+    }
+    showNext();
+  }
 
   function symbolFor(tag) { return symbolMap[tag]; }
 
@@ -414,6 +438,9 @@
   }
 
   function startGame(skipRulesGate) {
+    if (revealTimeoutId) { clearTimeout(revealTimeoutId); revealTimeoutId = null; }
+    revealAnimating = false;
+
     symbolMap = {};
     activeSymbolIds = shuffle(SYMBOL_ICONS.map(function (_, i) { return i; })).slice(0, TAGS.length);
     activeSymbolIds.forEach(function (id, i) { symbolMap[TAGS[i]] = id; });
@@ -533,7 +560,7 @@
       btn.disabled = !isAsk || (!isSelected && selectedWords.length >= MAX_ASK_WORDS);
     });
     selectedCountEl.textContent = selectedWords.length + ' / ' + MAX_ASK_WORDS + ' selected';
-    askBtn.disabled = !isAsk || selectedWords.length === 0 || !running;
+    askBtn.disabled = !isAsk || selectedWords.length === 0 || !running || revealAnimating;
 
     var menuCards = menuListEl.querySelectorAll('.it-menu-card');
     menuCards.forEach(function (card) { card.disabled = isAsk || !running; });
@@ -549,7 +576,7 @@
   }
 
   function askIndigo() {
-    if (!selectedWords.length || roundPhase !== 'ask') return;
+    if (!selectedWords.length || roundPhase !== 'ask' || revealAnimating) return;
     var words = selectedWords.map(function (i) { return WORDS[i]; });
     var tags = bestGuessTags(words);
 
@@ -568,7 +595,6 @@
       noteSeen(id);
     });
     logEl.appendChild(entry);
-    renderAnswerSymbols(tags);
 
     selectedWords = [];
 
@@ -579,9 +605,21 @@
     asksSinceGuess++;
     roundPhase = asksSinceGuess >= ASKS_PER_GUESS ? 'guess' : 'ask';
 
-    renderCurrentOrder();
     renderSeenSymbols();
+
+    revealAnimating = true;
     updatePhaseUI();
+    playSequentialReveal(answerSymbolsEl, tags, function (tag) {
+      return makeSymbolIcon(symbolFor(tag), 'it-answer-symbol');
+    }, function () {
+      playSequentialReveal(orderSymbolsEl, currentReveal, function (item) {
+        var cls = 'it-reveal-symbol' + (item.negated ? ' is-negated' : '');
+        return makeSymbolIcon(symbolFor(item.tag), cls);
+      }, function () {
+        revealAnimating = false;
+        updatePhaseUI();
+      });
+    });
   }
 
   function noteSeen(symbol) {

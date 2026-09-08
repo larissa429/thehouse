@@ -10,6 +10,7 @@
   var seenSymbolsEl = document.getElementById('itSeenSymbols');
   var logEl = document.getElementById('itLog');
   var decoderGridEl = document.getElementById('itDecoderGrid');
+  var decoderClearBtn = document.getElementById('itDecoderClear');
   var notesFloatEl = document.getElementById('itNotesFloat');
   var notesFloatHeaderEl = document.getElementById('itNotesFloatHeader');
   var notesFloatMinBtn = document.getElementById('itNotesFloatMin');
@@ -695,6 +696,11 @@
   startBtn.addEventListener('click', beginRound);
   howToPlayBtn.addEventListener('click', pauseForRules);
   askBtn.addEventListener('click', askIndigo);
+  decoderClearBtn.addEventListener('click', function () {
+    decoderGridEl.querySelectorAll('.it-decoder-marker.is-on').forEach(function (dot) {
+      dot.classList.remove('is-on');
+    });
+  });
 
   symbolPickerClearBtn.addEventListener('click', function () {
     if (symbolPickerTargetBtn) setDecoderPick(symbolPickerTargetBtn, null);

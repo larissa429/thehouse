@@ -312,6 +312,25 @@ UI NOTES
   to still suppress a click from the exact same drag-release gesture
   (which fires synchronously, same tick), but cleared before any
   later, separate click could see it.
+- The panel container (.it-notes-float) needs `overflow: hidden` —
+  without it, the header's own border-radius (top corners only, since
+  it squares off where the body begins) didn't match the outer
+  container's border-radius (all four corners) once minimized, and
+  the header's bottom edge sitting flush against the container's
+  rounded bottom corners left a sliver of the container's own
+  background showing through as a visible seam. `overflow: hidden`
+  makes the container clip anything inside it to its own rounded
+  shape regardless of the header's own radius, which also fixes it in
+  fullscreen mode. Safe against the symbol picker modal specifically
+  because that's a sibling element in the DOM (#itSymbolPicker), not
+  a child of .it-notes-float, so it was never at risk of being clipped.
+- A "Clear markers" button sits above the decoder grid (separate from
+  Restart) that wipes every red/yellow/green marker dot in one click,
+  without touching the player's actual symbol picks. Added because
+  the markers are meant as disposable per-round scratch marks, but
+  the picks are the player's accumulated theory of what each symbol
+  means and persist for the whole game — clearing them together would
+  throw away real progress along with the scratch state.
 - The timer is a stopwatch, not a countdown, while the deduction loop
   itself is still being tuned — a clock that could cut a player off
   before they've even learned the system would add frustration on top
@@ -334,3 +353,8 @@ UI NOTES
 DEFERRED / NOT YET DONE
 - Real symbol art beyond the current icon set, if desired.
 - Anything the playtest round surfaces.
+- Hard mode idea (not started): hide each word's own tags on its
+  button in the Ask Indigo grid, showing only the ingredient name, so
+  the player has to work from memory/assumption about which words
+  carry which trait instead of reading it straight off the button.
+  Explicitly flagged by the user as a later addition, not now.

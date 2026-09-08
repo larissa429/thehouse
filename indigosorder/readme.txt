@@ -356,6 +356,19 @@ UI NOTES
   stays clickable to turn the mode back off even while everything
   else in the panel is inert. Whatever opacity level was set before
   toggling stays as-is — touch-through doesn't change it.
+- The header's drag-vs-button exclusion check (which elements on the
+  header should start a drag vs. do their own thing) used strict
+  identity (`e.target === touchBtn`) against each action button. That
+  broke the moment the touch-through button got an inline SVG icon
+  instead of plain text: clicking the visible icon makes `e.target`
+  the `<svg>` or `<path>` inside the button, never the button element
+  itself, so the check silently failed and a drag started instead of
+  the button's own click firing — which is what made the toggle feel
+  like it was fighting the drag handler. Fixed by checking
+  `e.target.closest('.it-notes-float-actions')` instead, which
+  matches any element inside the actions row regardless of how deep
+  the actual click landed, and covers min/full/opacity the same way
+  without needing one exact-match check per button.
 - The timer is a stopwatch, not a countdown, while the deduction loop
   itself is still being tuned — a clock that could cut a player off
   before they've even learned the system would add frustration on top

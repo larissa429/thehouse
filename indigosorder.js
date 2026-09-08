@@ -775,7 +775,7 @@
     var preFullscreenTop = '', preFullscreenHeight = '';
 
     header.addEventListener('pointerdown', function (e) {
-      if (e.target === minBtn || e.target === fullBtn || e.target === opacityBtn || e.target === touchBtn) return;
+      if (e.target.closest('.it-notes-float-actions')) return;
       dragging = true; moved = false;
       header.setPointerCapture(e.pointerId);
       var rect = panel.getBoundingClientRect();
